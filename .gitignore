@@ -1,0 +1,35 @@
+envs/
+models/
+cache/
+checkpoints/
+third_party/
+runs/
+data/raw/
+data/prepared/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local credentials and editor / operating-system files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+.idea/
+.vscode/
+
+# Model and media artifacts are restored or generated outside Git
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.wav
+*.flac
+*.mp3
+*.mp4
+*.m4a
+*.ogg
+*.webm

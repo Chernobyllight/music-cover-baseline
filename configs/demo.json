@@ -1,0 +1,11 @@
+{
+  "song": "data/raw/songs/tonight-awake.mp3",
+  "lyrics": "data/raw/lyrics/tonight-awake.txt",
+  "reference": "data/raw/references/librispeech-reference.flac",
+  "style": "Mandarin Chinese, acoustic folk ballad, solo lead vocal, warm acoustic guitar, soft piano, light brushed drums, intimate clear dry vocal, restrained arrangement",
+  "seed": 42,
+  "steps": 30,
+  "reference_start": 0.0,
+  "reference_duration": 15.0,
+  "name": "tonight_awake_folk"
+}

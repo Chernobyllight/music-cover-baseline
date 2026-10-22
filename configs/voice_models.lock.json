@@ -1,0 +1,27 @@
+{
+  "Seed-VC": {
+    "repo_id": "Plachta/Seed-VC",
+    "revision": "257283f9f41585055e8f858fba4fd044e5caed6e",
+    "path": "/data/liuhongda/music-cover-baseline/models/Seed-VC"
+  },
+  "BigVGAN": {
+    "repo_id": "nvidia/bigvgan_v2_44khz_128band_512x",
+    "revision": "95a9d1dcb12906c03edd938d77b9333d6ded7dfb",
+    "path": "/data/liuhongda/music-cover-baseline/models/BigVGAN"
+  },
+  "Whisper-small": {
+    "repo_id": "openai/whisper-small",
+    "revision": "973afd24965f72e36ca33b3055d56a652f456b4d",
+    "path": "/data/liuhongda/music-cover-baseline/models/Whisper-small"
+  },
+  "RMVPE": {
+    "repo_id": "lj1995/VoiceConversionWebUI",
+    "revision": "e6d0c1a17da07c33557852f9dfa2bd44cc75737d",
+    "path": "/data/liuhongda/music-cover-baseline/models/RMVPE"
+  },
+  "CAMPPlus": {
+    "repo_id": "funasr/campplus",
+    "revision": "e4b6ede7ce16997aff4ae69fbca1f0175e2afede",
+    "path": "/data/liuhongda/music-cover-baseline/models/CAMPPlus"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "song": {
+    "title": "今晚不眠",
+    "type": "public AI-generated example, not a human studio recording",
+    "url": "https://huggingface.co/m-a-p/YuE2-3B",
+    "revision": "8f24312f187763b9854adeec87e437e2b03bbff1",
+    "path": "data/raw/songs/tonight-awake.mp3",
+    "sha256": "54f642933f796e4244f0a308d3d0603c09b4d87f04e0bc42fbcbb9df0bffbcf9"
+  },
+  "lyrics": {
+    "path": "data/raw/lyrics/tonight-awake.txt",
+    "sha256": "c4f8a686dd02372156b388378df1d21475743ac358bbbe8ba50c576bea0d5af0",
+    "source": "examples/tonight-awake.json from the same pinned repository"
+  },
+  "reference": {
+    "url": "https://huggingface.co/datasets/Narsil/asr_dummy",
+    "revision": "8d141c84e3f84c54cd7bbaa851d24edd0f559734",
+    "file": "1.flac",
+    "path": "data/raw/references/librispeech-reference.flac",
+    "sha256": "30885601173f96b0d8ddd020dc959b055c6c1582b85a33e3fcab8c4b08ed94c2",
+    "purpose": "public speech reference for zero-shot pipeline verification"
+  }
+}

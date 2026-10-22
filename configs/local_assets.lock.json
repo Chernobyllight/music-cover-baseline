@@ -1,0 +1,754 @@
+{
+  "models/BigVGAN/LICENSE": {
+    "bytes": 1076,
+    "sha256": "90459cd52fc41bd723df7c0c76fac1e4dd60e6bfd644a7e2a93f325bed4f6d95"
+  },
+  "models/BigVGAN/bigvgan_generator.pt": {
+    "bytes": 489041291,
+    "sha256": "d9fe7ec6bd0b44ed9d66973d5012d8181c1570b01e5c72df51973e241dccd357"
+  },
+  "models/BigVGAN/config.json": {
+    "bytes": 1403,
+    "sha256": "65b7f487bfaf15256056a75f6667ef5f640214c981922a111927873705ea4ddb"
+  },
+  "models/CAMPPlus/campplus_cn_common.bin": {
+    "bytes": 28036335,
+    "sha256": "3388cf5fd3493c9ac9c69851d8e7a8badcfb4f3dc631020c4961371646d5ada8"
+  },
+  "models/MERT-v2-FullSong/LICENSE": {
+    "bytes": 20000,
+    "sha256": "73593d6cad4ca80f3ab1448a4908f92ab802dfffe029561e3b12fa7d07c8b87c"
+  },
+  "models/MERT-v2-FullSong/README.md": {
+    "bytes": 11861,
+    "sha256": "86eae75e4b64846abdf4af52d973ed959d17c3fcf8959f7d5a3919aace6d382f"
+  },
+  "models/MERT-v2-FullSong/THIRD_PARTY_NOTICES.md": {
+    "bytes": 541,
+    "sha256": "ce8fd578969f1bdad9a0be5e20cab0251dc4253bd4dbfaa9abeb1c11d68bafdc"
+  },
+  "models/MERT-v2-FullSong/config.json": {
+    "bytes": 882,
+    "sha256": "f2e194895f58be3ddba327255db129ff0e3bee550cc0ecf08e4d22d79ce3bca3"
+  },
+  "models/MERT-v2-FullSong/configuration_mert2.py": {
+    "bytes": 3860,
+    "sha256": "77b53ec9d7ee31a599d744fb006e812c7eeaf7390deb46e2f460cf8c17b00bd6"
+  },
+  "models/MERT-v2-FullSong/marble_results.json": {
+    "bytes": 8997,
+    "sha256": "ced741a3d9684b551a2569c2206ba86911addd07a42df72d65b74e4288d4bd0e"
+  },
+  "models/MERT-v2-FullSong/model.safetensors": {
+    "bytes": 2529812848,
+    "sha256": "e6dd2ab187d6dd62b6521cd7d8f932e237acf0c5757745a7232082e28391350d"
+  },
+  "models/MERT-v2-FullSong/modeling_mert2.py": {
+    "bytes": 17081,
+    "sha256": "b1a3174e5649c4b26b0c90d8626f0adacfbbba111a58ed3bb72ad651945a2f5c"
+  },
+  "models/MERT-v2-FullSong/preprocessor_config.json": {
+    "bytes": 215,
+    "sha256": "fc7337f113b71062b8efd03f8a43a07aa769ce85c6a53fdc0b3bb90c299fe63f"
+  },
+  "models/MERT-v2-FullSong/weights_manifest.json": {
+    "bytes": 241,
+    "sha256": "413e2ddfa71ae5bb364bfd15364e221249111e14c2f0843ea6162afb776a8300"
+  },
+  "models/RMVPE/rmvpe.pt": {
+    "bytes": 181184272,
+    "sha256": "6d62215f4306e3ca278246188607209f09af3dc77ed4232efdd069798c4ec193"
+  },
+  "models/Seed-VC/DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth": {
+    "bytes": 820865494,
+    "sha256": "42aef93ffe65857c840d270252fa040f7ba04514945ec460f3ac1ac2a96de684"
+  },
+  "models/Seed-VC/config_dit_mel_seed_uvit_whisper_base_f0_44k.yml": {
+    "bytes": 2408,
+    "sha256": "ff86f343b08c2def405f075022eeb10dafba23c4eda36d151010f4ca6d7a1a0a"
+  },
+  "models/SheetSage2/LICENSE": {
+    "bytes": 20000,
+    "sha256": "73593d6cad4ca80f3ab1448a4908f92ab802dfffe029561e3b12fa7d07c8b87c"
+  },
+  "models/SheetSage2/README.md": {
+    "bytes": 17655,
+    "sha256": "46cece7664fc0b531d379311af7caf3bb6a46e89d9bf8a6b6bbbbf5e7318bc81"
+  },
+  "models/SheetSage2/THIRD_PARTY_NOTICES.md": {
+    "bytes": 589,
+    "sha256": "ab8b195c2c1475f254a04181a9841db2f2581c579b95858c78ee0040eb495a29"
+  },
+  "models/SheetSage2/__init__.py": {
+    "bytes": 39,
+    "sha256": "19539a965cabf22d08231688efc15547d005e6345745f48684c2f02d010f82fd"
+  },
+  "models/SheetSage2/audio_sheetsage2.py": {
+    "bytes": 4289,
+    "sha256": "ecce56e7bb8a08cbca9eb27a74d9aeff17f55e80efcc7c48f7436440f610ccc1"
+  },
+  "models/SheetSage2/benchmark_results.json": {
+    "bytes": 13616,
+    "sha256": "780bff9fb34f2ecc115f11625bece4b7444fffc66e0384e852c4d77d2d9eb178"
+  },
+  "models/SheetSage2/benchmarks/chordformer_results.json": {
+    "bytes": 4440,
+    "sha256": "18d2acba5b9a1103a3cb47f04e41d29c9233bcf4db647a0e6d262d0df2b7118f"
+  },
+  "models/SheetSage2/benchmarks/jaah_results.json": {
+    "bytes": 10006,
+    "sha256": "8602aa3f76c5250880d4bf175f6383e68504acd2a27575244a8ba7fdb94f5964"
+  },
+  "models/SheetSage2/benchmarks/jaah_statistics.json": {
+    "bytes": 961,
+    "sha256": "4e4a82f6c63d03535ea0dd18ea3a2cb959cdb99a04ca80103d2af599da67cfde"
+  },
+  "models/SheetSage2/benchmarks/rock_corpus_results.json": {
+    "bytes": 1141,
+    "sha256": "e1384d023cf8528b181f923e188dd3d7faeefd1102c8b97e3c7fe1e29614bbcb"
+  },
+  "models/SheetSage2/benchmarks/score_chordformer.py": {
+    "bytes": 5277,
+    "sha256": "3bf245833cebfa68db954c0e43f4ffa2fce2302b5c1b4b53d2f80b9fc7fe1d2f"
+  },
+  "models/SheetSage2/chord_spelling_sheetsage2.py": {
+    "bytes": 9330,
+    "sha256": "5a673e3c8caa6d0a4cda19227ce5587c611a2bf85343f6bc623e3d66d99ed8b1"
+  },
+  "models/SheetSage2/config.json": {
+    "bytes": 2060,
+    "sha256": "a986e63f5d831ecb823c11d19cfb371d763f25ae2e614ec9acd714c0b8bb87fd"
+  },
+  "models/SheetSage2/configuration_mert2.py": {
+    "bytes": 3860,
+    "sha256": "77b53ec9d7ee31a599d744fb006e812c7eeaf7390deb46e2f460cf8c17b00bd6"
+  },
+  "models/SheetSage2/configuration_sheetsage2.py": {
+    "bytes": 4119,
+    "sha256": "36d174331b3721d984608252830179bf3516d77b7225f413acc85bdf5efb3bec"
+  },
+  "models/SheetSage2/durations_sheetsage2.py": {
+    "bytes": 296,
+    "sha256": "abbc297b70b63a86f8509b1db74d0e85d7b46dcb83867cf33741c43f9d49db83"
+  },
+  "models/SheetSage2/exports_sheetsage2.py": {
+    "bytes": 10405,
+    "sha256": "11782cff50f96dac1bf1eedefed86b3cd60222e31b8456bee366eeb373b6a7e5"
+  },
+  "models/SheetSage2/generation_sheetsage2.py": {
+    "bytes": 24722,
+    "sha256": "b58dbbfaebfba2a441a79b8c36183f0e4956acdd3aaf7c655c559933b4c20afd"
+  },
+  "models/SheetSage2/infer.py": {
+    "bytes": 4253,
+    "sha256": "20e6b23c910bfdecf012a8ee8d45efcb31cb6cb21351da5921d95fb877e70de6"
+  },
+  "models/SheetSage2/io_sheetsage2.py": {
+    "bytes": 1830,
+    "sha256": "afb5b4d4a52b513b11cfdad40e7b9d2286dd4ff6585b89688dbb31b3d5376da6"
+  },
+  "models/SheetSage2/labels_sheetsage2.py": {
+    "bytes": 978,
+    "sha256": "4a80870695dd91da6070e7d8d0ce6b50f3bf71c3f629417a86cf12f4ef4f97e0"
+  },
+  "models/SheetSage2/midi_sheetsage2.py": {
+    "bytes": 4230,
+    "sha256": "32f80d13592c669e56683ebb4c415f13bf8278c8ad1fe43afa500347bed35099"
+  },
+  "models/SheetSage2/model.safetensors": {
+    "bytes": 228738564,
+    "sha256": "b235f68091a5f5b644000f2b5acb57d1e70432aca2b34ab1b9cf27236e1f4274"
+  },
+  "models/SheetSage2/modeling_mert2.py": {
+    "bytes": 17081,
+    "sha256": "b1a3174e5649c4b26b0c90d8626f0adacfbbba111a58ed3bb72ad651945a2f5c"
+  },
+  "models/SheetSage2/modeling_sheetsage2.py": {
+    "bytes": 24664,
+    "sha256": "f1c45346dd76329fcbeadc5c721312836509326310c034634bc12d75263688bb"
+  },
+  "models/SheetSage2/notation_sheetsage2.py": {
+    "bytes": 55775,
+    "sha256": "f75f0e8b268cd9e9c622d791d3fd77d2e68ad355a4e67018c7e15aeb2bc05af7"
+  },
+  "models/SheetSage2/pipeline_sheetsage2.py": {
+    "bytes": 15022,
+    "sha256": "0ae572554ca375323e2aa4ea1fb25ba27e7f4d520c0ba5b101d74930c0a66c33"
+  },
+  "models/SheetSage2/processing_sheetsage2.py": {
+    "bytes": 5408,
+    "sha256": "ec5ef34ad61455437c750dd5ffb92142f7309638559e74114c639b57da56263c"
+  },
+  "models/SheetSage2/processor_config.json": {
+    "bytes": 277,
+    "sha256": "1eed73513a74029fe74c71faba70f8cff002ae7be23ac1c926125846d1b29817"
+  },
+  "models/SheetSage2/render.py": {
+    "bytes": 1927,
+    "sha256": "446b18e0ba7250c8584c14bda241f8d063083cd10b1432de82c3cf56736af9de"
+  },
+  "models/SheetSage2/render_assets/DejaVuSans.ttf": {
+    "bytes": 757076,
+    "sha256": "7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954"
+  },
+  "models/SheetSage2/render_assets/LICENSE.abcjs": {
+    "bytes": 1156,
+    "sha256": "ab1072f859916529e284a8f43643146de9935041bb347a35559a96c87ce5566f"
+  },
+  "models/SheetSage2/render_assets/LICENSE.font": {
+    "bytes": 8816,
+    "sha256": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+  },
+  "models/SheetSage2/render_assets/abcjs-basic-min.js": {
+    "bytes": 504175,
+    "sha256": "abdab74cf95c39fb9ff4ae0c96735b9c35222851f0844ce471ddd4354739bc75"
+  },
+  "models/SheetSage2/render_assets/manifest.json": {
+    "bytes": 11626,
+    "sha256": "aa0b4bfb84d71169e4d0c9f6cc3ed5cf8761e49c2c178961aa100cf6d83000b3"
+  },
+  "models/SheetSage2/render_assets/renderer.js": {
+    "bytes": 7203,
+    "sha256": "0756398dfe69fe1c54c8779252885fbf573d02eecbe3f2389a0b81e0f43fcd09"
+  },
+  "models/SheetSage2/render_assets/soundfonts/ATTRIBUTION.md": {
+    "bytes": 542,
+    "sha256": "87237050093c1d4f47f5c459f1e18b57ea6710f92d1a57b4462f8f5aa31e11be"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A0.mp3": {
+    "bytes": 25585,
+    "sha256": "5c47e8142b04505c888b8edd7246a8881b4b30c4340682f0264191599df232fc"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A1.mp3": {
+    "bytes": 25585,
+    "sha256": "abab379d4d0557abb93856f816b7bb395872e656533c3fe7f02048fc993834b7"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A2.mp3": {
+    "bytes": 25585,
+    "sha256": "e21d9ab9b30c73c0aea921c2cd0dd59fece4cc021619927c9ff3dee71f0a9679"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A3.mp3": {
+    "bytes": 25585,
+    "sha256": "02dee2fa184b9b94a5f72886c2370bd076103ebb76fc179982fa503e549dcc10"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A4.mp3": {
+    "bytes": 25585,
+    "sha256": "4f1671ac831bc41c845e67b18e6c9ea200fc9b753bdffe124703b7141aa928c3"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A5.mp3": {
+    "bytes": 18929,
+    "sha256": "2cccfe0aa8077bfd20bcbba470012faa0328ae97d5bd2297147c01f2b255e574"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A6.mp3": {
+    "bytes": 15315,
+    "sha256": "87dab2b5bfdd8bafa575fc24b99591e87e5a0c991a8bbdc8aeb8a1e517b576d2"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/A7.mp3": {
+    "bytes": 14535,
+    "sha256": "ace76663dac4610a93259655f069835e6eb397b76aedf85c1f48a5036cf25687"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab1.mp3": {
+    "bytes": 25585,
+    "sha256": "a9889722caea82aa67a8b7f600f1def8e51e095f1f423949c3a8e9dbf5c14abd"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab2.mp3": {
+    "bytes": 25585,
+    "sha256": "b45bb57e125cdbbc3bb521ae643e67a90c0ff646d37e5b5284e5c70bfeff6c75"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab3.mp3": {
+    "bytes": 25585,
+    "sha256": "843d633061631861c943266b4836573fe8ba8b8a10df9bd94adc380376cdb8ce"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab4.mp3": {
+    "bytes": 25585,
+    "sha256": "e8612f8602d1c146f9b7f69a441ee518876ccdfa469457366c8064c25d9d3116"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab5.mp3": {
+    "bytes": 20411,
+    "sha256": "31c86a311eb68761b8008359b34addfeec249d1c7d6795a52f8f2e172e3e8a05"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab6.mp3": {
+    "bytes": 15757,
+    "sha256": "7775c09d08d344af9528edbf7abb6f59ac600e4d15efd6f139845bb107a822ed"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Ab7.mp3": {
+    "bytes": 14691,
+    "sha256": "66932305995ff04e9e0244c5a408ec87c9131ab3915eac15c72c7659132ab0f2"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B0.mp3": {
+    "bytes": 25585,
+    "sha256": "4422d1d2f0498aec427165415f5d665d78699e8623475215ce9b27c18b3d331f"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B1.mp3": {
+    "bytes": 25585,
+    "sha256": "048003df58298d2659bff084885ad69d9531fdc03837c7ee39c8bcf68334b5b9"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B2.mp3": {
+    "bytes": 25585,
+    "sha256": "be2df872b00b68adead4ca24ef68bd4a93bf0c4864d455d742171e5df91e86b7"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B3.mp3": {
+    "bytes": 25585,
+    "sha256": "82c0463af9c9fe51d44aa59b71d2dccefab11c1ea98e2748ee93244f8af9169e"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B4.mp3": {
+    "bytes": 25585,
+    "sha256": "5f09187820410b0f78575f232c3509f367478b7755b6eb5aa46ce6cf4c16a0e8"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B5.mp3": {
+    "bytes": 19345,
+    "sha256": "4e0932827d3e9390080c4a9acd420e9b83871a5f73723feaf61d2d7f6b628b01"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B6.mp3": {
+    "bytes": 15055,
+    "sha256": "d31aa62152acd598d55fb02cc024e59e0176a7dc13d27813882f299cae7baf7a"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/B7.mp3": {
+    "bytes": 14483,
+    "sha256": "6e1aad1cc92f17ebf6fe6161766cce279250e67a30569649481c77ab80db1677"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb0.mp3": {
+    "bytes": 25585,
+    "sha256": "e4734f8d0285f0e5a39db7f61023510b46fb1570743b20d287479dcaa5536adb"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb1.mp3": {
+    "bytes": 25585,
+    "sha256": "6d4face1b6559a08af3f9a49fcbc472b43e974e072156b31850ab9a230713aa3"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb2.mp3": {
+    "bytes": 25585,
+    "sha256": "78cc11431a2a2d52294f0c714c59107a886f637806ae2cba63d50ff53585b93e"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb3.mp3": {
+    "bytes": 25585,
+    "sha256": "6ac0f67f18e15db35553d4fcd83ceec4473ebe639e31659ce93cf8466cb06644"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb4.mp3": {
+    "bytes": 25585,
+    "sha256": "d8f729899595116cb62ca9b7b801b4dfb9322bdf50d1bbfa847010e43a39f8f5"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb5.mp3": {
+    "bytes": 19709,
+    "sha256": "51224d4c26f1c89b08e43865ef55d3638367f7f40fbc92e4ab88610b54d4301d"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb6.mp3": {
+    "bytes": 15263,
+    "sha256": "394488d6cbd2c58b40f202e5acc238abdb73f261bcebd7105fb81d091113c4aa"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Bb7.mp3": {
+    "bytes": 14457,
+    "sha256": "fe72a195f6036722e587e1597e54d66ec70e0ce11768e74e39bb2319bf256f80"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C1.mp3": {
+    "bytes": 25585,
+    "sha256": "eb3b985e3b692cfe0c48550a26843fc3da44c7630c0b7bcfd820e87c5122cccc"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C2.mp3": {
+    "bytes": 25585,
+    "sha256": "e02c5a80c03871e1889a3bb371d853f92294c1e8538ac06f70df0fd045540207"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C3.mp3": {
+    "bytes": 25585,
+    "sha256": "7d0409ea3c40af25c6d3d606f12890f88f896d93c381b6eb8c58497f308b30d3"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C4.mp3": {
+    "bytes": 25585,
+    "sha256": "b6d32e0d9d0c2e4b88165a2ec27b8787a970f131a03d96d065f28f158640af96"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C5.mp3": {
+    "bytes": 25585,
+    "sha256": "7a4be6dae323ac5564ad1a617b554fd595e5e0a63f19c3581e3ee94c33ae2e4b"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C6.mp3": {
+    "bytes": 19371,
+    "sha256": "6a0030c071ccd6c9a722455851d65b18cb86cbfe515772a6ded4c747eda339a0"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C7.mp3": {
+    "bytes": 14977,
+    "sha256": "5e4cadc06eb25e2302dcc5bf1af76fe85ed258759d02c46e9169376ade83845e"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/C8.mp3": {
+    "bytes": 14327,
+    "sha256": "4ec066cab9362f6706b90fedc3249fa3c221769ee95ff52d7e46aaaf0a01fd16"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D1.mp3": {
+    "bytes": 25585,
+    "sha256": "2389562397c7bdf2a856965b8b371eb6311be3cad2875c71d8ff4a607a242cea"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D2.mp3": {
+    "bytes": 25585,
+    "sha256": "6233cc6f3670a287e33c7b8ece3b03a787ee1e169c8355432ce0b5e194bee612"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D3.mp3": {
+    "bytes": 25585,
+    "sha256": "b8a5ed9cf147e10f484f3ad39930130d487b12045a35cef73f48dab401e6583b"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D4.mp3": {
+    "bytes": 25585,
+    "sha256": "90539782bdbbbe714de579bfbbe6f478e07e112c6f78d03e8ee82462fbf2a569"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D5.mp3": {
+    "bytes": 25585,
+    "sha256": "b25b5e541807af700f4e2272ac4c55a2f9b5cc8f176fcd9961d4456803af2b87"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D6.mp3": {
+    "bytes": 17681,
+    "sha256": "46317b9dca22a75986ecfeba93ef34c8f7bc6d4e2e0223dc64b13c9a1984110b"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/D7.mp3": {
+    "bytes": 14873,
+    "sha256": "d7db5e63d7caa2fc62e00f55366f9a5236b3a13f7eb0d141a9823e10c7cc4209"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db1.mp3": {
+    "bytes": 25585,
+    "sha256": "84f2ba7505c515c39797eafe36295b15ee9da8adbafcfbfbfc7685532b4bdce4"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db2.mp3": {
+    "bytes": 25585,
+    "sha256": "c5d76b97326a189786aba25685c8789f59d4dc41d5fbd4d6a6aa97986b2b7d1d"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db3.mp3": {
+    "bytes": 25585,
+    "sha256": "c5bd77b92ad8411c47e509643a7d6fc9c74f3aaba2290e2f4aed6a2ba1446e88"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db4.mp3": {
+    "bytes": 25585,
+    "sha256": "f49892c4e935296db1cb785000818e6a04bf0756c4443bffa6245144fdaf3e47"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db5.mp3": {
+    "bytes": 25585,
+    "sha256": "924a70321fe728ff7a69c941029e060f529e6ada507f20357ee74039e270e588"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db6.mp3": {
+    "bytes": 17265,
+    "sha256": "5e4b55cc27db80e899ea817c546f4c0cf15b43267f426f8de53baac770f90be7"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db7.mp3": {
+    "bytes": 15003,
+    "sha256": "56c93ba30fa46db98590fd4c218fec88e87b02eaa0b177bcc0ad621fd9a506da"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Db8.mp3": {
+    "bytes": 12065,
+    "sha256": "1be0e2193b729fc32a4fbb82f9f46bb4c0b2cbb67027c0f07c8eeff6460b64cf"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E1.mp3": {
+    "bytes": 25585,
+    "sha256": "740bf03f7ac2a9bbd41ae10f7daf876bc8bde6fe6d355f2f2781ae70d95c762a"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E2.mp3": {
+    "bytes": 25585,
+    "sha256": "316b392d51d9c27334976511643112b088a9812a8e37e598957e8acc6725aad0"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E3.mp3": {
+    "bytes": 25585,
+    "sha256": "5e556a4850b93b1adba6655372c9e58913169864c52a8e6f232f4b1e901ca2dc"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E4.mp3": {
+    "bytes": 25585,
+    "sha256": "48bcecf53832988af83f74aa65efd7daa34f1e3ebf10de4679363b89d54f3852"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E5.mp3": {
+    "bytes": 25039,
+    "sha256": "c48cee1a11528da53e1f780a1ed36558530f053b5ed8c7033709b2002b452513"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E6.mp3": {
+    "bytes": 17785,
+    "sha256": "e4de8378854d6b39b40d4cf7b022f60bda097993b492639c8a0a005f02a010e0"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/E7.mp3": {
+    "bytes": 14899,
+    "sha256": "e757f51d2fb54dca2c0adb4ee6a2b86459a52e2f7dfa227529558a6a0f28fd07"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb1.mp3": {
+    "bytes": 25585,
+    "sha256": "694e89cd30008f47411336ea1b76675503bbc5383c3849df676b2cf6b51eee67"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb2.mp3": {
+    "bytes": 25585,
+    "sha256": "708ff787e5ae2bfa45fe386e5fadc90a9339817dd245ed6e6f62532e42fad8d2"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb3.mp3": {
+    "bytes": 25585,
+    "sha256": "bec9944789ef9e7ec3dd7f9fcdf63ed1e5e82e29447c81be3578df9b1269b4b6"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb4.mp3": {
+    "bytes": 25585,
+    "sha256": "96586e2865651cfa0469e762f3bd40821f6e45eecf4761a86a37bc59cfebfb2c"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb5.mp3": {
+    "bytes": 24753,
+    "sha256": "aad99b852c20c2aee66143dd103513523566716cb2f4c6ef6ac478ef84f282b0"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb6.mp3": {
+    "bytes": 17915,
+    "sha256": "c0f4c45d7930ed90edebfd93321807cdb7346e364ba1933867c4b49ba18d5368"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Eb7.mp3": {
+    "bytes": 14925,
+    "sha256": "c23b9b43ca8ece152e59ef04832b2290e96db54f9539af3162df4054c23271c7"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F1.mp3": {
+    "bytes": 25585,
+    "sha256": "6b83be26ca990ee91e4d404afd5756e5d63b7a6f9ac46da068c80b2692945dba"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F2.mp3": {
+    "bytes": 25585,
+    "sha256": "7bb9c26ec86e1d32194ab5ced3805e1026e638a4a5481d556a7e3f2860141c46"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F3.mp3": {
+    "bytes": 25585,
+    "sha256": "ff912c3211f80dc0c4f541ebd39c1db11f21cfda684d54999f9bce87aaf0cf20"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F4.mp3": {
+    "bytes": 25585,
+    "sha256": "a7426425ed95ea8652a888d850c34c4b766c7c7a11c168ed6899c38a6836be0c"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F5.mp3": {
+    "bytes": 24623,
+    "sha256": "d7f046daec924ce8607ec92360e0d0e42e29e4b3a108839179e04aba4adadc51"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F6.mp3": {
+    "bytes": 17187,
+    "sha256": "6f7794d298d1036ebbd514ad1b3605ffbd280556925fba05e29b83052cbf3dfd"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/F7.mp3": {
+    "bytes": 14795,
+    "sha256": "f49b2b54f0b913f636b5822eae373a85dbb30ec5e9a6ebc18e498fdfe0547011"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G1.mp3": {
+    "bytes": 25585,
+    "sha256": "d187e74ca3a23d08248ea4073abc0893a758c8b15c4b6af16c3ba1d2394830db"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G2.mp3": {
+    "bytes": 25585,
+    "sha256": "034f90b9f81e5aca0012f1ff73d731308653578a7eb4bee30efca37af5afce77"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G3.mp3": {
+    "bytes": 25585,
+    "sha256": "3b75e4dfd657723b3c7a30bca0409dce8013b4083d54e703c8ec513b535cee99"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G4.mp3": {
+    "bytes": 25585,
+    "sha256": "37d21e13d5cecc8c0f1645c83bfe82f6032407a3b7de3dde14021c196526664e"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G5.mp3": {
+    "bytes": 19969,
+    "sha256": "2eb949282bc676f3dc96bf5008459b5fff02696e63b70ff799ff08c36bb97058"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G6.mp3": {
+    "bytes": 15653,
+    "sha256": "c24ccf8d6f0c6c9818fe244d150a42c42585629db413e6b245088fdb589e9f3d"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/G7.mp3": {
+    "bytes": 14587,
+    "sha256": "7cc4630a06cbc11438fac85c00b640cc7677be8332105204632b687d7127ebc4"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb1.mp3": {
+    "bytes": 25585,
+    "sha256": "6ff97bc16a3020037f46ebe4196ce2602eed8af243b567768d4cb5d47a8ba0bc"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb2.mp3": {
+    "bytes": 25585,
+    "sha256": "95ab26a90d088fdc938673005ba2b2a4b166ee188ffbad0c7f75fb746334b043"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb3.mp3": {
+    "bytes": 25585,
+    "sha256": "91605f55bf0265c1e526b966a3901f9c2813473ac890f4b7330ee08874c5d30f"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb4.mp3": {
+    "bytes": 25585,
+    "sha256": "f0db7ee32b9175907ca60cf53e6c7a129ea8e7c8f6562dc7ebe6e5c81dcbdf99"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb5.mp3": {
+    "bytes": 24493,
+    "sha256": "bd1d81203f5338ab62372f88c0b4eb5b4a3133ef58518a8770f3dfdf34f74124"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb6.mp3": {
+    "bytes": 17239,
+    "sha256": "c5f87e3bf666919bd1e230f6945ee4af752761faa54dc1814f854e8e9d8a7920"
+  },
+  "models/SheetSage2/render_assets/soundfonts/acoustic_grand_piano-mp3/Gb7.mp3": {
+    "bytes": 14665,
+    "sha256": "8615b92d93fa16b4051bdc8800a6430642bdcff17e26d020ec5fd83bf89db759"
+  },
+  "models/SheetSage2/rendering_sheetsage2.py": {
+    "bytes": 15862,
+    "sha256": "ddbcaf314139d67727cb5df6840d7d60d671d5c67f6b185a26b840df1e2d9288"
+  },
+  "models/SheetSage2/requirements-render.txt": {
+    "bytes": 58,
+    "sha256": "17990cc03ded2e6041b1ee4afcb3c0af3577cba534a4537685776c76fe0642c1"
+  },
+  "models/SheetSage2/requirements.txt": {
+    "bytes": 190,
+    "sha256": "fc3172be36722d75ae679ec9ffcf100baaa3d6ce4b6fdfefa9b24608810fc6a2"
+  },
+  "models/SheetSage2/schema_sheetsage2.py": {
+    "bytes": 3893,
+    "sha256": "3ee069f0d4dcfb8080f730c43676318d471ab6b3cfef86c6c225aa63a9db182f"
+  },
+  "models/SheetSage2/setup_render.py": {
+    "bytes": 1540,
+    "sha256": "8ee1004067f8e50443005a761d86435337f6ee71eeabf447d543eb5f3ad5561d"
+  },
+  "models/SheetSage2/tensors_sheetsage2.py": {
+    "bytes": 4645,
+    "sha256": "51f72b51ed5a22c751d5adf915198490b1a95ec8959fcf9a38ee71b4444fc8b3"
+  },
+  "models/SheetSage2/tests/test_spelling.py": {
+    "bytes": 7742,
+    "sha256": "9a7888f1b29546bdb1fc8858b1409b724e29984a43f66d6710a4cd49820ee230"
+  },
+  "models/SheetSage2/tokenization_sheetsage2.py": {
+    "bytes": 30043,
+    "sha256": "2ad9f7734e3d9f750fe575f22fd9ec03a9a4ab52497a6314e76f53ed9024fa75"
+  },
+  "models/Whisper-small/added_tokens.json": {
+    "bytes": 34604,
+    "sha256": "9715fd2243b6f06a5858b5e32950d2853f73dd5bc201aafcf76f5082a2d8acd1"
+  },
+  "models/Whisper-small/config.json": {
+    "bytes": 1967,
+    "sha256": "e6a2b489da1b5aed65a8eb8d1e7466fa867ad5643a8bc138ba708bd56b2875c4"
+  },
+  "models/Whisper-small/generation_config.json": {
+    "bytes": 3868,
+    "sha256": "71565b8ef50d0bf7a1193ed4bbed195b94e70c18894d81bba2f1233dcec3ab53"
+  },
+  "models/Whisper-small/merges.txt": {
+    "bytes": 493869,
+    "sha256": "2df2990a395e35e8dfbc7511e08c12d56018d8d04691e0133e5d63b21e154dc6"
+  },
+  "models/Whisper-small/model.safetensors": {
+    "bytes": 966995080,
+    "sha256": "1d7734884874f1a1513ed9aa760a4f8e97aaa02fd6d93a3a85d27b2ae9ca596b"
+  },
+  "models/Whisper-small/normalizer.json": {
+    "bytes": 52666,
+    "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd"
+  },
+  "models/Whisper-small/preprocessor_config.json": {
+    "bytes": 184990,
+    "sha256": "9b5cd03a36fbb8a627c64d98a5b5b126ead95a77720723944487311f0110b666"
+  },
+  "models/Whisper-small/special_tokens_map.json": {
+    "bytes": 2194,
+    "sha256": "e67ae3a0aaa99abcd9f187138e12db1f65c16a14761c50ef10eef2c174a7a691"
+  },
+  "models/Whisper-small/tokenizer.json": {
+    "bytes": 2480466,
+    "sha256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566"
+  },
+  "models/Whisper-small/tokenizer_config.json": {
+    "bytes": 282683,
+    "sha256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce"
+  },
+  "models/Whisper-small/vocab.json": {
+    "bytes": 835550,
+    "sha256": "8f680bba319e01a653d2e8a5dbc17a9157179e0576e6ce74ce0c06356c6e24f9"
+  },
+  "models/YuE2-3B/LICENSE": {
+    "bytes": 20309,
+    "sha256": "060985741d20e70613b4c189c7de106cabd3fb2109fbbfb6d705c9d619417dd0"
+  },
+  "models/YuE2-3B/README.md": {
+    "bytes": 21898,
+    "sha256": "469ac88a01ef1be99a60ece8fdf1f3b81221e7c6943048782ed7487e06d159f0"
+  },
+  "models/YuE2-3B/THIRD_PARTY_NOTICES.md": {
+    "bytes": 793,
+    "sha256": "14d3fd9f6fee86b4260b69b0979735b99ffec8c6b4db254567047a4215cd9af3"
+  },
+  "models/YuE2-3B/assets/audio/examples.json": {
+    "bytes": 4432,
+    "sha256": "c64d8f79f57781f72b593efd7dbb01cb9b1cebe72ee1fe7fb49d1d6a4dc9e858"
+  },
+  "models/YuE2-3B/config.json": {
+    "bytes": 959,
+    "sha256": "ad3477bbef890bf98ae196c1e4b44779494a6231c4ab66f32708eabadf265329"
+  },
+  "models/YuE2-3B/examples/tonight-awake.json": {
+    "bytes": 1734,
+    "sha256": "96087e19caa63beda8a0509afe2f2fe9f8779d300c31bd8947d6504733bd54cf"
+  },
+  "models/YuE2-3B/generation_config.json": {
+    "bytes": 204,
+    "sha256": "ccc842772f029049fadf9b288393bcdd9f79271b361c0f1875ec1218e4ba5170"
+  },
+  "models/YuE2-3B/licenses/SnakeBeta-NVIDIA-MIT.txt": {
+    "bytes": 1076,
+    "sha256": "da9858d516047d82096d01c112a61bd67f26d289039464d668a1d45f91738ecc"
+  },
+  "models/YuE2-3B/licenses/stable-audio-tools-MIT.txt": {
+    "bytes": 1069,
+    "sha256": "a1fac33b7bcd791b74fb33aeb439f825e7277e239fc119fb7d2ab6f084a0c101"
+  },
+  "models/YuE2-3B/model.safetensors": {
+    "bytes": 7261441640,
+    "sha256": "1d55c42c1a9875c34f5d736e15078449992b044e807ce2a138e6cf289a1e59e9"
+  },
+  "models/YuE2-3B/modeling_yue2.py": {
+    "bytes": 32983,
+    "sha256": "62d2bd758c8fff1a0d64584a699343076fca9a7880db5d8e19263bc30ae79d7c"
+  },
+  "models/YuE2-3B/qwen.tiktoken": {
+    "bytes": 2561218,
+    "sha256": "b2b1b8dfb5cc5f024bafc373121c6aba3f66f9a5a0269e243470a1de16a33186"
+  },
+  "models/YuE2-3B/weights_manifest.json": {
+    "bytes": 179,
+    "sha256": "2296f82c29dcb11aeefde07e216403a32fc86c8f6da2ec15a70102abfd936a93"
+  },
+  "models/YuE2-3B/yue2_generation_config.json": {
+    "bytes": 466,
+    "sha256": "203830cebde6e3644eb291925362990d198e66c3b6006cd11f1aaa21904bcc61"
+  },
+  "models/YuE2-Vae/LICENSE": {
+    "bytes": 20309,
+    "sha256": "060985741d20e70613b4c189c7de106cabd3fb2109fbbfb6d705c9d619417dd0"
+  },
+  "models/YuE2-Vae/README.md": {
+    "bytes": 10434,
+    "sha256": "7c4359464599b946cbcb979a6143c81ea8f047023638b18d709702b8f97d52b2"
+  },
+  "models/YuE2-Vae/THIRD_PARTY_NOTICES.md": {
+    "bytes": 793,
+    "sha256": "14d3fd9f6fee86b4260b69b0979735b99ffec8c6b4db254567047a4215cd9af3"
+  },
+  "models/YuE2-Vae/config.json": {
+    "bytes": 1378,
+    "sha256": "f0191bb9694009956de44e0c361a6f1334760be4c8f848e599bde242a54a0970"
+  },
+  "models/YuE2-Vae/licenses/SnakeBeta-NVIDIA-MIT.txt": {
+    "bytes": 1076,
+    "sha256": "da9858d516047d82096d01c112a61bd67f26d289039464d668a1d45f91738ecc"
+  },
+  "models/YuE2-Vae/licenses/stable-audio-tools-MIT.txt": {
+    "bytes": 1069,
+    "sha256": "a1fac33b7bcd791b74fb33aeb439f825e7277e239fc119fb7d2ab6f084a0c101"
+  },
+  "models/YuE2-Vae/model.safetensors": {
+    "bytes": 530512720,
+    "sha256": "807ce9d5149fa27c5ad3e6582058469852e908f6c5acc8c8aa338e7ab7751346"
+  },
+  "models/YuE2-Vae/modeling_vae.py": {
+    "bytes": 25265,
+    "sha256": "b6578ff461e6be9fd079ca5ddf12893940f3b3338ff3435fceae89c466486f5a"
+  },
+  "models/YuE2-Vae/weights_manifest.json": {
+    "bytes": 178,
+    "sha256": "017d64a4d288217a43fcac3866a0e1d55f796fa891d4dfb6de0bd170ab750026"
+  },
+  "models/separation/download_checks.json": {
+    "bytes": 28267,
+    "sha256": "d3622e1fa19c161d3cf704927711b453d593a3f1eb0f2e0838c3136907935151"
+  },
+  "models/separation/model_bs_roformer_ep_317_sdr_12.9755.ckpt": {
+    "bytes": 639331213,
+    "sha256": "5b84f37e8d444c8cb30c79d77f613a41c05868ff9c9ac6c7049c00aefae115aa"
+  },
+  "models/separation/model_bs_roformer_ep_317_sdr_12.9755.yaml": {
+    "bytes": 2273,
+    "sha256": "2bfdd16c656bd9519aba757cc4f8834b7ede675eb1e00ec4772d74ae1c41af7f"
+  }
+}

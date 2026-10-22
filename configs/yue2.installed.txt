@@ -1,0 +1,12 @@
+accelerate==1.13.0
+cuda-bindings @ file:///data/liuhongda/music-cover-baseline/cache/wheels/cuda_bindings-12.9.4-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl#sha256=c912a3d9e6b6651853eed8eed96d6800d69c08e94052c292fec3f282c5a817c9
+huggingface_hub==0.36.2
+nvidia-nccl-cu12 @ file:///data/liuhongda/music-cover-baseline/cache/wheels/nvidia_nccl_cu12-2.27.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl#sha256=ad730cf15cb5d25fe849c6e6ca9eb5b76db16a80f13f425ac68d8e2e55624457
+nvidia-nvshmem-cu12 @ file:///data/liuhongda/music-cover-baseline/cache/wheels/nvidia_nvshmem_cu12-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl#sha256=042f2500f24c021db8a06c5eec2539027d57460e1c1a762055a6554f72c369bd
+safetensors==0.7.0
+torch @ file:///data/liuhongda/music-cover-baseline/cache/wheels/torch-2.10.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl#sha256=1d01ffaebf64715c0f507a39463149cb19e596ff702bd4bcf862601f2881dabc
+torchaudio @ file:///data/liuhongda/music-cover-baseline/cache/wheels/torchaudio-2.10.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl#sha256=c50ed1f4bf6743a82f8e621eed1108ffd66c5812d00a9f695c749f9ce5fecde4
+torchvision @ file:///data/liuhongda/music-cover-baseline/cache/wheels/torchvision-0.25.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl#sha256=ebf2b495c76097796b9a2eac9290efbcae96e0fd9e5ae52c40eff188610bb440
+transformers @ file:///data/liuhongda/music-cover-baseline/cache/wheels/transformers-4.57.6-py3-none-any.whl#sha256=4c9e9de11333ddfe5114bc872c9f370509198acf0b87a832a0ab9458e2bd0550
+triton @ file:///data/liuhongda/music-cover-baseline/cache/wheels/triton-3.6.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl#sha256=e021e87e8f266c6f87bf379b669c43c2800aac6247bdf5d518cb553e3c403c00
+-e git+https://github.com/multimodal-art-projection/YuE.git@1647252d68b70cbead046ffd3f7caf036dde47ee#egg=yue2_infer

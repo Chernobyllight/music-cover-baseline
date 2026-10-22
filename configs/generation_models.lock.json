@@ -1,0 +1,22 @@
+{
+  "YuE2-3B": {
+    "repo_id": "m-a-p/YuE2-3B",
+    "revision": "8f24312f187763b9854adeec87e437e2b03bbff1",
+    "path": "/data/liuhongda/music-cover-baseline/models/YuE2-3B"
+  },
+  "YuE2-Vae": {
+    "repo_id": "m-a-p/YuE2-Vae",
+    "revision": "152733a19ad43aa67e367f9b5503ef8075bb5126",
+    "path": "/data/liuhongda/music-cover-baseline/models/YuE2-Vae"
+  },
+  "SheetSage2": {
+    "repo_id": "m-a-p/SheetSage2",
+    "revision": "b83c3d79a6d98bcffaf8f9ed112c90aa887887bc",
+    "path": "/data/liuhongda/music-cover-baseline/models/SheetSage2"
+  },
+  "MERT-v2-FullSong": {
+    "repo_id": "m-a-p/MERT-v2-FullSong",
+    "revision": "7001f7657276238629e61c7746ce70735e0604c0",
+    "path": "/data/liuhongda/music-cover-baseline/models/MERT-v2-FullSong"
+  }
+}

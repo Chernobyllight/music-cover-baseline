@@ -1,0 +1,6 @@
+[submodule "third_party/YuE"]
+	path = third_party/YuE
+	url = https://github.com/multimodal-art-projection/YuE.git
+[submodule "third_party/seed-vc"]
+	path = third_party/seed-vc
+	url = https://github.com/Plachtaa/seed-vc.git

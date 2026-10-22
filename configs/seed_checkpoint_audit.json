@@ -1,0 +1,23 @@
+{
+  "cfm": {
+    "parameter_count": 186337664,
+    "missing_or_mismatched_parameters": [],
+    "unused_checkpoint_keys": [
+      "estimator.t_embedder2.mlp.0.weight",
+      "estimator.t_embedder2.mlp.0.bias",
+      "estimator.t_embedder2.mlp.2.weight",
+      "estimator.t_embedder2.mlp.2.bias",
+      "estimator.conv1.weight",
+      "estimator.conv1.bias",
+      "estimator.conv2.weight",
+      "estimator.conv2.bias",
+      "estimator.res_projection.weight",
+      "estimator.res_projection.bias"
+    ]
+  },
+  "length_regulator": {
+    "parameter_count": 10039296,
+    "missing_or_mismatched_parameters": [],
+    "unused_checkpoint_keys": []
+  }
+}
