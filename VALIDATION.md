@@ -1,5 +1,100 @@
 # 实际验证记录
 
+
+## 2026-10-23：v0.2 Bossa Nova / Samba Jazz 使用示例
+
+发布前复核：对 `runs/lhd_test_modular` 的独立交付检查通过；45 项回归测试和完整环境预检通过；实操手册的 22 个 Bash 代码块通过语法检查，12 个独立模块命令的 `--plan` 均对应正确阶段；19 个示例绝对路径和 105 个本地 Markdown 链接存在；79 个项目源码文件与代码锁一致。新增 Bossa Nova 任务配置与本次完整运行保存的请求和模块设置一致。提交候选仅含源码、文档、配置、测试、演示来源元数据及两个固定子模块，不含媒体、模型、运行目录或临时认证文件。
+
+运行 `runs/lhd_test_modular` 使用孙燕姿 0–16 秒歌声参考、《秋意浓》及 upbeat bossa nova and samba jazz 风格，seed=42、30 步、GPU 0、review=true。00–11 全部 succeeded，运行 completed；可复制命令和逐阶段路径见 [实操手册](docs/11_modular_walkthrough.md)。
+
+- 实际选调 -2 半音，Am → Gm，可信度 medium。生成音频对齐后的音高变化中位数 -2.253262 半音，目标 ±1 半音内比例 84.9638%；换声变化中位数 +0.012660 半音，±1 半音比例 99.7955%，两项均通过当前工程规则。
+- 最终长度 397.638667 秒，48 kHz 立体声 WAV / 192 kbps MP3；12 条音轨、10 个主 MIDI 均已生成，没有空主 MIDI。
+- 交付检查通过，167 个评审文件，叶轨相加重建最大绝对误差约 `5.01957e-8`。音色、风格、歌词完整性、演唱自然度与逐音转谱准确性仍为 awaiting_human_review。
+- 原曲/成品 LUFS 为 -14.74 / -17.51，成品真峰值 -1.10 dBTP。自动速度估计均约 152 BPM；这些描述性数值不构成曲风或音色相似度评分。DTW source_coverage=1.0 不等于歌词/旋律 100% 保留。
+
+
+## 2026-10-23：双向选调 v2 与降调版完整验证
+
+新运行：`runs/20261023_pitch_v2_qiu_yi_nong_sun_yanzi`。使用现有《秋意浓》、孙燕姿 0–16 秒歌声参考、Synthwave / Dance-pop 风格，seed=42、30 步、GPU 0、review=true。00–11 全部成功；最终长度 393.318667 秒，WAV 与 MP3 均交付。历史运行只用于读取对照数据，没有改写其产物。
+
+### 真实数据与已知量对照
+
+| 数据 | 统计推荐 | 实际采用 | 结论 |
+| --- | ---: | ---: | --- |
+| 《秋意浓》＋孙燕姿歌声，新跑 00–02 | -2 | -2 | medium；Am → Gm；方向重采样支持率 0.71875 |
+| 《喜欢你》＋同一参考，历史原始 F0 回放 | -1 | 0 | low；方向支持率 0.5390625，不满足默认 0.60，保留原调并标记 ambiguous_reference |
+| 两首歌源 F0 的人工参考 -3 / 0 / +3 | 分别 -3 / 0 / +3 | 与已知量全部一致 | 6 个对照通过；这是人工 F0 对照，不是新增真实演唱 |
+
+《秋意浓》参考有效有声 11.43 秒，4 个可用时间块。精确幅度仍有不确定性：±1 半音稳定率约 0.4922，报告保留所有候选和替代值；中等可信度不代表已测出完整歌唱音域。默认评分从原调约 2.4863 改善到 -2 的约 1.3027。
+
+原谱与移调谱逐事件检查了 258 个人声音符、127 个器乐音符：全部精确下降 2 半音，起点、时值、速度和节拍不变，调号及和弦同步变化。移调 MIDI 另用 pretty_midi 解析核对音符及绝对时间，通过；原生 MIDI 导出不依赖 control 环境安装 mido。
+
+### 音频实测
+
+10 的正式 `pitch_adherence.json` 标记 verified：
+
+- 原曲→新生成歌声：相对轮廓 DTW 后，1104 个源有声片段的中位移调量 **-2.14053 半音**；相对要求 -2 的 ±1 半音比例 75.634%，差值的中位绝对偏差 0.35362 半音。
+- 换声前→延迟校正后的换声人声：1146 个共同时段，中位变化 **+0.01344 半音**，99.738% 的比较值在 ±1 半音内。没有额外施加隐藏移调。
+- 真实反例检查：旧原调版实测 -0.22381，按原调判定通过，故意按 -2 验收则 needs_review；把新降调版故意按 0 验收也 needs_review。
+- 独立 pYIN 在原曲、生成歌声、换声歌声各取 55–67 秒和 155–167 秒，与各自 RMVPE 同时间戳比较。六组音高差绝对值中位数约 0.086–0.188 半音，±1 半音比例约 88.9%–97.9%。这只是同一音频的双方法抽查，不是按相同秒数对齐原曲和成品。
+
+原谱与原曲 F0 的约 +12 半音差异仍会报告为 octave_offset_detected；没有据此擅自再降一八度。生成后实测支持相对 -2 的控制生效，但不保证所有音符、歌词和结构完全正确。
+
+### 完整交付与代码检查
+
+交付校验通过：12 条评审音轨、10 个主 MIDI，均无空主 MIDI；167 个评审文件哈希、ZIP 内容、HTML 链接检查通过，叶轨相加重建最大绝对误差约 `1.5232e-7`。02 的报告、CSV、ABC、输入谱 MIDI、八度检查，以及 10 的音高核验同时进入主交付、`review/pitch_adaptation` 和 MIDI ZIP。
+
+45 项回归测试全部通过（原 33 项 + 新 12 项）。覆盖升/降/0、讲话与未知参考、参考不足或不稳定、手动覆盖、安静歌声、非有限值、孤立八度尖峰、参数范围、多个参考、八度识别、错误移调检测和 MIDI 事件/时间往返。完整测试应使用已有 separator 环境；control 环境不含评审测试所需 mido。另完成 66 个 Python 文件语法、79 个代码锁文件哈希、23 个文档 Bash 示例语法检查。
+
+```bash
+cd /mnt/afs_f/liuhongda/music-cover-baseline
+PATH="/opt/conda/bin:$PATH" PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests -v
+```
+
+可复核证据：新运行 `deliverables/pitch_report.html`、`pitch_adherence.json`、`delivery_validation.json`；回放位于 `runs/20261023_pitch_v2_replay_qiu/selection_replay.json` 和 `runs/20261023_pitch_v2_replay_xi/selection_replay.json`；额外原谱/MIDI、反例、pYIN 检查及测试日志保存在 `cache/pitch_v2_backup_20261023/`。新算法与阈值见 [双向选调说明](docs/10_bidirectional_pitch.md)。
+
+完整续跑再次验证：00–11 共 12 阶段全部复用，未新建 attempt，最终状态仍为 completed，发布链接指向本次已验证交付。日志见 `cache/pitch_v2_backup_20261023/resume.log`。
+
+自动核验不替代专业试听。短参考的推荐幅度、孙燕姿音色相似度、合成自然度和成品转谱准确性仍需人工评审。
+
+
+## 2026-10-23：模块化重构整首验证
+
+基于 v0.1（`83819b5`）拆为 12 个独立模块，当前服务器工作分支 `codex/modular-baseline`。没有使用旧运行的生成缓存替代本次推理：新建 `runs/20261023_modular_qiu_yi_nong_sun_yanzi_validation`，使用孙燕姿歌声 0–16 秒、完整《秋意浓》、Synthwave / Dance-pop 风格、auto 移调、seed 42、30 步、GPU 0。
+
+实际验证分三次完成：先通过 `scripts/00_prepare/run.sh` 独立准备输入；再从 01 跑到 `--until 06_mix`，状态为 partial；最后 `--from 07_stem_separation` 复用已验证的 00–06，完成成品分轨、成品转谱、MIDI、评估与交付。所有 12 个模块均成功。
+
+| 检查 | 实测结果 |
+| --- | --- |
+| 单元与集成测试 | 33 项通过，覆盖损坏拒绝、参数/源码/契约变更、失败重试、锁、原子发布、保留人工评分、零移调直通等 |
+| 完整交付 | 396.998667 秒，48 kHz 立体声，24-bit WAV / 192 kbps MP3 |
+| 模块契约 | 12 个模块均保留 inputs/config/command/process.log/checks/outputs 清单 |
+| 独立评审文件检查 | 157 个文件；所有模块输出哈希也通过 |
+| 分轨 / MIDI | 12 条 WAV（10 条叶轨可相加）、10 个主 MIDI；没有空主 MIDI |
+| 重建最大绝对误差 | `1.4761553757125512e-07`，包含残差，不代表分离准确率 |
+| MIDI 主唱 / 合并编曲音符数 | 795 / 10240 |
+| 单模块入口 | 09 子目录入口通过 --force 独立重新转写 MIDI，生成 attempt_002；之前的生成、换声和分轨均复用 |
+| 再次完整续跑 | 12 个模块全部 `[reuse]`，没有新建任何 attempt |
+| 历史兼容 | 旧《喜欢你》122 个评审文件通过新版验证器；旧运行未改写 |
+| 基础交付分支 | 在无 mido 的 control 环境中通过 `review=false` 验证；音频单测也覆盖基础交付 |
+| 源码锁 | 75 个 Python / Shell 文件与当前锁和交付 provenance 对应 |
+
+原曲准备数据、乐谱、YuE2 音频、分离人声与伴奏、最终 WAV / MP3 等与 v0.1 对照。13 个主要产物中 11 个文件哈希完全相同；另外两份浮点 WAV 容器字节不同，但解码后所有采样值完全相同，最大误差 0。最终 WAV SHA256 为 `2fae3f11a08649180c70b18b981cb4fc1b7bf20ab743ce0239eb6d5f342a1843`，MP3 为 `56f569b81ffe4f6c7c39a574da1f9579491a64d398320300a114180726838247`。本次重构保持默认音频结果。
+
+验证命令：
+
+```bash
+export PATH="/opt/conda/bin:$PATH" PYTHONPATH=src
+envs/separator/bin/python -m unittest discover -s tests -v
+envs/separator/bin/python scripts/verify_review.py \
+  runs/20261023_modular_qiu_yi_nong_sun_yanzi_validation \
+  --output cache/modularization_backup_20261023/modular_verification.json
+```
+
+证据保存在 `cache/modularization_backup_20261023/`：`tests_final.log`、`baseline_comparison.json`、`modular_verification.json`、`legacy_verification.json`、`final_report.json`。源码修改前备份为同目录 `code_before.tar.gz`。各次执行记录在运行目录的 `executions/`。
+
+自动检查确认可执行、文件完整、时轴和数值有效，不代替专业听评。此前 v0.1 的歌词识别异常与听感待验收结论仍然适用；本次没有重新做 Whisper/CAMPPlus 诊断，也没有宣称提升音乐质量。模块接口和使用方式见 [模块化说明](docs/09_modular_pipeline.md)。
+
 ## 2026-10-23：v0.1 上传前复核
 
 本次复核使用服务器当前代码和已经完成的结果，没有重新运行音乐生成。`PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests -v` 的 **22 项测试全部通过**；`bash scripts/run_baseline.sh --preflight` 通过，包括新增评审模型的文件大小、SHA256 及依赖导入检查。

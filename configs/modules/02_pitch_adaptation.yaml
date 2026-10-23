@@ -1,0 +1,14 @@
+{
+  "timeout_seconds": 10800,
+  "auto_min_semitones": -6,
+  "auto_max_semitones": 6,
+  "shift_penalty": 0.04,
+  "minimum_improvement": 0.15,
+  "minimum_voiced_seconds": 3.0,
+  "minimum_direction_support": 0.6,
+  "reference_kind": "unknown",
+  "range_references": [],
+  "target_low_midi": null,
+  "target_high_midi": null,
+  "range_penalty": 1.0
+}

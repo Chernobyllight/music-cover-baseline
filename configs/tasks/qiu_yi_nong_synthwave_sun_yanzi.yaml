@@ -1,0 +1,21 @@
+{
+  "request": {
+    "name": "qiu_yi_nong_synthwave_sun_yanzi_modular",
+    "song": "data/raw/songs/qiu_yi_nong.mp3",
+    "lyrics": "data/raw/lyrics/qiu_yi_nong.txt",
+    "reference": "data/raw/references/sun_yanzi/reference.wav",
+    "reference_start": 0,
+    "reference_duration": 16,
+    "transpose": "auto",
+    "style": "Mandarin Chinese, retro-futuristic synthwave dance-pop, driving double-time drum machine groove, four-on-the-floor electronic kick, gated snare, pulsing analog synth bass, sparkling sequenced arpeggios, bright synth brass stabs, sidechain pumping pads, clear expressive female lead vocal, layered female backing harmonies in choruses, energetic electronic arrangement, wide polished stereo production",
+    "seed": 42,
+    "steps": 30,
+    "gpu": "0",
+    "review": true
+  },
+  "modules": {
+    "02_pitch_adaptation": {
+      "reference_kind": "singing"
+    }
+  }
+}

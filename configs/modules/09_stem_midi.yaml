@@ -1,0 +1,6 @@
+{
+  "timeout_seconds": 10800,
+  "onset_threshold": 0.5,
+  "frame_threshold": 0.3,
+  "minimum_note_ms": 90
+}

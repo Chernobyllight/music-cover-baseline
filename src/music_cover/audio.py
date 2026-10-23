@@ -138,7 +138,7 @@ def export_mp3(source, destination, bitrate_kbps=192):
         temporary.unlink(missing_ok=True)
 
 
-def mix_tracks(cover, vocal, instrumental, converted, output):
+def mix_tracks(cover, vocal, instrumental, converted, output, *, mp3_bitrate_kbps=192):
     output = Path(output)
     rate = 48000
     master = read_at(cover, rate)
@@ -166,7 +166,7 @@ def mix_tracks(cover, vocal, instrumental, converted, output):
     vocal_gain = float(np.clip(source_rms / converted_rms, 0.25, 4.0))
     reconstruction = export_limited(output / "reconstruction.wav", source + accompaniment, rate)
     final = export_limited(output / "final.wav", accompaniment + replacement * vocal_gain, rate)
-    final_mp3 = export_mp3(output / "final.wav", output / "final.mp3")
+    final_mp3 = export_mp3(output / "final.wav", output / "final.mp3", bitrate_kbps=mp3_bitrate_kbps)
     sf.write(output / "converted_aligned.wav", replacement, rate, subtype="FLOAT")
     alignment.update({"converted_duration_delta_s": duration_delta, "output_frames": frames})
     return {"alignment": alignment, "vocal_gain": vocal_gain,

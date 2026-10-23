@@ -1,10 +1,34 @@
-# 使用说明
+# 使用说明（v0.2）
 
-项目位置：`/data/liuhongda/music-cover-baseline`。已有的环境、权重和演示数据可重复使用，无需训练目标人物音色模型。
+项目位置：`/mnt/afs_f/liuhongda/music-cover-baseline`（现有 `/data/liuhongda/music-cover-baseline` 为同一共享目录的入口）。已有的环境、权重和演示数据可重复使用，无需训练目标人物音色模型。
+
+**按模块一步步运行：**见 [00–11 完整实操手册](docs/11_modular_walkthrough.md)，使用“孙燕姿＋秋意浓＋upbeat bossa nova and samba jazz”，包含长命令、简短配置、完整输出路径及检查重点。
 
 现有服务器可直接打开 `runs/20261022_111548_xi_huan_ni_bossa_nova_sun_yanzi_auto_review_a714d5/deliverables/listen.html` 验收《喜欢你》结果；具体记录见 [VALIDATION.md](VALIDATION.md)。该目录是服务器本地数据，不随 Git 克隆。早期演示目录及便捷链接已清理。历史基础流程约 3 分钟的耗时不适用于当前完整评审流程。
 
 实际链路：原曲 → SheetSage2 提取旋律 → YuE2 按指定风格重生成 → BS-RoFormer 分离 → Seed-VC 参考音色转换 → 对齐、混音 → 成品分轨、重新转谱、专业评审包。历史耗时不包含新增的评审阶段。
+
+## 模块化执行（v0.2）
+
+完整阶段表、依赖图、配置覆盖与产物契约见 [模块化说明](docs/09_modular_pipeline.md)。原有长命令仍可完整执行；每个阶段也可从对应的 `scripts/NN_名称/run.sh` 独立执行。
+
+```bash
+export PATH="/opt/conda/bin:$PATH"
+bash scripts/run_baseline.sh --config configs/tasks/qiu_yi_nong_synthwave_sun_yanzi.yaml
+
+# 先做到混音，再从成品分轨继续
+bash scripts/run_baseline.sh --config configs/tasks/qiu_yi_nong_synthwave_sun_yanzi.yaml \
+  --run runs/my_modular_test --until 06_mix
+bash scripts/run_baseline.sh --run runs/my_modular_test --from 07_stem_separation
+
+# 只重跑 MIDI；省略 --force 时可复用本阶段缓存
+bash scripts/09_stem_midi/run.sh --run runs/my_modular_test --force
+bash scripts/run_baseline.sh --run runs/my_modular_test --from 10_evaluation
+```
+
+新产物位于 `runs/<run>/stages/<module>/attempt_NNN/artifacts/`；输入、配置、命令、日志、检查及成功清单保存在 attempt 同级。单阶段不会悄悄补跑失效的上游；错误会指出需从哪一步开始。完整交付通过后 `deliverables` 指向 11 的成功产物；人工评分请写在 `runs/<run>/reviews/`。
+
+历史 v0.1 运行目录继续只读保留，验证器兼容旧格式；`--resume` 只用于新的模块化目录。下文历史案例中的旧阶段编号只描述当时的运行，不应直接用于新模块命令。
 
 ## 你需要准备什么
 
@@ -47,51 +71,36 @@ bash scripts/run_baseline.sh \
 
 换风格是根据旋律和歌词重新生成音乐，时长、演唱细节和编曲可能变化，不能当作原音频的严格逐帧编辑。换音色和最终混音则保持新生成歌曲的时间轴。
 
-YuE2 默认的 9000 个语义 token 约对应 6 分钟。当前脚本会按乐谱时长自动提高生成上限，并预留结尾余量；例如《秋意浓》使用 12000 token 上限（约 8 分钟容量），模型仍可提前正常结束，不会强制生成 8 分钟。实际设置保存在 `02_cover/attempt_*/generation_budget.json` 及原生生成配置中。若仍出现 `semantic: True`，该次输出属于截断结果，不应作为完整歌曲验收；脚本保留此检查。
+YuE2 默认的 9000 个语义 token 约对应 6 分钟。当前脚本会按乐谱时长自动提高生成上限，并预留结尾余量；例如《秋意浓》使用 12000 token 上限（约 8 分钟容量），模型仍可提前正常结束，不会强制生成 8 分钟。实际设置保存在 `stages/03_style_generation/attempt_NNN/artifacts/generation_budget.json` 及原生生成配置中。若仍出现 `semantic: True`，该次输出属于截断结果，不应作为完整歌曲验收；脚本保留此检查。
 
-## 按参考歌声音区升调：孙燕姿《落叶归根》
+## 按参考歌声音区自动升调或降调
 
-2026-10-22 的历史升调运行约 4 分 23 秒，输出约 5 分 7 秒；当时不含新增评审阶段。开头主歌实测音高已上移，粗糙度和高音自然度仍需试听。旧运行及 `sun_yanzi_transposed_verified` 便捷入口已清理，数值记录保留在 [VALIDATION.md](VALIDATION.md)。以下命令会生成新的运行目录。
-
-在原有命令中加 `--transpose auto` 即可。该模式需要清晰的**歌唱**参考片段；不要用说话录音估计歌唱音区。当前孙燕姿参考已是分离出的歌声，无需重新下载。
+使用已标记为歌声参考的任务配置：
 
 ```bash
-cd /data/liuhongda/music-cover-baseline
+cd /mnt/afs_f/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
 bash scripts/run_baseline.sh \
-  --song data/raw/songs/luo_ye_gui_gen.mp3 \
-  --lyrics data/raw/lyrics/luo_ye_gui_gen.txt \
-  --reference data/raw/references/sun_yanzi/reference.wav \
-  --reference-duration 16 \
-  --transpose auto \
-  --style "Mandarin Chinese, energetic modern jazz rock fusion, driving rock drums, groovy electric bass, punchy electric guitars, syncopated rhythms, jazzy piano chords, brass accents, clear solo female lead vocal" \
-  --name luo_ye_gui_gen_sun_yanzi_pitch_adapted \
-  --gpu 0
+  --config configs/tasks/qiu_yi_nong_synthwave_sun_yanzi.yaml \
+  --run runs/qiu_yi_nong_pitch_v2
 ```
 
-流程为：分离原曲人声并测音高 + 测参考歌声音区 → 选升调量 → 对原曲乐谱所有旋律声部统一移调 → YuE2 重新生成同调的歌声与伴奏 → 分离 → Seed-VC 换声 → 混音 → 再测生成/换声后的音高。换声阶段不额外移调。
+`auto` 在 -6～+6 半音中比较分布距离、移调幅度和参考稳定性，可以升、降或保持原调。推荐值与实际采用值分别记录。人工 `--transpose -2` 固定降 2 半音；`--transpose 3` 固定升 3 半音；支持 -12～12。默认及 `--transpose 0` 关闭分析、原谱直通。
 
-自动模式在 0～6 个半音中选取折中值，优先改善低音区，同时惩罚过高的全曲高音。它使用参考片段的统计音区，不等于识别歌手完整音域；高音余量是实验参数，仍需试听。上述历史《落叶归根》运行选择了 **+3 个半音，Ab → B**；其他歌曲也可能选择 0。可用 `--transpose 3` 固定升 3 个半音，或 `--transpose 5` 另做对照；手动支持 -12～12。不加此参数与 `--transpose 0` 均不进行谱面移调。
+只有确认歌唱参考的 `reference_kind: singing` 才自动采用非零建议。上述任务已配置；其他歌曲可在原有命令中加 `--config configs/tasks/pitch_singing_auto.yaml`，它只覆盖 transpose 和 02 模块选调参数。讲话或未知参考只提供临时候选并保留原调。更长/多段音区参考、候选范围和人工确认音域见 [02 README](scripts/02_pitch_adaptation/README.md)；不要把短参考的 P95 当作歌手上限。
 
-每次运行仍输出新的 `runs/.../deliverables/`，首先听 `final.wav` 的第一段主歌及高音段。额外文件：
+流程为：原曲人声与参考 F0 → 双向选择 k → 全谱统一移调 → YuE2 生成歌声与伴奏 → Seed-VC 保持音高换声 → 10 实测核验。02 同时检查原谱和原曲音频的八度差，不自动施加隐藏的八度修正。
 
-| 文件 | 内容 |
+| 交付文件 | 内容 |
 | --- | --- |
-| `transposition.json` | 选择的半音数、候选方案、谱面逐音检查 |
-| `score_original.abc` / `score_transposed.abc` | 移调前后谱子 |
-| `pitch_input.json` | 原曲人声及参考歌声的实测音高 |
-| `pitch_output.json` | 新生成及换声后歌声的实测音高，含每 30 秒统计 |
+| `pitch_report.html` / `pitch_candidates.csv` | 分布图、所有候选评分及决策原因 |
+| `transposition.json` | recommended_semitones、applied_semitones、可信度、参考质量和逐音检查 |
+| `score_original.abc` / `score_transposed.abc` / `score_transposed.mid` | 原谱与统一移调后的谱、输入旋律 MIDI；不同于成品转谱 MIDI |
+| `score_audio_consistency.json` | 原谱与原曲 F0 的八度/音高检查 |
+| `pitch_adherence.json` | 生成实际移调量、换声前后保持程度及需要复核的问题 |
+| `pitch_input.json` / `pitch_output.json` | 后端原有口径统计，供兼容对照；选调实际采用的统计在 transposition.json |
 
-谱面移调通过检查不代表 YuE2 每个音都严格遵循；实际音高和音色自然度需要分别验收。当前改动不处理无歌声处的换声噪音，也不保证升调本身解决全部“粗糙”问题。
-
-如需对下一次新运行制作同样的对照页，生成完成后执行：
-
-```bash
-envs/seed-vc/bin/python scripts/verify_transposition.py \
-  /绝对路径/runs/未移调对照运行目录 \
-  /绝对路径/runs/新的升调运行目录 --gpu 0
-```
-
-脚本检查相同原曲、参考片段、曲风、种子和换声步数，输出 `deliverables/pitch_comparison/listen.html`、片段及音高诊断。对照目录必须尚不存在，以保留已有验收记录。
+技术流程成功不等于 YuE2 逐音遵循或听感通过。详细算法、阈值及已知限制见 [双向选调说明](docs/10_bidirectional_pitch.md)。历史 v1 升调/原调结果保留在 [VALIDATION.md](VALIDATION.md)，不会由新算法改写。
 
 ## 粤语示例：《喜欢你》巴萨诺瓦／桑巴爵士
 
@@ -105,6 +114,7 @@ bash scripts/run_baseline.sh \
   --lyrics data/raw/lyrics/xi_huan_ni_beyond.txt \
   --reference data/raw/references/sun_yanzi/reference.wav \
   --reference-start 0 --reference-duration 16 \
+  --config configs/tasks/pitch_singing_auto.yaml \
   --transpose auto \
   --style "Cantonese, upbeat bossa nova and samba jazz, swaying Latin groove, syncopated nylon-string guitar, warm upright bass, brushed drums, shakers and gentle hand percussion, airy flute phrases, soft electric piano, playful jazz chord voicings, clear expressive female lead vocal, delicate female backing harmonies in choruses, bright intimate acoustic production" \
   --name xi_huan_ni_bossa_nova_sun_yanzi_auto_review \
@@ -115,7 +125,7 @@ bash scripts/run_baseline.sh \
 
 ## 在哪里验收
 
-命令开始时打印 `RUN: ...`，成功后打印 `RESULTS: .../deliverables`。每次新运行使用新的目录。
+命令开始时打印 `RUN: ...`，成功后打印 `RESULTS (completed): <运行目录>`；只执行部分模块时显示 `RESULTS (partial)`。完整交付位于该运行目录的 `deliverables/`。未指定 `--run` 时自动创建新目录，指定已有 `--run` 则校验并复用有效缓存。
 
 打开该目录的 `listen.html`，依次播放原曲、换风格、最终混音，并与参考录音比较。也可以直接播放 WAV/FLAC/MP3 文件。最终混音默认同时输出 WAV 和 MP3，无需额外参数；试听页提供两种格式的播放和下载入口。
 
@@ -194,7 +204,7 @@ bash scripts/run_baseline.sh --preflight
 bash scripts/run_baseline.sh --resume /绝对路径/runs/某次运行
 ```
 
-更换参考录音并复用已有的旋律、换风格和分离结果：
+更换参考录音后按依赖复用有效结果（启用 auto 时，02 会重新分析，03 及后续也可能重跑）：
 
 ```bash
 bash scripts/run_baseline.sh \
@@ -202,7 +212,7 @@ bash scripts/run_baseline.sh \
   --reference /绝对路径/new_reference.wav
 ```
 
-输入、参数、适配代码和产物哈希一致的已完成阶段会复用；受影响阶段会重新执行。旧交付目录保存在 `deliverables_history/`，失败时不会把旧音频标成新结果。
+输入、参数、适配代码和产物哈希一致的已完成阶段会复用；受影响阶段会重新执行。各次成功交付保存在对应的 `stages/11_delivery/attempt_NNN/artifacts/`，`deliverables` 只在新交付通过后切换指向；若接管的是旧实体交付目录，才会移入 `deliverables_history/`。失败时不会把旧音频标成新结果。
 
 ## 可选的附加自动验证
 

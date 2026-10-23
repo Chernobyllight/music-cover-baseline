@@ -9,7 +9,9 @@ import numpy as np
 import soundfile as sf
 
 from music_cover.audio import estimate_alignment, export_mp3, fit_length, mix_tracks, read_at, sha256, shift_audio
-from music_cover.pipeline import Pipeline, clean_lyrics, write_json
+from music_cover.pipeline import clean_lyrics, write_json
+from music_cover.common.delivery import build_delivery
+from music_cover.common.validation import verify_delivery
 
 
 class AudioTests(unittest.TestCase):
@@ -70,27 +72,24 @@ class AudioTests(unittest.TestCase):
             # Exercise the real delivery code with the actual encoded audio.
             sf.write(root / "cover.flac", acc + vocal, rate)
             write_json(root / "mix.json", result)
-            pipeline = Pipeline(root / "run", {"gpu": "0", "style": "test", "song": str(paths["cover"])})
-            try:
-                pipeline.deliver(
-                    {"source": paths["cover"], "reference": paths["converted"]},
-                    {"cover": root / "cover.flac"},
-                    {"vocals": paths["vocal"], "instrumental": paths["acc"]},
-                    {"converted": paths["converted"]},
-                    {"final": root / "final.wav", "final_mp3": root / "final.mp3",
-                     "reconstruction": root / "reconstruction.wav", "aligned_vocal": root / "converted_aligned.wav",
-                     "metrics": root / "mix.json"})
-                delivered = pipeline.run / "deliverables"
-                for name in ["final.wav", "final.mp3"]:
-                    self.assertEqual(sha256(delivered / name), sha256(root / name))
-                    self.assertIn(f'src="{name}"', (delivered / "listen.html").read_text())
-                    self.assertIn(f'href="{name}" download', (delivered / "listen.html").read_text())
-                checks = json.loads((delivered / "checks.json").read_text())
-                self.assertEqual(checks["final_mp3"]["sha256"], sha256(delivered / "final.mp3"))
-                self.assertIn("final.mp3", (delivered / "report.md").read_text())
-            finally:
-                pipeline.lock.close()
-
+            delivered = root / "run" / "deliverables"
+            delivered.mkdir(parents=True)
+            build_delivery(
+                delivered, {"style": "test", "song": str(paths["cover"])}, {},
+                {"source": paths["cover"], "reference": paths["converted"]},
+                {"cover": root / "cover.flac"},
+                {"vocals": paths["vocal"], "instrumental": paths["acc"]},
+                {"final": root / "final.wav", "final_mp3": root / "final.mp3",
+                 "reconstruction": root / "reconstruction.wav", "aligned_vocal": root / "converted_aligned.wav",
+                 "metrics": root / "mix.json"})
+            for name in ["final.wav", "final.mp3"]:
+                self.assertEqual(sha256(delivered / name), sha256(root / name))
+                self.assertIn(f'src="{name}"', (delivered / "listen.html").read_text())
+                self.assertIn(f'href="{name}" download', (delivered / "listen.html").read_text())
+            checks = json.loads((delivered / "checks.json").read_text())
+            self.assertEqual(checks["final_mp3"]["sha256"], sha256(delivered / "final.mp3"))
+            self.assertIn("final.mp3", (delivered / "report.md").read_text())
+            self.assertEqual(verify_delivery(delivered, review=False)["technical_validation"], "passed")
             sf.write(paths["converted"], np.pad(vocal, ((0, rate), (0, 0))), rate)
             with self.assertRaisesRegex(ValueError, "refusing to hide drift"):
                 mix_tracks(paths["cover"], paths["vocal"], paths["acc"], paths["converted"], root)
@@ -107,45 +106,6 @@ class AudioTests(unittest.TestCase):
                     export_mp3(Path(directory) / "final.wav", target)
             self.assertEqual(target.read_bytes(), b"previous output")
             self.assertEqual(list(Path(directory).iterdir()), [target])
-
-
-class RecoveryTests(unittest.TestCase):
-    def test_valid_cache_reused_but_corrupt_output_rebuilt(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            source = root / "input.txt"
-            source.write_text("input")
-            pipeline = Pipeline(root / "run", {"gpu": "0"})
-            calls = []
-            def action(out):
-                calls.append(out)
-                target = out / "output.txt"
-                target.write_text("valid output")
-                return {"artifact": target}
-            try:
-                first = pipeline.stage("01_test", {"source": source}, {}, action)
-                pipeline.stage("01_test", {"source": source}, {}, action)
-                self.assertEqual(len(calls), 1)
-                first["artifact"].write_text("corrupt output")
-                rebuilt = pipeline.stage("01_test", {"source": source}, {}, action)
-                self.assertEqual(len(calls), 2)
-                self.assertNotEqual(first["artifact"], rebuilt["artifact"])
-            finally:
-                pipeline.lock.close()
-
-    def test_failure_is_not_committed_and_can_retry(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            source = root / "input.txt"
-            source.write_text("input")
-            pipeline = Pipeline(root / "run", {"gpu": "0"})
-            try:
-                with self.assertRaises(RuntimeError):
-                    pipeline.stage("01_test", {"source": source}, {}, lambda out: {"missing": out / "missing.wav"})
-                self.assertEqual(pipeline.state["stages"]["01_test"]["status"], "failed")
-                self.assertNotIn("outputs", pipeline.state["stages"]["01_test"])
-            finally:
-                pipeline.lock.close()
 
 
 if __name__ == "__main__":

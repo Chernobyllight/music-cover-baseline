@@ -1,0 +1,25 @@
+{
+  "request": {
+    "seed": 42,
+    "steps": 30,
+    "gpu": "0",
+    "reference_start": 0,
+    "reference_duration": 15,
+    "transpose": "0",
+    "review": true
+  },
+  "module_configs": {
+    "00_prepare": "configs/modules/00_prepare.yaml",
+    "01_source_score": "configs/modules/01_source_score.yaml",
+    "02_pitch_adaptation": "configs/modules/02_pitch_adaptation.yaml",
+    "03_style_generation": "configs/modules/03_style_generation.yaml",
+    "04_vocal_separation": "configs/modules/04_vocal_separation.yaml",
+    "05_voice_conversion": "configs/modules/05_voice_conversion.yaml",
+    "06_mix": "configs/modules/06_mix.yaml",
+    "07_stem_separation": "configs/modules/07_stem_separation.yaml",
+    "08_final_score": "configs/modules/08_final_score.yaml",
+    "09_stem_midi": "configs/modules/09_stem_midi.yaml",
+    "10_evaluation": "configs/modules/10_evaluation.yaml",
+    "11_delivery": "configs/modules/11_delivery.yaml"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "request": {"transpose": "auto"},
+  "modules": {
+    "02_pitch_adaptation": {
+      "reference_kind": "singing",
+      "auto_min_semitones": -6,
+      "auto_max_semitones": 6
+    }
+  }
+}

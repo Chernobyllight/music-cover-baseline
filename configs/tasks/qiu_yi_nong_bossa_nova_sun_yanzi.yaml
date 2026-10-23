@@ -1,0 +1,23 @@
+{
+  "request": {
+    "name": "lhd_test_modular",
+    "song": "data/raw/songs/qiu_yi_nong.mp3",
+    "lyrics": "data/raw/lyrics/qiu_yi_nong.txt",
+    "reference": "data/raw/references/sun_yanzi/reference.wav",
+    "reference_start": 0,
+    "reference_duration": 16,
+    "transpose": "auto",
+    "style": "Mandarin Chinese, upbeat bossa nova and samba jazz, swaying Latin groove, syncopated nylon-string guitar, warm upright bass, brushed drums, shakers and gentle hand percussion, airy flute phrases, soft electric piano, playful jazz chord voicings, clear expressive female lead vocal, delicate female backing harmonies in choruses, bright intimate acoustic production",
+    "seed": 42,
+    "steps": 30,
+    "gpu": "0",
+    "review": true
+  },
+  "modules": {
+    "02_pitch_adaptation": {
+      "reference_kind": "singing",
+      "auto_min_semitones": -6,
+      "auto_max_semitones": 6
+    }
+  }
+}

@@ -1,4 +1,8 @@
+当前版本：`v0.2`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。逐步操作见 [实操手册](11_modular_walkthrough.md)。
+
 本仓库用于保存音乐换曲风与参考音色转换 baseline 的代码、文档及版本记录。原始工作目录为 `/data/liuhongda/music-cover-baseline`；现有模型和音频产物继续保留在该目录，不随 Git 提交上传。
+
+v0.2 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
 
 | 内容 | Git 管理方式 |
 | --- | --- |
@@ -13,7 +17,7 @@
 在新目录获取代码时，同时初始化两个上游子模块：
 
 ```bash
-git clone --branch v0.1 --recurse-submodules https://github.com/Chernobyllight/music-cover-baseline.git
+git clone --branch v0.2 --recurse-submodules https://github.com/Chernobyllight/music-cover-baseline.git
 cd music-cover-baseline
 ```
 
@@ -44,7 +48,7 @@ envs/control/bin/python scripts/download_separator_model.py
 
 下载脚本需要相应的 `huggingface_hub`、`PyYAML` 等依赖。它们会创建模型目录并更新本地模型清单；`download_voice_models.py` 还会按当前仓库位置重建 `configs/seed_svc.local.yml` 中的绝对路径。版本清单里的原始绝对路径是原服务器记录，迁移时不能直接照搬。
 
-`v0.1` 默认开启成品分轨和 MIDI 评审。基础 separator 环境配置好后，还需要安装附加依赖和模型：
+从 `v0.1` 起默认开启成品分轨和 MIDI 评审，`v0.2` 继续保留。基础 separator 环境配置好后，还需要安装附加依赖和模型：
 
 ```bash
 envs/separator/bin/python -m pip install --no-deps -r configs/review-requirements.txt
