@@ -4,6 +4,8 @@
 
 **按模块一步步运行：**见 [00–11 完整实操手册](docs/11_modular_walkthrough.md)，使用“孙燕姿＋秋意浓＋upbeat bossa nova and samba jazz”，包含长命令、简短配置、完整输出路径及检查重点。
 
+**模型权重：**见[完整清单与准备方法](docs/12_model_weights.md)，包含主模型与附属模型、下载步骤、实际路径、版本及校验命令。
+
 现有服务器可直接打开 `runs/20261022_111548_xi_huan_ni_bossa_nova_sun_yanzi_auto_review_a714d5/deliverables/listen.html` 验收《喜欢你》结果；具体记录见 [VALIDATION.md](VALIDATION.md)。该目录是服务器本地数据，不随 Git 克隆。早期演示目录及便捷链接已清理。历史基础流程约 3 分钟的耗时不适用于当前完整评审流程。
 
 实际链路：原曲 → SheetSage2 提取旋律 → YuE2 按指定风格重生成 → BS-RoFormer 分离 → Seed-VC 参考音色转换 → 对齐、混音 → 成品分轨、重新转谱、专业评审包。历史耗时不包含新增的评审阶段。

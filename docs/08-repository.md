@@ -1,5 +1,7 @@
 当前版本：`v0.2`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。逐步操作见 [实操手册](11_modular_walkthrough.md)。
 
+模型资产的集中清单、固定版本、下载命令与校验方法见[模型权重指南](12_model_weights.md)。
+
 本仓库用于保存音乐换曲风与参考音色转换 baseline 的代码、文档及版本记录。原始工作目录为 `/data/liuhongda/music-cover-baseline`；现有模型和音频产物继续保留在该目录，不随 Git 提交上传。
 
 v0.2 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。

@@ -10,6 +10,8 @@
 - 02 增加候选 CSV、离线 HTML 图表、谱/音频八度检查和移调后输入旋律 MIDI；10 增加生成移调遵循和换声保持检查，证据随评审包与 MIDI ZIP 交付。
 - 新增[逐模块实操手册](docs/11_modular_walkthrough.md)及 `configs/tasks/qiu_yi_nong_bossa_nova_sun_yanzi.yaml`，使用孙燕姿参考、《秋意浓》及 Bossa Nova / Samba Jazz，输出到 `runs/lhd_test_modular`。
 
+- 补充[模型权重指南](docs/12_model_weights.md)，集中说明 13 组模型的用途、文件位置、固定版本、下载、迁移和只读校验，并明确模型代码与权重的区别。
+
 验证：45 项回归测试；两套孙燕姿《秋意浓》风格实验完成全部 12 阶段并通过交付检查。双向算法在真实《秋意浓》上采用 -2 半音；已知 -3/0/+3 半音的 F0 对照均通过。详细数值与听感限制见 [VALIDATION.md](VALIDATION.md)。
 
 迁移：历史 v0.1 运行保持只读，不能直接续跑为模块化格式；请创建新的 `--run`。既有模块化运行的 02 算法升级会使相关缓存失效，后续依赖按需要重跑。媒体、歌词正文、模型、环境及 runs 不随 Git 上传；资源恢复见 [仓库说明](docs/08-repository.md)。
