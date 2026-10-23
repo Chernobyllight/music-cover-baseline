@@ -1,12 +1,15 @@
 from pathlib import Path
+import json
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import soundfile as sf
 
-from music_cover.audio import estimate_alignment, fit_length, mix_tracks, read_at, shift_audio
-from music_cover.pipeline import Pipeline, clean_lyrics
+from music_cover.audio import estimate_alignment, export_mp3, fit_length, mix_tracks, read_at, sha256, shift_audio
+from music_cover.pipeline import Pipeline, clean_lyrics, write_json
 
 
 class AudioTests(unittest.TestCase):
@@ -56,9 +59,54 @@ class AudioTests(unittest.TestCase):
             self.assertEqual(result["final"]["frames"], rate * 2)
             self.assertEqual(result["final"]["channels"], 2)
             self.assertLessEqual(result["final"]["estimated_true_peak_dbtp"], -1.0)
+            self.assertEqual(result["final_mp3"]["sample_rate"], rate)
+            self.assertEqual(result["final_mp3"]["channels"], 2)
+            self.assertAlmostEqual(result["final_mp3"]["duration_s"], 2, delta=0.05)
+            self.assertEqual(sf.info(root / "final.mp3").format, "MP3")
+            self.assertGreater(result["final_mp3"]["rms"], 0.01)
+            self.assertLess((root / "final.mp3").stat().st_size, (root / "final.wav").stat().st_size / 5)
+            self.assertEqual(result["final_mp3"]["sha256"], sha256(root / "final.mp3"))
+
+            # Exercise the real delivery code with the actual encoded audio.
+            sf.write(root / "cover.flac", acc + vocal, rate)
+            write_json(root / "mix.json", result)
+            pipeline = Pipeline(root / "run", {"gpu": "0", "style": "test", "song": str(paths["cover"])})
+            try:
+                pipeline.deliver(
+                    {"source": paths["cover"], "reference": paths["converted"]},
+                    {"cover": root / "cover.flac"},
+                    {"vocals": paths["vocal"], "instrumental": paths["acc"]},
+                    {"converted": paths["converted"]},
+                    {"final": root / "final.wav", "final_mp3": root / "final.mp3",
+                     "reconstruction": root / "reconstruction.wav", "aligned_vocal": root / "converted_aligned.wav",
+                     "metrics": root / "mix.json"})
+                delivered = pipeline.run / "deliverables"
+                for name in ["final.wav", "final.mp3"]:
+                    self.assertEqual(sha256(delivered / name), sha256(root / name))
+                    self.assertIn(f'src="{name}"', (delivered / "listen.html").read_text())
+                    self.assertIn(f'href="{name}" download', (delivered / "listen.html").read_text())
+                checks = json.loads((delivered / "checks.json").read_text())
+                self.assertEqual(checks["final_mp3"]["sha256"], sha256(delivered / "final.mp3"))
+                self.assertIn("final.mp3", (delivered / "report.md").read_text())
+            finally:
+                pipeline.lock.close()
+
             sf.write(paths["converted"], np.pad(vocal, ((0, rate), (0, 0))), rate)
             with self.assertRaisesRegex(ValueError, "refusing to hide drift"):
                 mix_tracks(paths["cover"], paths["vocal"], paths["acc"], paths["converted"], root)
+
+    def test_failed_mp3_export_keeps_previous_file_and_removes_partial_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "final.mp3"
+            target.write_bytes(b"previous output")
+            def fail(command, **kwargs):
+                Path(command[-1]).write_bytes(b"partial encoding")
+                raise subprocess.CalledProcessError(1, command)
+            with patch("music_cover.audio.subprocess.run", side_effect=fail):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    export_mp3(Path(directory) / "final.wav", target)
+            self.assertEqual(target.read_bytes(), b"previous output")
+            self.assertEqual(list(Path(directory).iterdir()), [target])
 
 
 class RecoveryTests(unittest.TestCase):

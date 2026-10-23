@@ -121,6 +121,23 @@ def export_limited(path, data, rate=48000, ceiling_db=-1.1):
     return result
 
 
+def export_mp3(source, destination, bitrate_kbps=192):
+    """Encode the finished WAV, publishing only a successfully decoded MP3."""
+    destination = Path(destination)
+    temporary = destination.with_name(destination.name + ".tmp")
+    command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+               "-i", str(source), "-map", "0:a:0", "-vn", "-c:a", "libmp3lame",
+               "-b:a", f"{bitrate_kbps}k", "-f", "mp3", str(temporary)]
+    try:
+        subprocess.run(command, check=True, timeout=600)
+        result = inspect_audio(temporary)
+        result.update({"encoder": "libmp3lame", "bitrate_kbps": bitrate_kbps})
+        temporary.replace(destination)
+        return result
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def mix_tracks(cover, vocal, instrumental, converted, output):
     output = Path(output)
     rate = 48000
@@ -149,8 +166,9 @@ def mix_tracks(cover, vocal, instrumental, converted, output):
     vocal_gain = float(np.clip(source_rms / converted_rms, 0.25, 4.0))
     reconstruction = export_limited(output / "reconstruction.wav", source + accompaniment, rate)
     final = export_limited(output / "final.wav", accompaniment + replacement * vocal_gain, rate)
+    final_mp3 = export_mp3(output / "final.wav", output / "final.mp3")
     sf.write(output / "converted_aligned.wav", replacement, rate, subtype="FLOAT")
     alignment.update({"converted_duration_delta_s": duration_delta, "output_frames": frames})
     return {"alignment": alignment, "vocal_gain": vocal_gain,
-            "reconstruction": reconstruction, "final": final,
+            "reconstruction": reconstruction, "final": final, "final_mp3": final_mp3,
             "subjective_quality": "not_listened; human listening required"}

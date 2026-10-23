@@ -18,6 +18,7 @@ from pathlib import Path
 
 from .audio import decode, inspect_audio, mix_tracks, sha256
 from .pitch import ABC_HELPER, choose_transposition, transpose_abc
+from .review import artifact_paths
 
 ROOT = Path(__file__).resolve().parents[2]
 STAGE_SCRIPT = ROOT / "scripts/stage_runner.py"
@@ -104,7 +105,9 @@ class Pipeline:
                                 "audio_sha256": sha256(Path(__file__).with_name("audio.py")),
                                 "pipeline_sha256": sha256(Path(__file__)),
                                 "pitch_sha256": sha256(Path(__file__).with_name("pitch.py")),
-                                "abc_parser_sha256": sha256(ABC_HELPER)})
+                                "abc_parser_sha256": sha256(ABC_HELPER),
+                                "review_sha256": sha256(Path(__file__).with_name("review.py"))
+                                if "review" in name else None})
         previous = self.state["stages"].get(name, {})
         if previous.get("fingerprint") == fingerprint and previous.get("status") == "succeeded":
             outputs = previous.get("outputs", {})
@@ -174,7 +177,8 @@ class Pipeline:
             score = out / "score.abc"
             if "V:" not in score.read_text():
                 raise ValueError("Transcription did not produce a voiced ABC score")
-            return {"score": score, "events": out / "events.json"}
+            return {"score": score, "events": out / "events.json",
+                    **{f"artifact:{k}": v for k, v in artifact_paths(out).items()}}
 
         transcription = self.stage("01_transcribe", {"source": prepared["source"]},
                                    {"models": model_identity, "mode": "melody"}, transcribe)
@@ -246,10 +250,12 @@ class Pipeline:
             result = mix_tracks(generated["cover"], separated["vocals"], separated["instrumental"],
                                 converted["converted"], out)
             write_json(out / "mix.json", result)
-            return {"final": out / "final.wav", "reconstruction": out / "reconstruction.wav",
+            return {"final": out / "final.wav", "final_mp3": out / "final.mp3",
+                    "reconstruction": out / "reconstruction.wav",
                     "aligned_vocal": out / "converted_aligned.wav", "metrics": out / "mix.json"}
 
-        mixed = self.stage("05_mix", {**generated, **separated, **converted}, {"output_rate": 48000}, mix)
+        mixed = self.stage("05_mix", {**generated, **separated, **converted},
+                           {"output_rate": 48000, "mp3_bitrate_kbps": 192}, mix)
         pitch_check = None
         if adaptation:
             def check_pitch(out):
@@ -260,26 +266,74 @@ class Pipeline:
                         "after_f0": out / "after_f0.npz"}
             pitch_check = self.stage("06_pitch_check", {"before": separated["vocals"], "after": mixed["aligned_vocal"]},
                                       {"rmvpe": sha256(ROOT / "models/RMVPE/rmvpe.pt")}, check_pitch)
-        self.deliver(prepared, generated, separated, converted, mixed, adaptation, pitch_check)
+        review = None
+        if r.get("review", True):
+            review_models = sha256(ROOT / "configs/review_models.lock.json")
+
+            def review_stems(out):
+                write_json(out / "stems_request.json", {
+                    "final": str(mixed["final"]), "vocal": str(mixed["aligned_vocal"]),
+                    "instrumental": str(separated["instrumental"]), "mix_metrics": str(mixed["metrics"]), "seed": r["seed"]})
+                self.execute("separator", "review_stems", out, "--request", out / "stems_request.json")
+                return artifact_paths(out)
+
+            stems = self.stage("07_review_stems", {"final": mixed["final"], "vocal": mixed["aligned_vocal"],
+                               "instrumental": separated["instrumental"], "metrics": mixed["metrics"]},
+                               {"models": review_models, "seed": r["seed"], "output_rate": 48000}, review_stems)
+
+            def transcribe_final(out):
+                self.execute("sheetsage2", "transcribe_final", out, "--input", mixed["final"])
+                return artifact_paths(out)
+
+            final_score = self.stage("08_final_transcribe", {"final": mixed["final"]},
+                                     {"models": model_identity, "melody_only": False}, transcribe_final)
+
+            def review_midi(out):
+                write_json(out / "midi_request.json", {"stems": str(stems["stems.json"].parent),
+                           "transcription": str(final_score["transcription_summary.json"].parent)})
+                self.execute("separator", "review_midi", out, "--request", out / "midi_request.json")
+                return artifact_paths(out)
+
+            midi = self.stage("09_review_midi", {"stems": stems["stems.json"], "chords": final_score["chords.mid"]},
+                              {"models": review_models, "timebase_bpm": 120}, review_midi)
+
+            def review_package(out):
+                write_json(out / "package_request.json", {
+                    "stems": str(stems["stems.json"].parent),
+                    "transcription": str(final_score["transcription_summary.json"].parent),
+                    "midi": str(midi["midi.json"].parent), "source_transcription": str(transcription["score"].parent),
+                    "original": str(prepared["source"]), "final": str(mixed["final"]), "run_request": r})
+                self.execute("separator", "review_package", out, "--request", out / "package_request.json")
+                return artifact_paths(out)
+
+            review = self.stage("10_review_package", {"stems": stems["stems.json"], "midi": midi["midi.json"],
+                                "final_score": final_score["transcription_summary.json"],
+                                "source_events": transcription["events"], "original": prepared["source"], "final": mixed["final"]},
+                                {"schema_version": 1, "models": review_models}, review_package)
+        self.deliver(prepared, generated, separated, converted, mixed, adaptation, pitch_check, review)
         self.state["status"] = "completed"
         self.state["subjective_quality"] = "requires_listening"
         write_json(self.state_path, self.state)
         write_json(self.run / "manifest.json", self.state)
         print(f"\nRESULTS: {self.run / 'deliverables'}", flush=True)
 
-    def deliver(self, prepared, generated, separated, converted, mixed, adaptation=None, pitch_check=None):
+    def deliver(self, prepared, generated, separated, converted, mixed, adaptation=None, pitch_check=None, review=None):
         destination = self.run / "deliverables"
         destination.mkdir(exist_ok=True)
         items = {"original.wav": prepared["source"], "reference.wav": prepared["reference"],
                  "restyled.flac": generated["cover"], "reconstruction.wav": mixed["reconstruction"],
-                 "final.wav": mixed["final"], "vocals_before.wav": separated["vocals"],
+                 "final.wav": mixed["final"], "final.mp3": mixed["final_mp3"],
+                 "vocals_before.wav": separated["vocals"],
                  "vocals_after.wav": mixed["aligned_vocal"], "instrumental.wav": separated["instrumental"]}
         if adaptation:
             items.update({"score_original.abc": adaptation["original_score"], "score_transposed.abc": adaptation["score"],
                           "transposition.json": adaptation["plan"], "pitch_input.json": adaptation["profiles"],
                           "pitch_output.json": pitch_check["profiles"]})
+        if review:
+            items.update({"review/" + name: path for name, path in review.items()})
         for name, source in items.items():
             temporary = destination / (name + ".tmp")
+            temporary.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, temporary)
             temporary.replace(destination / name)
         metrics = json.loads(mixed["metrics"].read_text())
@@ -292,6 +346,7 @@ class Pipeline:
             "自动文件、数值、时长与峰值检查已执行；音乐风格、音色相似度和自然度仍需试听验收。\n\n"
             f"目标风格：{self.request['style']}\n\n"
             "依次试听 original.wav、restyled.flac、final.wav；参考人物声音在 reference.wav。"
+            "final.mp3 是同一最终混音的 192 kbps 压缩版，便于下载和分享。"
             "reconstruction.wav 用于检查分离和重混的损伤。\n\n"
             f"转换人声长度差：{metrics['alignment']['converted_duration_delta_s']:.6f} 秒。"
             f"固定延迟校正：{metrics['alignment']['applied_shift_samples']} 个 48 kHz 采样点。\n\n"
@@ -314,31 +369,57 @@ class Pipeline:
                        "参考音区来自本次短片段，不代表歌手完整音域；自动选调为启发式建议。"
                        "选择依据见 transposition.json、pitch_input.json，生成和换声后实测见 pitch_output.json。"
                        "谱面检查不保证生成歌声逐音遵循；仍需检查开头是否改善以及高音是否自然。\n")
+        if review:
+            report += ("\n成品分轨和 MIDI 评审包已生成，入口 review/index.html。\n"
+                       "所有 review/audio 轨道均同起点、同采样率、同长度；父轨不能与子轨重复相加。\n"
+                       "MIDI 来自成品重新转谱，自动估计仍需专业人员校对；鼓为起音候选，和弦谱为分析指南。\n"
+                       "音符 CSV、原始模型数据、校验哈希、响度/节奏描述和人工评分表均包含在 review。\n")
         (destination / "report.md").write_text(report, encoding="utf-8")
         labels = [("original.wav", "1 原曲"), ("reference.wav", "目标音色参考"),
-                  ("restyled.flac", "2 换风格"), ("final.wav", "3 最终混音"),
+                  ("restyled.flac", "2 换风格"), ("final.wav", "3 最终混音（WAV）"),
+                  ("final.mp3", "最终混音（MP3，192 kbps）"),
                   ("reconstruction.wav", "分离后直接重混对照"),
                   ("vocals_before.wav", "换声前人声"), ("vocals_after.wav", "换声后人声")]
-        players = "\n".join(f'<p>{html.escape(label)}</p><audio controls preload="none" src="{name}"></audio>'
+        players = "\n".join(f'<p>{html.escape(label)} · <a href="{name}" download>下载</a></p>'
+                            f'<audio controls preload="none" src="{name}"></audio>'
                             for name, label in labels)
         page = ('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>音乐 baseline 试听</title>'
                 '<style>body{max-width:850px;margin:40px auto;padding:0 20px;font:17px/1.6 sans-serif;background:#f7f7f4;color:#222}'
                 'audio{width:100%}p{margin-top:28px}pre{white-space:pre-wrap;font:inherit}</style>'
                 '<h1>音乐 baseline 试听</h1><p>完整流程已执行；听感质量请对照以下音频验收。</p>'
+                + ('<p><a href="review/index.html">打开成品分轨与 MIDI 专业评审包</a></p>' if review else '')
                 + players + '<details><summary>运行报告</summary><pre>' + html.escape(report) + '</pre></details></html>')
         (destination / "listen.html").write_text(page, encoding="utf-8")
 
 
-def preflight():
+def preflight(review=True):
     required = [ROOT / f"envs/{name}/bin/python" for name in ["control", "sheetsage2", "yue2", "separator", "seed-vc"]]
     required += [ROOT / f"models/{name}/model.safetensors" for name in ["SheetSage2", "MERT-v2-FullSong", "YuE2-3B", "YuE2-Vae"]]
     required += [ROOT / "third_party/seed-vc/inference.py", ROOT / "configs/generation_models.lock.json"]
     required += [ROOT / "configs/voice_models.lock.json", ROOT / "configs/seed_svc.local.yml"]
+    if review:
+        required += [ROOT / "configs/review_models.lock.json", ROOT / "models/review/basic_pitch.onnx",
+                     ROOT / "models/review/demucs/htdemucs_6s.yaml", ROOT / "models/review/demucs/5c90dfd2-34c22ccb.th",
+                     ROOT / "models/separation/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",
+                     ROOT / "models/separation/config_mel_band_roformer_karaoke.yaml"]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError("Setup incomplete:\n" + "\n".join(missing))
     if not shutil.which("ffmpeg"):
         raise RuntimeError("ffmpeg is not available")
+    encoders = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"],
+                              check=True, capture_output=True, text=True, timeout=30)
+    if "libmp3lame" not in encoders.stdout:
+        raise RuntimeError("ffmpeg must support libmp3lame to export final.mp3")
+    if review:
+        lock = json.loads((ROOT / "configs/review_models.lock.json").read_text())
+        for entry in lock["assets"]:
+            path = ROOT / entry["path"]
+            if not path.is_file() or path.stat().st_size != entry["bytes"] or sha256(path) != entry["sha256"]:
+                raise RuntimeError(f"Review model missing or changed: {path}")
+        subprocess.run([str(ROOT / "envs/separator/bin/python"), "-c",
+                        "from demucs.pretrained import get_model; from basic_pitch.inference import predict; import mido, pretty_midi"],
+                       check=True, capture_output=True, text=True, timeout=60)
 
 
 def main():
@@ -354,20 +435,22 @@ def main():
     parser.add_argument("--reference-duration", type=float)
     parser.add_argument("--transpose", help="auto：按参考歌声及原曲音区选升调量；或 -12..12 个半音，默认 0")
     parser.add_argument("--preflight", action="store_true")
+    parser.add_argument("--review", action=argparse.BooleanOptionalAction, default=None,
+                        help="默认生成成品分轨、MIDI、专业评审数据；--no-review 仅输出基础结果")
     args = parser.parse_args()
     if args.demo and args.resume:
         parser.error("--demo and --resume cannot be combined")
     if args.preflight:
-        preflight()
+        preflight(review=args.review is not False)
         print("Preflight files OK")
         return
     request = {"name": "cover", "seed": 42, "steps": 30, "gpu": "0", "reference_start": 0.0, "reference_duration": 15.0,
-               "transpose": "0"}
+               "transpose": "0", "review": True}
     if args.demo:
         request.update(json.loads((ROOT / "configs/demo.json").read_text()))
     if args.resume:
         request.update(json.loads((args.resume.resolve() / "request.json").read_text()))
-    for name in ["song", "lyrics", "reference", "style", "name", "seed", "steps", "reference_start", "reference_duration", "transpose"]:
+    for name in ["song", "lyrics", "reference", "style", "name", "seed", "steps", "reference_start", "reference_duration", "transpose", "review"]:
         if getattr(args, name) is not None:
             request[name] = getattr(args, name)
     if args.gpu is not None:
@@ -394,7 +477,7 @@ def main():
         request[key] = str((ROOT / path).resolve() if not path.is_absolute() else path.resolve())
         if not Path(request[key]).is_file():
             parser.error(f"File does not exist: {request[key]}")
-    preflight()
+    preflight(review=request["review"])
     name = re.sub(r"[^\w-]+", "_", request["name"])[:60]
     run_id = dt.datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + name + "_" + uuid.uuid4().hex[:6]
     run = args.resume.resolve() if args.resume else ROOT / "runs" / run_id

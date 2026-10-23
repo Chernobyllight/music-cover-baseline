@@ -38,9 +38,21 @@ def transcribe(args):
         str(ROOT / "models/SheetSage2"), trust_remote_code=True, local_files_only=True,
         base_model_path=str(ROOT / "models/MERT-v2-FullSong"),
     ).eval().to("cuda")
-    result = model.transcribe(args.input, output_dir=args.output, melody_only=True, dtype="bf16",
+    result = model.transcribe(args.input, output_dir=args.output, melody_only=args.stage != "transcribe_final", dtype="bf16",
                               preset="default", progress=lambda event: print(event, flush=True))
-    if result.get("abc_error") or not result.get("abc"):
+    if args.stage == "transcribe_final":
+        import mido
+        files = {}
+        for path in Path(args.output).glob("*.mid"):
+            midi = mido.MidiFile(path)
+            files[path.name] = {"note_count": sum(m.type == "note_on" and m.velocity > 0 for t in midi.tracks for m in t),
+                                "duration_s": midi.length}
+        if not files.get("transcription.mid", {}).get("note_count"):
+            raise RuntimeError("Final transcription contains no notes")
+        (Path(args.output) / "transcription_summary.json").write_text(json.dumps({
+            "source": str(args.input), "melody_only": False, "midis": files,
+            "abc_error": result.get("abc_error"), "status": "model_estimates_require_human_review"}, indent=2) + "\n")
+    elif result.get("abc_error") or not result.get("abc"):
         raise RuntimeError(result.get("abc_error") or "No ABC was produced")
 
 
@@ -178,7 +190,8 @@ def pitch(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("stage", choices=["transcribe", "cover", "separate", "convert", "pitch"])
+    parser.add_argument("stage", choices=["transcribe", "transcribe_final", "cover", "separate", "convert", "pitch",
+                                         "review_stems", "review_midi", "review_package"])
     parser.add_argument("--input")
     parser.add_argument("--output", required=True)
     parser.add_argument("--request")
@@ -188,7 +201,14 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     start = time.monotonic()
-    globals()[args.stage](args)
+    if args.stage.startswith("review_"):
+        sys.path.insert(0, str(ROOT / "src"))
+        from music_cover.review import run_stage
+        run_stage(args)
+    elif args.stage == "transcribe_final":
+        transcribe(args)
+    else:
+        globals()[args.stage](args)
     print(json.dumps({"stage": args.stage, "wall_seconds": time.monotonic() - start}), flush=True)
 
 

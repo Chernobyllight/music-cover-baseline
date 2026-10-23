@@ -1,0 +1,54 @@
+{
+  "assets": [
+    {
+      "path": "models/separation/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",
+      "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",
+      "bytes": 913096801,
+      "sha256": "1de20d459332fe8869aeb01327a31df0032262706e1365114e852dc271779813"
+    },
+    {
+      "path": "models/separation/config_mel_band_roformer_karaoke.yaml",
+      "url": "https://raw.githubusercontent.com/TRvlvr/application_data/main/mdx_model_data/mdx_c_configs/config_mel_band_roformer_karaoke.yaml",
+      "bytes": 1794,
+      "sha256": "30364842112e18500aca7ff7b1acf235251eb4ee93b377278176b432410eae33"
+    },
+    {
+      "path": "models/review/demucs/5c90dfd2-34c22ccb.th",
+      "url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th",
+      "bytes": 54996327,
+      "sha256": "34c22ccb381c6f9fdbf324f04e1e2fe21aaaf293f5ded163a162697ff9a02ddd"
+    },
+    {
+      "path": "models/review/demucs/htdemucs_6s.yaml",
+      "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/htdemucs_6s.yaml",
+      "bytes": 21,
+      "sha256": "207405151270af8fd81c2373c25d27950916682ac91dca7884a11ce13dad6f58"
+    },
+    {
+      "path": "models/review/basic_pitch.onnx",
+      "url": "https://github.com/spotify/basic-pitch",
+      "source": "basic-pitch 0.4.0 wheel bundled ONNX model",
+      "bytes": 230444,
+      "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec"
+    }
+  ],
+  "packages": {
+    "audio-separator": "0.30.2",
+    "demucs": "4.0.1",
+    "basic-pitch": "0.4.0",
+    "onnxruntime": "1.23.2",
+    "numpy": "1.26.4",
+    "torch": "2.8.0+cu128",
+    "torchaudio": "2.8.0+cu128",
+    "librosa": "0.11.0",
+    "mido": "1.3.3",
+    "pretty-midi": "0.2.11",
+    "dora-search": "0.1.12",
+    "julius": "0.2.8",
+    "openunmix": "1.3.0",
+    "lameenc": "1.8.1",
+    "mir_eval": "0.8.2"
+  },
+  "hash_note": "SHA256 measured after download; only Demucs filename publishes a short hash.",
+  "runtime_note": "Reuse existing Torch 2.8 CUDA runtime; Basic Pitch uses ONNX CPU, no TensorFlow."
+}

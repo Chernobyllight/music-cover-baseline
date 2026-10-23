@@ -1,4 +1,9 @@
 {
+  "src/music_cover/__init__.py": "74380ccf9bf8eff1415b2d522b64f027ab0040067af6484605c5e061fb61d783",
+  "src/music_cover/audio.py": "e9318d4df4a83d3696051868bb4ad5762c0e75b8ce753e8c5a424e289f4460a4",
+  "src/music_cover/pipeline.py": "cad8fe1a2f4ad409d421766d68073e0582252e5ae7f468db0d11a18ae33447cd",
+  "src/music_cover/pitch.py": "aa21033c72710af7e42bbc6826b056b844f8c333e12dc617db2125c3fa734ee9",
+  "src/music_cover/review.py": "f03e872daaf4219c7c2ea730db28a3fd6bd17080223ee37893801af6f98a38b8",
   "scripts/capture_environment.py": "9012be5a27b8e6faa4db753757727c089900226d6f1524d4f69fc767f31885c6",
   "scripts/download_models.py": "20a53a7809129398f7cf878aad29b98344d4221a54c692249915811d8245f9c9",
   "scripts/download_separator_model.py": "37e8bc5bf91b5a44aaf89363cd81a9b4fcb76155d111ec1196aa8f58cb0a61c4",
@@ -6,14 +11,13 @@
   "scripts/fetch_wheels.py": "f0fd910dd6a8d15b93c6dd16c5021e00881103a60fa459e2bfebcd9782205dd6",
   "scripts/prepare_demo.py": "72ac3a3936d516800820f795e7907279c31faf740c331a605b2e4b28941adc9e",
   "scripts/run_baseline.sh": "1c4e10b2b5dcbddfda4e36df07b47a85695c02f57e2b94b3b3c2c4e11d8466e4",
-  "scripts/stage_runner.py": "1996dd6645c56be2b254308304607bce0bb2b1b02cc303aacb2125f60ee495ea",
+  "scripts/setup_review_assets.py": "94afba12656efec500e984d7763eb541f4050ba4f51a13d64fab4e76a74dc3e1",
+  "scripts/stage_runner.py": "59bfdfb641c58b487666bff98843bba005b92518b6ffda5ea4b6801852c32cc3",
   "scripts/verify_result.py": "f26d2140b51bb0a328663fc2fa4b3f47b5fde04e4a1e2afde02aaa4451a86b96",
+  "scripts/verify_review.py": "bb3a8c3243c236b0541a252993dc108840ffa0db83966303f3d5c8591a2c50e6",
   "scripts/verify_transposition.py": "6e0f394b85736cfd676c54078d87e9bb6b400bb6a0ea1e31af01c17a0d59f7e3",
-  "src/music_cover/__init__.py": "74380ccf9bf8eff1415b2d522b64f027ab0040067af6484605c5e061fb61d783",
-  "src/music_cover/audio.py": "84ed88beb3970b5b659296fa996b9153fad7ad2038eb5265f3d2eb7f26828226",
-  "src/music_cover/pipeline.py": "13ab90a4bccc39a4e5ad693d8e59a3ba78ba1925063643f721df8d70d38f4fbb",
-  "src/music_cover/pitch.py": "aa21033c72710af7e42bbc6826b056b844f8c333e12dc617db2125c3fa734ee9",
   "tests/test_generation_length.py": "a056b4811ead1c8ee38699a170dd24eeee53a91bf59e6f6d3a58538478418c59",
-  "tests/test_pipeline.py": "f5a0f586174206ac9f8f2ae660e10db62319a1a3fb1dd8cf85bd62246238a5f1",
-  "tests/test_pitch.py": "1813106c6bad89b0753ed6e5293a137bba90dc227e9e31814b4de369fc0e4bb3"
+  "tests/test_pipeline.py": "1a8d15071fd2496ff1592e1468fc05559e83f1021052f81e1e9635a8b0a897fd",
+  "tests/test_pitch.py": "1813106c6bad89b0753ed6e5293a137bba90dc227e9e31814b4de369fc0e4bb3",
+  "tests/test_review.py": "cee657e9be35a96e3a3b27e358fd44b0f369189fa381fc3c6dd865d62423fef7"
 }

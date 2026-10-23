@@ -13,7 +13,7 @@
 在新目录获取代码时，同时初始化两个上游子模块：
 
 ```bash
-git clone --recurse-submodules https://github.com/Chernobyllight/music-cover-baseline.git
+git clone --branch v0.1 --recurse-submodules https://github.com/Chernobyllight/music-cover-baseline.git
 cd music-cover-baseline
 ```
 
@@ -44,20 +44,38 @@ envs/control/bin/python scripts/download_separator_model.py
 
 下载脚本需要相应的 `huggingface_hub`、`PyYAML` 等依赖。它们会创建模型目录并更新本地模型清单；`download_voice_models.py` 还会按当前仓库位置重建 `configs/seed_svc.local.yml` 中的绝对路径。版本清单里的原始绝对路径是原服务器记录，迁移时不能直接照搬。
 
+`v0.1` 默认开启成品分轨和 MIDI 评审。基础 separator 环境配置好后，还需要安装附加依赖和模型：
+
+```bash
+envs/separator/bin/python -m pip install --no-deps -r configs/review-requirements.txt
+envs/separator/bin/python scripts/setup_review_assets.py
+export PATH="/opt/conda/bin:$PATH"
+bash scripts/run_baseline.sh --preflight
+```
+
+该附加清单复用已有 Torch 2.8 / CUDA、NumPy、Librosa、ONNX Runtime、Julius 和 audio-separator 环境，不是一个独立环境的完整 requirements 文件。验证版本及模型 URL、哈希在 `configs/review_models.lock.json`。Basic Pitch 使用 CPU ONNX，不要求安装 TensorFlow。只恢复旧基础流程可使用 `--no-review`，对应预检为 `bash scripts/run_baseline.sh --preflight --no-review`。
+
 需要内置演示素材时，执行已有的准备脚本：
 
 ```bash
 envs/control/bin/python scripts/prepare_demo.py
 ```
 
-自己的歌曲、歌词和参考录音按 [USAGE.md](../USAGE.md) 放入 `data/raw/`。当前仓库不包含《落叶归根》《秋意浓》以及目标人物参考录音，相关文件仍保存在原服务器。`runs/` 下的试听页和音频也不会出现在 GitHub；报告中的这些链接是本地验收入口。
+自己的歌曲、歌词和参考录音按 [USAGE.md](../USAGE.md) 放入 `data/raw/`。当前仓库不包含《落叶归根》《秋意浓》《喜欢你》以及目标人物参考录音，相关文件仍保存在原服务器。`runs/` 下的试听页、音轨、MIDI 和评分表也不会出现在 GitHub。历史运行目录已按需清理，验证文档中的旧编号只作为历史记录。
 
 代码检查可在现有服务器执行，不会启动整首音乐生成：
 
 ```bash
-PYTHONPATH=src envs/control/bin/python -m unittest discover -s tests -v
+PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests -v
 ```
 
-该检查需要初始化 YuE 子模块，因为谱面移调复用了其中的 ABC 解析器。新环境中至少需要 NumPy、SciPy 和 SoundFile 等基础依赖。完整推理仍需完成上述环境、模型与输入准备，再通过 `scripts/run_baseline.sh` 执行。
+该检查需要初始化 YuE 子模块，因为谱面移调复用了其中的 ABC 解析器。新环境中需要 NumPy、SciPy、支持 MP3 解码的 SoundFile/libsndfile，以及新增测试所需的 Mido / Pretty MIDI；在 PATH 中提供带 `libmp3lame` 编码器的 FFmpeg。音频测试会实际生成和解码 MP3，完整测试集应使用已配置评审依赖的 separator 环境。完整推理仍需完成上述环境、模型与输入准备，再通过 `scripts/run_baseline.sh` 执行。
+
+对已经完成的评审运行执行独立检查，不会重新调用生成模型：
+
+```bash
+envs/separator/bin/python scripts/verify_review.py /绝对路径/runs/某次运行 \
+  --output /绝对路径/runs/某次运行/delivery_verification.json
+```
 
 `configs/project_code.lock.json` 记录本次归档时项目 Python 和 Shell 源码的 SHA256。后续代码变化由 Git commit 追溯；需要新的文件级快照时应同步更新该清单。
