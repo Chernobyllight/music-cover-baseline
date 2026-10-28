@@ -34,3 +34,6 @@ __pycache__/
 *.m4a
 *.ogg
 *.webm
+
+# Versioned voice datasets are local training assets
+data/voice_datasets/

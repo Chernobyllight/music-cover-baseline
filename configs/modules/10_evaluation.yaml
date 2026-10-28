@@ -1,4 +1,5 @@
 {
   "timeout_seconds": 10800,
-  "pitch_check": true
+  "pitch_check": true,
+  "voice_check": false
 }

@@ -1,3 +1,32 @@
+# v0.3 发布验证（2026-10-28）
+
+当前代码已撤回上一轮歌词检测与自动静音修复，保留 zero_shot、目标音色 finetuned、候选评估、分轨和 MIDI。新实例及命令见 [v0.3 实操](docs/17_v03_walkthrough.md)。下方旧日期记录保留历史数值；部分旧运行已按用户要求清理，不再作为当前下载入口。
+
+发布前复核：78 项回归测试通过，零样本和微调两条路线的完整环境预检通过；12 个模块和两个换声入口的执行计划正确。41 份文档的 196 个本地链接、111 个 Bash 示例语法通过，96 个项目 Python/Shell 文件与源码锁一致。提交内容检查未发现模型、媒体、运行数据或临时认证文件。
+
+本次整曲运行：`runs/lhd_bu_bai_de_ying_xiong_celtic_epic_yang_kun_finetuned_20261028`。使用《不败的英雄》、杨坤 0–20 秒参考、1000 步音色模型、凯尔特史诗风格、单候选 seed=42、30 步推理、自动选调、GPU 0，review/voice_check 开启。
+
+| 检查 | 实测 |
+| --- | --- |
+| 回归测试 | 78 项通过 |
+| 流程与交付 | 00–11 全部 succeeded；technical_validation=passed |
+| 自动选调 | 推荐/采用 -2 半音；生成实测中位 -1.982717，pitch_adherence=verified |
+| 最终音色 ECAPA | 0.821394563（10 阶段对齐干声，同推理参考） |
+| 换声音高保持 | voice_conversion.pitch 中 ±1 半音比例 98.0545% |
+| 成品 | 128.198667 秒；48 kHz 立体声 WAV/192 kbps MP3 |
+| 评审数据 | 12 路音频（10 条叶轨）、10 项 MIDI，无空主 MIDI |
+| MP3 SHA256 | `9cef2684c9296981e91c5c2083056e913114f0eeb30a2d3899bb717883e15c52` |
+
+05 原始干声 ECAPA 为 0.821432471，10 的对齐后干声为上表值，口径不同不应混用。`pitch_adherence.voice_conversion` 与独立 `voice_conversion.pitch` 各自运行 F0 评估，分别为 98.2490% 和 98.0545%。主观状态仍为 awaiting_human_review，未声称歌词或曲风已通过听评。
+
+模型 profile 为 `models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json`，selected_step=1000、validation_status=unverified_user_selected。主权重 SHA256 为 `292cae9459eba3fad2905beec480857d5d3f57d818c3ee2a06f21edcc3a7674a`；按用户指定使用该模型，不代表独立模型选优。源素材、参考片段、原有成品和权重校验保持一致。
+
+上一轮三个歌词验证运行及对应本地报告已删除。当前整曲生成及交付保留在上述目录；媒体、训练数据与模型不进入 Git。
+
+# 2026-10-27 音色方案收敛
+
+测试与实际整曲验证见[三候选验证记录](docs/16_voice_convergence_validation.md)，使用指南见[两条入口和结果路径](docs/15_voice_candidates.md)。
+
 # 实际验证记录
 
 

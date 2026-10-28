@@ -1,10 +1,13 @@
 import shutil
+import json
+from ..audio import sha256
+from ..voice_candidates import contained_file, render_report
 from ..common.io import write_json, artifact_paths
 from ..common.delivery import build_delivery
 ID = '11_delivery'
-CONTRACT_VERSION = 2
+CONTRACT_VERSION = 3
 DEFAULTS = {'timeout_seconds': 10800}
-CODE = ['audio.py', 'common/delivery.py', 'common/validation.py', 'backends/package.py', 'backends/evaluation.py', 'common/review_audio.py']
+CODE = ['voice_candidates.py', 'audio.py', 'common/delivery.py', 'common/validation.py', 'backends/package.py', 'backends/evaluation.py', 'common/review_audio.py']
 TIMELINE = {'*': 'see source artifact timeline'}
 def backends(r, c): return ['package'] if r['review'] else []
 def requires(r):
@@ -52,6 +55,23 @@ def run(ctx, out, i, p):
         page.write_text(page.read_text().replace('<h1>', '<p><a href="review/index.html">成品分轨与 MIDI 专业评审包</a></p><h1>', 1))
         with (out / 'report.md').open('a') as f:
             f.write('\n成品分轨及 MIDI：review/index.html。人工评分请填写运行目录 reviews 中的副本。\n')
+    if 'candidate_report' in mixed:
+        report = json.loads(mixed['candidate_report'].read_text())
+        for row in report['candidates']:
+            for key in ('final_wav', 'final_mp3'):
+                if key not in row: continue
+                source = contained_file(mixed['candidate_report'].parent, row[key])
+                if sha256(source) != row[key + '_sha256']: raise ValueError('Mixed candidate checksum mismatch')
+                target = out / row[key]; target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
+                if row['id'] == report['recommended_id'] and sha256(out / key.replace('_', '.')) != sha256(target):
+                    raise ValueError('Delivered final does not match recommended candidate')
+        write_json(out / 'candidates.json', report)
+        render_report(report, out / 'candidates.html', mixed=True)
+        page = out / 'listen.html'
+        page.write_text(page.read_text().replace('<h1>', '<p><a href="candidates.html">微调候选：三个版本与定量推荐</a></p><h1>', 1))
+        with (out / 'report.md').open('a') as stream:
+            stream.write('\n微调候选对比：candidates.html；推荐：' + report['recommended_id'] + '。指标取自 05 转换后干声；后续分轨、MIDI 对应推荐版本。\n')
     shutil.copyfile(evaluation['evaluation.json'], out / 'evaluation.json')
     for key in ['vocal_post_gain', 'instrumental_post_gain', 'residual']:
         shutil.copyfile(mixed[key], out / mixed[key].name)

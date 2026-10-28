@@ -1,3 +1,8 @@
 {
-  "timeout_seconds": 10800
+  "timeout_seconds": 10800,
+  "backend": "seed_vc",
+  "mode": "zero_shot",
+  "voice_profile": null,
+  "candidate_count": 3,
+  "candidate_seeds": null
 }

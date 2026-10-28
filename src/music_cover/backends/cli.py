@@ -11,11 +11,13 @@ OPERATIONS = {
     'cover': ('yue', 'cover', False),
     'separate': ('separator', 'separate', False),
     'convert': ('seed_vc', 'convert', False),
+    'convert_candidates': ('voice_candidates', 'generate', True),
     'pitch': ('rmvpe', 'pitch', False),
     'review_stems': ('review_stems', 'separate_review', True),
     'review_midi': ('midi', 'transcribe_stems', True),
     'review_package': ('package', 'build_review_package', True),
     'evaluate': ('evaluation', 'evaluate', True),
+    'evaluate_voice': ('voice_metrics', 'evaluate_voice', True),
     'validate_delivery': ('evaluation', 'validate_delivery', True),
 }
 
@@ -28,6 +30,10 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--steps', type=int, default=30)
     parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--voice-mode', choices=['zero_shot', 'finetuned'], default='zero_shot')
+    parser.add_argument('--voice-profile')
+    parser.add_argument('--checkpoint')
+    parser.add_argument('--model-config')
     args = parser.parse_args()
     Path(args.output).mkdir(parents=True, exist_ok=True)
     module, function, request_api = OPERATIONS[args.stage]

@@ -68,3 +68,15 @@ bash scripts/11_delivery/run.sh \
 启用移调分析时，交付还包含 pitch_report.html、pitch_candidates.csv、score_audio_consistency.json、score_transposed.mid；启用音高核验时包含 pitch_adherence.json。相同证据会进入 review/pitch_adaptation 和 midi_bundle.zip。此处 MIDI 是 02 的输入旋律谱；review/midi 中的 MIDI 才是成品音频重新转谱，二者不能混用。
 
 另一个完整实例：[孙燕姿＋秋意浓＋Bossa Nova / Samba Jazz，输出 runs/lhd_test_modular](../../docs/11_modular_walkthrough.md)。该手册包含从 00 到 11 的每条命令、上下游路径和评估解读。
+
+## 微调三个候选
+
+当 05 采用 finetuned 三候选时，本阶段也保留三个版本；根目录 final 为推荐版本。具体例子：
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
+bash scripts/11_delivery/run.sh --run runs/lhd_candidates_example
+```
+
+需要同一运行的前置模块已完成。读取的候选来自 06 的 candidates.json 及三个候选混音。本模块输出在 `runs/lhd_candidates_example/stages/11_delivery/attempt_001/artifacts/`，查看 `candidates.html`、`candidates.json` 和 `candidates/candidate_001/final.mp3`（002、003 同理）。实际 attempt 由 stage_state.json 决定。分轨与 MIDI 对应推荐版本。完整顺序见[三候选指南](../../docs/15_voice_candidates.md)。

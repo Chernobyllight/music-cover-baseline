@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "repo": "myshell-ai/OpenVoiceV2",
+      "revision": "f36e7edfe1684461a8343844af60babc2efbb727",
+      "file": "converter/checkpoint.pth",
+      "path": "models/OpenVoiceV2/converter/checkpoint.pth",
+      "sha256": "9652c27e92b6b2a91632590ac9962ef7ae2b712e5c5b7f4c34ec55ee2b37ab9e",
+      "scope": "training",
+      "bytes": 131320490
+    },
+    {
+      "repo": "myshell-ai/OpenVoiceV2",
+      "revision": "f36e7edfe1684461a8343844af60babc2efbb727",
+      "file": "converter/config.json",
+      "path": "models/OpenVoiceV2/converter/config.json",
+      "sha256": "9dfff60350b8c63f2c664efd92a61b2516efb22671466960f0e5dfebd881fa47",
+      "scope": "training",
+      "bytes": 838
+    },
+    {
+      "repo": "Plachta/Seed-VC",
+      "revision": "257283f9f41585055e8f858fba4fd044e5caed6e",
+      "file": "se_db.pt",
+      "path": "models/Seed-VC/se_db.pt",
+      "sha256": "a76e1ad4fac609cfa1a5198bf789427c5e7822d656fab1ffed6cd80fc0d381b7",
+      "scope": "training",
+      "bytes": 102405286
+    },
+    {
+      "repo": "speechbrain/spkrec-ecapa-voxceleb",
+      "revision": "0f99f2d0ebe89ac095bcc5903c4dd8f72b367286",
+      "file": "embedding_model.ckpt",
+      "path": "models/voice_evaluation/ecapa/embedding_model.ckpt",
+      "sha256": "0575cb64845e6b9a10db9bcb74d5ac32b326b8dc90352671d345e2ee3d0126a2",
+      "scope": "evaluation",
+      "bytes": 83316686
+    },
+    {
+      "repo": "speechbrain/spkrec-ecapa-voxceleb",
+      "revision": "0f99f2d0ebe89ac095bcc5903c4dd8f72b367286",
+      "file": "hyperparams.yaml",
+      "path": "models/voice_evaluation/ecapa/hyperparams.yaml",
+      "sha256": "6f78854fa04ba59e761437b76a2575d3aba5e5016de3e9b69f0c9a5077fb1a41",
+      "scope": "evaluation",
+      "bytes": 1919
+    }
+  ]
+}

@@ -79,6 +79,10 @@ def main():
         parser.add_argument('--' + name, type=float)
     parser.add_argument('--review', action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument('--preflight', action='store_true', help='只检查选中模块的依赖')
+    parser.add_argument('--voice-mode', choices=['zero_shot', 'finetuned'])
+    parser.add_argument('--voice-profile', help='已导出的 Seed-VC 音色版本 voice.json')
+    parser.add_argument('--voice-candidates', type=int, help='微调推理候选数，默认 3')
+    parser.add_argument('--voice-candidate-seeds', type=int, nargs='+', help='明确指定每个微调候选的随机种子')
     args = parser.parse_args()
     if args.list_stages:
         print('\n'.join(IDS))
@@ -102,7 +106,7 @@ def main():
                 parser.error('历史 v0.1 运行目录保留不动。请指定新的 --run，或不传 --run 自动创建。')
             request.update(json.loads((run / 'request.json').read_text()))
             saved = read_config(run / 'config.resolved.json')
-            configs.update(saved.get('modules', {}))
+            for stage, values in saved.get('modules', {}).items(): configs[stage].update(values)
         if args.config:
             path = (ROOT / args.config.expanduser()).resolve()
             task = read_config(path)
@@ -111,6 +115,12 @@ def main():
             request.update(task.get('request', {}))
             for stage, values in task.get('modules', {}).items(): configs[normalize(stage)].update(values)
         if set(request) - REQUEST_KEYS: parser.error(f'Unknown request keys: {sorted(set(request) - REQUEST_KEYS)}')
+        if args.voice_mode: configs['05_voice_conversion']['mode'] = args.voice_mode
+        if args.voice_profile: configs['05_voice_conversion']['voice_profile'] = args.voice_profile
+        if args.voice_candidates is not None: configs['05_voice_conversion']['candidate_count'] = args.voice_candidates
+        if args.voice_candidate_seeds is not None: configs['05_voice_conversion']['candidate_seeds'] = args.voice_candidate_seeds
+        if configs['05_voice_conversion']['mode'] == 'zero_shot':
+            configs['05_voice_conversion']['voice_profile'] = None
         for key in REQUEST_KEYS:
             value = getattr(args, key, None)
             if value is not None: request[key] = value
@@ -139,6 +149,10 @@ def main():
                 'note': 'This is a static execution plan. Cache checks happen when running.'}, ensure_ascii=False, indent=2))
             return
         if args.preflight:
+            if '05_voice_conversion' in selected:
+                from .voice import resolve_voice
+                c = configs['05_voice_conversion']
+                resolve_voice(c['mode'], c['voice_profile'])
             check_resources(ROOT, [b for name in selected for b in modules[name].backends(request, configs[name])], mp3='06_mix' in selected)
             print('Selected module preflight OK')
             return

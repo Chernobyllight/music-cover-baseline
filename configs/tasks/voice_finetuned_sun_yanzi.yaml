@@ -1,0 +1,9 @@
+{
+  "modules": {
+    "05_voice_conversion": {
+      "mode": "finetuned",
+      "voice_profile": "models/voices/sun_yanzi/seed_vc/smoke_v001/voice.json"
+    },
+    "10_evaluation": {"voice_check": true}
+  }
+}

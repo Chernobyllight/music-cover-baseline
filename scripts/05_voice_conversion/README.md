@@ -1,6 +1,10 @@
 # 05_voice_conversion · 转换目标音色
 
-用 Seed-VC 将生成歌曲的人声转换为参考录音的目标音色。
+用 Seed-VC 将生成歌曲的人声转换为参考录音的目标音色。默认保留零样本模式，并新增独立的微调模型入口。
+
+- 零样本：`bash scripts/05_voice_conversion/zero_shot/run.sh --run runs/lhd_test_modular`。
+- 微调推理：`bash scripts/05_voice_conversion/finetuned/run.sh --run runs/lhd_test_modular --voice-profile models/voices/sun_yanzi/seed_vc/smoke_v001/voice.json`。
+- 训练、验证、导出：见 [音色微调手册](../../docs/13_voice_adaptation.md)。微调推理入口不会触发训练。
 
 ## 使用示例
 
@@ -35,6 +39,7 @@ bash scripts/05_voice_conversion/run.sh \
 
 | 文件 / 目录 | 内容及下游用途 |
 | --- | --- |
+| `conversion.json` | 模式、音色版本、模型与输入哈希、推理参数 |
 | `converted.wav` | 转换后人声；供 06 对齐和混音 |
 | `source_mono.wav` | 实际送入换声模型的 44.1 kHz 单声道人声 |
 
@@ -57,3 +62,9 @@ bash scripts/run_baseline.sh --run runs/qiu_yi_nong_modular_test --from 05_voice
 完整依赖、缓存及失败恢复说明见 [模块化说明](../../docs/09_modular_pipeline.md)。
 
 另一个完整实例：[孙燕姿＋秋意浓＋Bossa Nova / Samba Jazz，输出 runs/lhd_test_modular](../../docs/11_modular_walkthrough.md)。该手册包含从 00 到 11 的每条命令、上下游路径和评估解读。
+
+## 微调推理的三个候选
+
+微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，推荐版本进入分轨、MIDI 和最终交付入口；零样本入口仍为单次推理。
+
+具体命令与中间文件路径见[三个候选与推荐结果使用说明](../../docs/15_voice_candidates.md)。

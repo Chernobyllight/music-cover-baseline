@@ -152,6 +152,40 @@ class ModularExecutionTests(unittest.TestCase):
             for dependency in module.requires({'review':True, 'transpose':'auto'}):
                 self.assertLess(ids.index(dependency), ids.index(module.ID))
 
+    def legacy_alias_cache(self):
+        from music_cover.common.io import identity, write_json
+        from music_cover.audio import sha256
+        state = self.run_stages()
+        alias = self.root / 'alias'; alias.symlink_to(self.root, target_is_directory=True)
+        record = state['stages']['00_prepare']; attempt = Path(record['attempt'])
+        config = json.loads((attempt / 'config.json').read_text())
+        code = config['provenance']['code']
+        digest = code.pop('00_prepare.py'); code[str(alias / '00_prepare.py')] = digest
+        record['fingerprint'] = identity(config['provenance'])
+        write_json(attempt / 'config.json', config)
+        manifest = json.loads((attempt / 'outputs.json').read_text())
+        manifest['fingerprint'] = record['fingerprint']; write_json(attempt / 'outputs.json', manifest)
+        record['outputs_manifest_sha256'] = sha256(attempt / 'outputs.json')
+        write_json(self.root / 'run/stage_state.json', state)
+        return attempt
+
+    def test_legacy_code_path_alias_reuses_only_identical_provenance(self):
+        self.legacy_alias_cache()
+        self.run_stages(['02_pitch_adaptation'])
+        self.assertEqual(len(self.calls), 3)
+        Path(self.modules[0].__file__).write_text('# actual code change\n')
+        with self.assertRaisesRegex(DependencyError, '00_prepare'):
+            self.run_stages(['02_pitch_adaptation'])
+
+    def test_alias_compatibility_rejects_tampered_provenance(self):
+        from music_cover.common.io import write_json
+        attempt = self.legacy_alias_cache()
+        config = json.loads((attempt / 'config.json').read_text())
+        config['provenance']['params']['injected'] = True
+        write_json(attempt / 'config.json', config)
+        with self.assertRaisesRegex(DependencyError, '00_prepare'):
+            self.run_stages(['02_pitch_adaptation'])
+
 
 class DisabledPitchTests(unittest.TestCase):
     def test_zero_transpose_preserves_score_without_loading_models(self):

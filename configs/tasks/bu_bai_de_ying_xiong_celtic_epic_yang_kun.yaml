@@ -1,0 +1,78 @@
+{
+  "request": {
+    "name": "bu_bai_de_ying_xiong_celtic_epic_yang_kun_finetuned",
+    "seed": 42,
+    "steps": 30,
+    "gpu": "0",
+    "reference_start": 0,
+    "reference_duration": 20,
+    "transpose": "auto",
+    "review": true,
+    "song": "data/raw/songs/bu_bai_de_ying_xiong_tang_jun_di.mp3",
+    "lyrics": "data/raw/lyrics/bu_bai_de_ying_xiong_tang_jun_di.txt",
+    "reference": "data/raw/references/yang_kun/reference.wav",
+    "style": "Mandarin Chinese, epic Celtic folk orchestral anthem, cinematic heroic adventure, driving 6/8 Celtic rhythm, soaring Highland bagpipe melodies, lyrical Irish tin whistle, Celtic harp arpeggios, energetic fiddle ostinatos, deep bodhran and thunderous orchestral drums, sweeping strings and majestic French horns, expressive husky solo male lead vocal, warm resonant low register, intimate storytelling verses building into a triumphant powerful chorus, spacious polished stereo production"
+  },
+  "modules": {
+    "00_prepare": {
+      "timeout_seconds": 10800
+    },
+    "01_source_score": {
+      "timeout_seconds": 10800
+    },
+    "02_pitch_adaptation": {
+      "timeout_seconds": 10800,
+      "auto_min_semitones": -6,
+      "auto_max_semitones": 6,
+      "shift_penalty": 0.04,
+      "minimum_improvement": 0.15,
+      "minimum_voiced_seconds": 3.0,
+      "minimum_direction_support": 0.6,
+      "reference_kind": "singing",
+      "range_references": [],
+      "target_low_midi": null,
+      "target_high_midi": null,
+      "range_penalty": 1.0
+    },
+    "03_style_generation": {
+      "timeout_seconds": 10800
+    },
+    "04_vocal_separation": {
+      "timeout_seconds": 10800
+    },
+    "05_voice_conversion": {
+      "timeout_seconds": 10800,
+      "backend": "seed_vc",
+      "mode": "finetuned",
+      "voice_profile": "models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json",
+      "candidate_count": 1,
+      "candidate_seeds": [
+        42
+      ]
+    },
+    "06_mix": {
+      "timeout_seconds": 10800,
+      "mp3_bitrate_kbps": 192
+    },
+    "07_stem_separation": {
+      "timeout_seconds": 10800
+    },
+    "08_final_score": {
+      "timeout_seconds": 10800
+    },
+    "09_stem_midi": {
+      "timeout_seconds": 10800,
+      "onset_threshold": 0.5,
+      "frame_threshold": 0.3,
+      "minimum_note_ms": 90
+    },
+    "10_evaluation": {
+      "timeout_seconds": 10800,
+      "pitch_check": true,
+      "voice_check": true
+    },
+    "11_delivery": {
+      "timeout_seconds": 10800
+    }
+  }
+}

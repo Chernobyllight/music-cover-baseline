@@ -1,5 +1,7 @@
 # 模块化 baseline：执行、产物契约与技术迭代
 
+v0.3 沿用下述依赖结构，05 增加 zero_shot / finetuned 双入口，06/11 支持微调候选混音和交付，10 支持可选 ECAPA。详见 [音色训练](13_voice_adaptation.md)、[候选说明](15_voice_candidates.md) 和 [当前整曲实例](17_v03_walkthrough.md)。
+
 v0.2 基于 v0.1 重构，保留 SheetSage2、YuE2、BS-RoFormer、Seed-VC、Demucs、Basic Pitch 等现有模型；02 的选调现已升级为[双向算法](10_bidirectional_pitch.md)。目标是使每个阶段可独立执行、检查、替换和重跑，不改变“原曲 → 改曲风 → 换音色 → 评审”的技术路线。默认主流程串行执行；目录编号是阅读顺序，真实依赖由模块声明。
 
 可直接复制的完整 00–11 示例、输入来源和结果路径见 [实操手册](11_modular_walkthrough.md)。
@@ -15,6 +17,9 @@ scripts/
   03_style_generation/run.sh
   04_vocal_separation/run.sh
   05_voice_conversion/run.sh
+    zero_shot/run.sh          # 通用模型推理
+    finetuned/run.sh          # 已训练音色模型推理
+    finetuned/training/       # 独立 00–03 训练/验证/导出
   06_mix/run.sh
   07_stem_separation/run.sh
   08_final_score/run.sh
@@ -51,7 +56,7 @@ configs/
 | 02_pitch_adaptation | 01 的 ABC；非零或 auto 时还使用 00 原曲和参考 | `score_original.abc`、`score_transposed.abc`、`transposition.json`、`score_transposed.mid`、候选 CSV/HTML、谱/音频一致性 JSON；启用时包含原曲分离结果、F0 和音区分析。`0` 明确记录直通，不加载分离/F0 模型 |
 | 03_style_generation | 02 的乐谱、00 歌词、style / seed | `generated/audio.flac`、生成请求、长度预算及原生模型数据；截断生成拒绝通过 |
 | 04_vocal_separation | 03 生成的歌曲 | `vocals.wav`、`instrumental.wav`（模型原生 44.1k） |
-| 05_voice_conversion | 04 人声、00 参考、steps / seed | `converted.wav`、实际单声道输入；保留原有 Seed-VC 参数 |
+| 05_voice_conversion | 04 人声、00 参考、steps / seed | `converted.wav`、`conversion.json`；微调还含 `candidates.json/csv/html` 与各候选干声，推荐版本供下游使用 |
 | 06_mix | 03 原混音、04 人声和伴奏、05 换声 | `final.wav`、`final.mp3`、`mix.json`、对齐人声、直接重混对照；新增 `vocal_post_gain.wav`、`instrumental_post_gain.wav`、`mix_residual.wav` 记录实际入混音成分 |
 | 07_stem_separation | 06 最终音频与增益/对齐结果、04 伴奏 | `stems.json`、`audio/*.wav`、重建对照；12 条父/子/残差轨中只有指定 10 条叶轨相加 |
 | 08_final_score | 06 最终音频 | 成品完整转谱、`chords.mid`、`transcription_summary.json`；使用成品而非原曲时间轴 |
@@ -185,3 +190,7 @@ runs/<run>/
 音频时间轴分为原曲、参考片段、生成歌曲三种。不要把原曲某一秒与成品同一秒当作音乐位置对齐。最终混音与评审分轨统一为 48k、同起点同长度；模型内部输入保留各自所需采样率。MIDI 的固定 120 BPM 是秒时间刻度，不是实测歌曲速度。
 
 这次模块化提供的是技术阶段重跑。它没有新增副歌局部重生成、人工修改 MIDI 后重新合成、DAW 编辑或客观音乐质量保证。
+
+## 05 音色模型迭代
+
+05 现有入口保留，新增 `zero_shot/run.sh` 与 `finetuned/run.sh`。训练流程独立放在 `finetuned/training/00_prepare` 至 `03_export`，不插入歌曲00–11。两种推理输出保持一致，模型模式、版本和哈希进入05缓存与记录。具体命令见 [音色微调手册](13_voice_adaptation.md)。

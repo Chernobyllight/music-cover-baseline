@@ -1,0 +1,33 @@
+{
+  "voice_id": "sun_yanzi",
+  "version": "v001",
+  "dataset_dir": "data/voice_datasets/sun_yanzi/v001",
+  "smoke_test": false,
+  "segment_seconds": 8,
+  "gpu": 0,
+  "sources": [],
+  "reference": "data/raw/references/sun_yanzi/reference.wav",
+  "training": {
+    "seed": 42,
+    "learning_rate": 1e-05,
+    "batch_size": 1,
+    "max_steps": 1000,
+    "save_every": 200
+  },
+  "validation": {
+    "source_run": "runs/lhd_test_modular",
+    "windows": [
+      {
+        "start": 40,
+        "duration": 12
+      },
+      {
+        "start": 120,
+        "duration": 12
+      }
+    ],
+    "steps": 30,
+    "seed": 42
+  },
+  "export_dir": "models/voices/sun_yanzi/seed_vc/v001"
+}

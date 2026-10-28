@@ -47,3 +47,18 @@ export PATH="/opt/conda/bin:$PATH"
 
 /opt/conda/bin/python scripts/setup/capture_environment.py
 ```
+
+## v0.3 音色训练与评估资源
+
+`setup_voice_training.py` 用固定 revision 和完整 SHA256 下载/检查附加资源。已有 Seed-VC 环境先按 [权重指南](../../docs/12_model_weights.md) 安装 `configs/requirements-voice-adaptation.txt`。
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
+# 已训练模型推理的候选评估，只需 evaluation 资产。
+envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+# 需要训练时再准备所有资产；已下载时只核验。
+envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
+```
+
+读取 `configs/voice_training_assets.lock.json`；evaluation 输出到 `models/voice_evaluation/ecapa/`，training 输出到 `models/OpenVoiceV2/` 与 `models/Seed-VC/se_db.pt`。训练的 00–03 和主流程 00–11 分开执行，见 [音色手册](../../docs/13_voice_adaptation.md)。

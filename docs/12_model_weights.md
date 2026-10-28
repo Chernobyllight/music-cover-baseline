@@ -1,8 +1,8 @@
-# v0.2 模型权重清单与准备方法
+# v0.3 模型权重清单与准备方法
 
-本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 按 2026-10-23 的 `v0.2` 代码、锁文件和现有服务器文件核对。
+本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 按 2026-10-28 的 `v0.3` 代码和模型锁文件核对；基础模型沿用 v0.2，微调/评估依赖见第 9 节。
 
-当前完整流程（`--transpose auto --review`）需要 **13 组模型资产**，包含主模型和附属模型；同一个模型可被多个阶段复用。GitHub 仓库不包含这些大文件。孙燕姿或詹姆斯的音色由参考录音提供，当前 Seed-VC 路线无需单独下载对应人物的专用权重。
+原有零样本完整流程（`--transpose auto --review`）需要 **13 组模型资产**，包含主模型和附属模型；同一个模型可被多个阶段复用。GitHub 仓库不包含这些大文件。孙燕姿或詹姆斯的音色由参考录音提供，零样本 Seed-VC 路线无需单独下载对应人物的专用权重。新增微调路线可用目标歌手录音训练专用版本，所需附加资产见本文末尾。
 
 本机项目根目录：
 
@@ -277,6 +277,54 @@ PY
 | 07/09 缺模型，基础歌曲却能生成 | 补齐评审依赖，并执行 `setup_review_assets.py`；只有不需要评审输出时才使用 `--no-review` |
 | BS-RoFormer/Karaoke 权重存在但报配置缺失 | 检查对应 YAML、`audio-separator` 版本及首次加载时的网络/缓存 |
 | `ffmpeg is not available` | 当前服务器执行 `export PATH="/opt/conda/bin:$PATH"`，再运行预检 |
-| 不知道该下载哪个人物模型 | 此路线使用通用 Seed-VC 权重，人物参考音频放在 `data/raw/references/`，通过 `--reference` 指定 |
+| 不知道该下载哪个人物模型 | 零样本路线使用通用 Seed-VC；微调路线加载本地训练导出的 voice.json，两者仍通过 --reference 指定参考片段 |
 
 本清单反映当前实现的实际依赖。后续替换模型时，应同步修改后端配置、下载脚本、锁记录和本文，并重新验证受影响模块。
+
+
+## 9. 可选：目标音色微调和独立评估资产
+
+原有零样本接口保持独立，不要求安装下列训练资产。完整逐步命令见 [音色微调手册](13_voice_adaptation.md)。
+
+| 资产 | 本地文件 | 用途 | 大小（十进制） |
+| --- | --- | --- | --- |
+| OpenVoiceV2 converter | `models/OpenVoiceV2/converter/checkpoint.pth`、`config.json` | 训练时扰动输入音色，模型自身冻结 | 约 131 MB |
+| Seed-VC 说话人向量库 | `models/Seed-VC/se_db.pt` | 提供随机音色扰动目标，固定不训练 | 约 102 MB |
+| SpeechBrain ECAPA-TDNN | `models/voice_evaluation/ecapa/embedding_model.ckpt`、`hyperparams.yaml` | 独立音色相似度评估，冻结 | 约 83 MB |
+| 自行微调的 Seed-VC | `models/voices/<voice_id>/seed_vc/<version>/model.pth` | 05 finetuned 模式使用；配套 config.yml、voice.json、validation.json | 取决于导出模型 |
+
+前三项在 `configs/voice_training_assets.lock.json` 固定仓库 revision、文件路径、用途、字节数和 SHA256；下载后校验完整哈希。基础 Seed-VC、Whisper-small、CAMPPlus、RMVPE 和 BigVGAN 仍沿用前文资产，不会覆盖通用主权重。
+
+| 来源 | 固定 revision |
+| --- | --- |
+| [myshell-ai/OpenVoiceV2](https://huggingface.co/myshell-ai/OpenVoiceV2/tree/f36e7edfe1684461a8343844af60babc2efbb727) | `f36e7edfe1684461a8343844af60babc2efbb727` |
+| [Plachta/Seed-VC](https://huggingface.co/Plachta/Seed-VC/tree/257283f9f41585055e8f858fba4fd044e5caed6e) | `257283f9f41585055e8f858fba4fd044e5caed6e` |
+| [speechbrain/spkrec-ecapa-voxceleb](https://huggingface.co/speechbrain/spkrec-ecapa-voxceleb/tree/0f99f2d0ebe89ac095bcc5903c4dd8f72b367286) | `0f99f2d0ebe89ac095bcc5903c4dd8f72b367286` |
+
+```bash
+cd /mnt/afs_f/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
+envs/seed-vc/bin/python -m pip install --no-deps \
+  -r configs/requirements-voice-adaptation.txt
+envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all
+# 只检查，不重新下载。
+envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
+```
+
+`--scope training` 只准备 OpenVoice 和向量库；`--scope evaluation` 只准备 ECAPA。独立验证和主流程10的 voice_check 都会核验评估资产。ECAPA 使用原始编码器向量的单位归一化余弦，不使用说话人分类头；hyperparams.yaml 保留用于追溯结构。训练 checkpoint 含优化器等状态，体积显著大于只含网络参数的导出模型，不要将两者混用。
+
+## 微调候选评估需要的权重
+
+05 的 `finetuned` 模式默认产生三个候选并自动评估；即使显式设为一个候选，也需要冻结的 ECAPA-TDNN 和 RMVPE。零样本 05 仍不需要 ECAPA；10 的可选 voice_check 启用时才需要。加载已导出的通用音色模型进行推理，不需要 OpenVoiceV2 或训练向量库。
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
+envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+```
+
+按本文件前述环境准备步骤安装评估依赖；该命令准备并校验 `configs/voice_training_assets.lock.json` 中 evaluation 资产。模型位置为 `models/voice_evaluation/ecapa/embedding_model.ckpt` 和 `models/RMVPE/rmvpe.pt`，音色 profile 中列出的 checkpoint/config/validation 三个文件均须保留。
+
+当前杨坤实例使用 `models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json`，`selected_step=1000`。此 profile 为用户指定 checkpoint，状态是 `unverified_user_selected`，不等于通过独立测试集模型选优。模型 SHA256 为 `292cae9459eba3fad2905beec480857d5d3f57d818c3ee2a06f21edcc3a7674a`；仓库只提供任务配置与使用说明，不分发歌手模型或录音。
+
+本版主流程不调用歌词 ASR、歌词门禁或静音修复；不需要此前实验使用的 Whisper large-v3、Paraformer 或 Qwen3-ASR 权重。表内 Whisper-small 是 Seed-VC 的内容编码器，仍为换声必需资源。

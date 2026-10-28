@@ -70,3 +70,18 @@ bash scripts/run_baseline.sh --run runs/qiu_yi_nong_modular_test --from 10_evalu
 音高核验使用 0.2 秒有声片段的相对轮廓 DTW（原曲→生成）和延迟校正后的同时间片段（换声前→后）。对齐不使用预期移调量，也不按八度折叠；低覆盖或偏差大时标记 unassessable / needs_review。verified 仅表示这些工程阈值通过，不等于逐音正确或听感验收。不会在评估阶段隐式移调音频。
 
 另一个完整实例：[孙燕姿＋秋意浓＋Bossa Nova / Samba Jazz，输出 runs/lhd_test_modular](../../docs/11_modular_walkthrough.md)。该手册包含从 00 到 11 的每条命令、上下游路径和评估解读。
+
+## 可选音色评估
+
+在任务配置 `modules.10_evaluation.voice_check` 设为 `true`，会增加 ECAPA 相似度和对齐后的源/转换 F0 检查，即使 transpose=0 也执行。示例：
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
+bash scripts/10_evaluation/run.sh \
+  --run runs/lhd_bu_bai_de_ying_xiong_celtic_epic_yang_kun_finetuned_20261028
+```
+
+本例读取已完成的杨坤凯尔特史诗运行，其保存配置已启用 voice_check。读取04的源人声、06的已对齐转换人声、00的参考片段，以及05的转换记录；需要相同配置下的00–09已完成，创建方法见 [v0.3 实操](../../docs/17_v03_walkthrough.md)。输出本阶段 `artifacts/voice_conversion_evaluation.json` 和 `voice_diagnostics/`，并合入 `evaluation.json`。该相似度使用同一推理参考，仅为诊断，不是盲测结论。附加权重及完整流程见 [音色微调手册](../../docs/13_voice_adaptation.md)。
+
+05 使用微调候选模式时，evaluation.json 自动包含 voice_candidates，汇总三个候选在 05 干声上的指标和推荐，不要求再开启 voice_check。后者仅额外评估推荐版本在 06 对齐后的干声。

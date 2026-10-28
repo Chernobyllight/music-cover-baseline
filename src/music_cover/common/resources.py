@@ -7,7 +7,7 @@ from ..audio import sha256
 
 ENVIRONMENTS = {'sheetsage': 'sheetsage2', 'yue': 'yue2', 'separator': 'separator',
                 'seed_vc': 'seed-vc', 'rmvpe': 'seed-vc', 'review_stems': 'separator',
-                'midi': 'separator', 'analysis': 'separator', 'package': 'separator'}
+                'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': 'seed-vc'}
 MODEL_GROUPS = {
     'sheetsage': ('generation_models.lock.json', ('SheetSage2', 'MERT-v2-FullSong')),
     'yue': ('generation_models.lock.json', ('YuE2-3B', 'YuE2-Vae')),
@@ -19,6 +19,10 @@ MODEL_GROUPS = {
 def resource_data(root, backend):
     """Only the selected model entries; editing another model's lock does not invalidate this stage."""
     root = Path(root)
+    if backend == 'voice_metrics':
+        data = json.loads((root / 'configs/voice_training_assets.lock.json').read_text())
+        pitch = json.loads((root / 'configs/voice_models.lock.json').read_text())['RMVPE']
+        return {'assets': [x for x in data['assets'] if x['scope'] == 'evaluation'], 'RMVPE': pitch}
     if backend in MODEL_GROUPS:
         name, keys = MODEL_GROUPS[backend]
         data = json.loads((root / 'configs' / name).read_text())
@@ -41,10 +45,13 @@ def signature(root, backends):
                  'installed_lock_sha256': sha256(freeze)}
         if backend == 'seed_vc':
             entry['config_sha256'] = sha256(root / 'configs/seed_svc.local.yml')
+        if backend == 'voice_metrics':
+            entry['additional_requirements_sha256'] = sha256(root / 'configs/requirements-voice-adaptation.txt')
         # Small local model implementation files are executable dependencies, too.
         prefixes = {'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
                     'yue': ('models/YuE2-3B', 'models/YuE2-Vae', 'third_party/YuE'),
-                    'seed_vc': ('third_party/seed-vc',), 'rmvpe': ('third_party/seed-vc/modules',)}.get(backend, ())
+                    'seed_vc': ('third_party/seed-vc',), 'rmvpe': ('third_party/seed-vc/modules',),
+                    'voice_metrics': ('third_party/seed-vc/modules',)}.get(backend, ())
         files = [p for prefix in prefixes for p in (root / prefix).rglob('*.py') if '__pycache__' not in p.parts]
         entry['upstream_code'] = {str(p.relative_to(root)): sha256(p) for p in sorted(files)}
         result[backend] = entry
@@ -54,6 +61,9 @@ def signature(root, backends):
 def requirements(root, backend):
     root = Path(root)
     required = [root / 'envs' / ENVIRONMENTS[backend] / 'bin/python']
+    if backend == 'voice_metrics':
+        required += [root / a['path'] for a in resource_data(root, backend)['assets']]
+        required += [root / 'models/RMVPE/rmvpe.pt']
     if backend in MODEL_GROUPS:
         _, groups = MODEL_GROUPS[backend]
         names = {'SheetSage2': 'model.safetensors', 'MERT-v2-FullSong': 'model.safetensors',
@@ -99,4 +109,5 @@ IMPORTS = {
     'rmvpe': ['torch', 'librosa'], 'review_stems': ['demucs.pretrained', 'audio_separator.separator'],
     'midi': ['basic_pitch.inference', 'onnxruntime', 'mido', 'pretty_midi'],
     'analysis': ['librosa'], 'package': ['mido', 'pretty_midi', 'soundfile'],
+    'voice_metrics': ['speechbrain', 'librosa', 'soundfile'],
 }

@@ -96,6 +96,9 @@ class Pipeline:
         if 'pitch.py' in getattr(module, 'CODE', ()):
             helper = self.root / 'third_party/YuE/skills/yue2-music/scripts/abc_tools.py'
             if helper.is_file(): files.append(helper)
+        # /data and /mnt/afs_f may point at the same checkout. Module imports can
+        # preserve either spelling, but cache identity must use the actual file.
+        files = [p.resolve() for p in files]
         code = {str(p.relative_to(self.root)) if p.is_relative_to(self.root) else str(p): sha256(p) for p in files}
         runtime = dict(self.runtime(module))
         control_lock = self.root / 'configs/control.installed.txt'
@@ -119,12 +122,26 @@ class Pipeline:
 
     def cached(self, name, fingerprint):
         record = self.state['stages'].get(name, {})
-        if record.get('fingerprint') != fingerprint or record.get('status') != 'succeeded': return None
+        if record.get('status') != 'succeeded': return None
         try:
+            if record.get('fingerprint') != fingerprint:
+                # Read-only compatibility for older manifests with alias-spelled
+                # code keys. Verify their original digest before normalization;
+                # every input, setting, runtime and code digest must still match.
+                previous = json.loads((Path(record['attempt']) / 'config.json').read_text())['provenance']
+                if identity(previous) != record.get('fingerprint'): return None
+                normalized = {}
+                for key, digest in previous['code'].items():
+                    p = (self.root / key).resolve()
+                    key = str(p.relative_to(self.root)) if p.is_relative_to(self.root) else str(p)
+                    if key in normalized and normalized[key] != digest: return None
+                    normalized[key] = digest
+                previous['code'] = normalized
+                if identity(previous) != fingerprint: return None
             marker = Path(record['attempt']) / 'outputs.json'
             if sha256(marker) != record['outputs_manifest_sha256']: return None
             manifest = json.loads(marker.read_text())
-            if manifest['fingerprint'] != fingerprint or manifest['status'] != 'succeeded': return None
+            if manifest['fingerprint'] != record['fingerprint'] or manifest['status'] != 'succeeded': return None
             outputs = record['outputs']
             if not outputs: return None
             for item in outputs.values():

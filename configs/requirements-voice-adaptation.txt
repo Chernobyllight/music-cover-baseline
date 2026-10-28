@@ -1,0 +1,6 @@
+# Additional packages for independent ECAPA evaluation in an existing Seed-VC environment.
+# Install with --no-deps to preserve the pinned torch/transformers stack.
+speechbrain==1.0.3
+hyperpyyaml==1.2.2
+ruamel.yaml==0.18.6
+ruamel.yaml.clib==0.2.12

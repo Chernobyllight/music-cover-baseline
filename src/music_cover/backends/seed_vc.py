@@ -7,8 +7,17 @@ import shutil
 import sys
 from pathlib import Path
 from ..common.paths import ROOT
+from ..common.io import write_json
+from ..audio import sha256
+from ..voice import resolve_voice, voice_record
+from ..voice_weights import check_parameter_coverage
 
 def convert(args):
+    voice = resolve_voice(getattr(args, 'voice_mode', 'zero_shot'), getattr(args, 'voice_profile', None))
+    # Candidate checkpoints are accepted only by the isolated validation controller.
+    if getattr(args, 'checkpoint', None):
+        voice = {**voice, 'mode': 'candidate', 'checkpoint': Path(args.checkpoint).resolve(),
+                 'config': Path(args.model_config).resolve()}
     # Keep upstream relative asset lookup intact. All changes stay inside this project.
     project = ROOT / "third_party/seed-vc"
     os.chdir(project)
@@ -30,12 +39,21 @@ def convert(args):
             raise ValueError(f"Unregistered voice model asset: {repo_id}/{model_filename}")
         return str(local_auxiliary[repo_id, model_filename])
     inference.load_custom_model_from_hf = local_asset
+    original_loader = inference.load_checkpoint
+    def checked_loader(model, optimizer, path, **kwargs):
+        payload = torch.load(path, map_location='cpu', weights_only=False)
+        if payload.get('adaptation_scope') not in (None, 'speaker'):
+            raise ValueError('Only speaker-level checkpoints are supported')
+        state = payload['net']
+        check_parameter_coverage(model, state)
+        del state, payload
+        return original_loader(model, optimizer, path, **kwargs)
+    inference.load_checkpoint = checked_loader
     options = argparse.Namespace(
         source=args.input, target=args.reference, output=args.output,
         diffusion_steps=args.steps, length_adjust=1.0, inference_cfg_rate=0.7,
         f0_condition=True, auto_f0_adjust=False, semi_tone_shift=0,
-        checkpoint=str(ROOT / "models/Seed-VC/DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth"),
-        config=str(ROOT / "configs/seed_svc.local.yml"), fp16=True,
+        checkpoint=str(voice['checkpoint']), config=str(voice['config']), fp16=True,
     )
     inference.main(options)
     outputs = list(Path(args.output).glob("vc_*.wav"))
@@ -43,3 +61,7 @@ def convert(args):
         raise RuntimeError(f"Expected one conversion WAV, got {outputs}")
     if outputs[0].name != "converted.wav":
         outputs[0].rename(Path(args.output) / "converted.wav")
+    write_json(Path(args.output) / 'conversion.json', {**voice_record(voice),
+        'source_sha256': sha256(args.input), 'reference_sha256': sha256(args.reference),
+        'steps': args.steps, 'seed': args.seed, 'semitones': 0, 'auto_f0_adjust': False,
+        'training_performed': False, 'reference_required': True})

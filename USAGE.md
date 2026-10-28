@@ -1,16 +1,16 @@
-# 使用说明（v0.2）
+# 使用说明（v0.3）
 
-项目位置：`/mnt/afs_f/liuhongda/music-cover-baseline`（现有 `/data/liuhongda/music-cover-baseline` 为同一共享目录的入口）。已有的环境、权重和演示数据可重复使用，无需训练目标人物音色模型。
+项目位置：`/mnt/afs_f/liuhongda/music-cover-baseline`（现有 `/data/liuhongda/music-cover-baseline` 为同一共享目录的入口）。已有的环境、权重和演示数据可重复使用，默认零样本模式无需训练目标人物音色模型。可选的目标音色微调使用独立训练脚本，见 [音色微调手册](docs/13_voice_adaptation.md)。
 
 **按模块一步步运行：**见 [00–11 完整实操手册](docs/11_modular_walkthrough.md)，使用“孙燕姿＋秋意浓＋upbeat bossa nova and samba jazz”，包含长命令、简短配置、完整输出路径及检查重点。
 
 **模型权重：**见[完整清单与准备方法](docs/12_model_weights.md)，包含主模型与附属模型、下载步骤、实际路径、版本及校验命令。
 
-现有服务器可直接打开 `runs/20261022_111548_xi_huan_ni_bossa_nova_sun_yanzi_auto_review_a714d5/deliverables/listen.html` 验收《喜欢你》结果；具体记录见 [VALIDATION.md](VALIDATION.md)。该目录是服务器本地数据，不随 Git 克隆。早期演示目录及便捷链接已清理。历史基础流程约 3 分钟的耗时不适用于当前完整评审流程。
+当前完整实例是 `runs/lhd_bu_bai_de_ying_xiong_celtic_epic_yang_kun_finetuned_20261028/deliverables/`：杨坤 1000 步模型＋《不败的英雄》＋凯尔特史诗。见 [v0.3 逐步命令和路径](docs/17_v03_walkthrough.md)。早期《喜欢你》及 `lhd_test_modular` 运行已清理，文档中的旧测量仅作历史记录；示例命令可创建新的运行。素材、模型和运行目录不随 Git 克隆。
 
 实际链路：原曲 → SheetSage2 提取旋律 → YuE2 按指定风格重生成 → BS-RoFormer 分离 → Seed-VC 参考音色转换 → 对齐、混音 → 成品分轨、重新转谱、专业评审包。历史耗时不包含新增的评审阶段。
 
-## 模块化执行（v0.2）
+## 模块化执行（v0.3，沿用 12 阶段）
 
 完整阶段表、依赖图、配置覆盖与产物契约见 [模块化说明](docs/09_modular_pipeline.md)。原有长命令仍可完整执行；每个阶段也可从对应的 `scripts/NN_名称/run.sh` 独立执行。
 
@@ -123,7 +123,7 @@ bash scripts/run_baseline.sh \
   --steps 30 --seed 42 --gpu 0 --review
 ```
 
-评审资料见下文；整首生成和评审可能占用数 GB 磁盘空间。已有结果无需再次生成，直接对其运行 `scripts/verify_review.py` 即可检查文件完整性。
+评审资料见下文；整首生成和评审可能占用数 GB 磁盘空间。本示例需要重新生成；只有实际保留的已完成运行，才可直接用 `scripts/verify_review.py` 检查文件完整性。
 
 ## 在哪里验收
 
@@ -216,17 +216,26 @@ bash scripts/run_baseline.sh \
 
 输入、参数、适配代码和产物哈希一致的已完成阶段会复用；受影响阶段会重新执行。各次成功交付保存在对应的 `stages/11_delivery/attempt_NNN/artifacts/`，`deliverables` 只在新交付通过后切换指向；若接管的是旧实体交付目录，才会移入 `deliverables_history/`。失败时不会把旧音频标成新结果。
 
-## 可选的附加自动验证
+## 当前评估范围
 
-```bash
-CUDA_VISIBLE_DEVICES=0 USE_TF=0 USE_FLAX=0 \
-  envs/seed-vc/bin/python scripts/verify_result.py /绝对路径/runs/某次运行
-```
+主流程 10 检查音频、分轨、MIDI 和可选 F0；`voice_check: true` 额外计算 ECAPA。微调 05 无论候选数为 1 还是 3，均先计算候选技术指标。主流程没有自动歌词识别、歌词质量门禁或自动静音修复，原有歌词输入继续用于 03 生成。
 
-结果写入 `deliverables/verification.json`，包括换声前后音高差异、Whisper 歌词识别结果及 CAMPPlus 音色相似度诊断。CAMPPlus 同时被换声模型使用，因此该项不是独立评价；ASR 和音高估计也有自身误差，不用这些分数替代试听。
+`scripts/verify_result.py` 是 v0.1 遗留的手动诊断脚本，会调用 Whisper 并写入旧式交付目录；它不属于当前 00–11，也不是本版验收命令。当前采用上文 `scripts/verify_review.py` 与 `10_evaluation` 的报告，避免向已发布的模块化产物中追加旧格式文件。
 
 ## 文件位置
 
 代码在 `src/music_cover/` 和 `scripts/`，上游仓库在 `third_party/`，权重在 `models/`，隔离环境在 `envs/`，下载缓存和安装日志在 `cache/`。模型 revision 清单在 `configs/`。
 
 本机的虚拟环境复用了 `/opt/conda` 的基础 CUDA 包，不能直接复制 `envs/` 到另一台机器使用。迁移时应按环境记录重新安装，并验证 GPU 推理。旧 `docs/` 中的方案文件保留为设计记录；当前操作以本说明和实际运行报告为准。
+
+## 零样本 / 微调音色双入口
+
+原有命令默认保持零样本。目标音色训练在歌曲流水线之外完成，05 通过 `--voice-mode finetuned --voice-profile .../voice.json` 加载导出的版本，仍需参考音频。完整文件结构、逐阶段命令、中间路径、模型资产和指标解释见 [音色微调手册](docs/13_voice_adaptation.md)。
+
+## 微调推理的三个候选
+
+微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，推荐版本进入分轨、MIDI 和最终交付入口；零样本入口仍为单次推理。
+
+具体命令与中间文件路径见[三个候选与推荐结果使用说明](docs/15_voice_candidates.md)。
+
+只生成一个微调版本时，设置 `--voice-candidates 1 --voice-candidate-seeds 42`；这只改变推理候选数，不改变训练步数。杨坤的 1000 步指 checkpoint 的训练步数，`--steps 30` 指推理扩散步数。具体配置和逐模块命令见 [v0.3 实操](docs/17_v03_walkthrough.md)。
