@@ -1,0 +1,37 @@
+{
+  "request": {
+    "name": "lhd_last_dance_funk_soul_huang_qi_shan_seedvc_20261029",
+    "song": "data/raw/songs/last_dance_wu_bai.mp3",
+    "lyrics": "data/raw/lyrics/last_dance_wu_bai.txt",
+    "reference": "data/raw/references/huang_qi_shan/reference.wav",
+    "reference_start": 0,
+    "reference_duration": 20,
+    "transpose": "auto",
+    "style": "Mandarin Chinese, retro 1970s funk and soul, warm Rhodes electric piano, syncopated clean rhythm guitar, elastic electric bass, crisp live drums with a relaxed dance groove, tasteful brass stabs, Hammond organ fills, rich extended chords, soulful mature solo female lead vocal, intimate storytelling verses and a powerful melodic chorus, warm polished studio mix",
+    "seed": 42,
+    "steps": 30,
+    "gpu": "2",
+    "review": true
+  },
+  "modules": {
+    "02_pitch_adaptation": {
+      "reference_kind": "singing",
+      "auto_min_semitones": -6,
+      "auto_max_semitones": 6
+    },
+    "05_voice_conversion": {
+      "backend": "seed_vc",
+      "mode": "finetuned",
+      "voice_profile": "models/voices/huang_qi_shan/seed_vc/v001_20261029/voice.json",
+      "candidate_count": 3,
+      "candidate_seeds": [
+        42,
+        43,
+        44
+      ]
+    },
+    "10_evaluation": {
+      "voice_check": true
+    }
+  }
+}

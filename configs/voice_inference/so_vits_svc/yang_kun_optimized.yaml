@@ -1,0 +1,17 @@
+{
+  "modules": {
+    "05_voice_conversion": {
+      "backend": "so_vits_svc",
+      "mode": "finetuned",
+      "voice_profile": "models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/voice.json",
+      "candidate_count": 1,
+      "svc": {
+        "f0_predictor": "rmvpe",
+        "noise_scale": 0.1,
+        "chunk_seconds": 8.0,
+        "overlap_seconds": 0.2,
+        "pad_seconds": 0.5
+      }
+    }
+  }
+}

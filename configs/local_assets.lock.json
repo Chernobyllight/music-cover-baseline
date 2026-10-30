@@ -55,7 +55,39 @@
     "bytes": 241,
     "sha256": "413e2ddfa71ae5bb364bfd15364e221249111e14c2f0843ea6162afb776a8300"
   },
+  "models/OpenVoiceV2/converter/checkpoint.pth": {
+    "bytes": 131320490,
+    "sha256": "9652c27e92b6b2a91632590ac9962ef7ae2b712e5c5b7f4c34ec55ee2b37ab9e"
+  },
+  "models/OpenVoiceV2/converter/config.json": {
+    "bytes": 838,
+    "sha256": "9dfff60350b8c63f2c664efd92a61b2516efb22671466960f0e5dfebd881fa47"
+  },
   "models/RMVPE/rmvpe.pt": {
+    "bytes": 181184272,
+    "sha256": "6d62215f4306e3ca278246188607209f09af3dc77ed4232efdd069798c4ec193"
+  },
+  "models/RVC/hubert_base/config.json": {
+    "bytes": 1492,
+    "sha256": "0346950779dfb7f9316fa74ed846e2b8a22a08eedfdc5387b73f327cb1a4a7cf"
+  },
+  "models/RVC/hubert_base/preprocessor_config.json": {
+    "bytes": 225,
+    "sha256": "7c1976a680fb7acc757cd36fb08eef878fa36c70b4c9d2d595df9c608bbbbf0e"
+  },
+  "models/RVC/hubert_base/pytorch_model.bin": {
+    "bytes": 189206711,
+    "sha256": "cc8c20f4b90a520757260197a3ff2505705a7adbd20ad9eeaa4e1a9b38442ef5"
+  },
+  "models/RVC/pretrained_v2/f0D48k.pth": {
+    "bytes": 142875703,
+    "sha256": "2269b73c7a4cf34da09aea99274dabf99b2ddb8a42cbfb065fb3c0aa9a2fc748"
+  },
+  "models/RVC/pretrained_v2/f0G48k.pth": {
+    "bytes": 75465569,
+    "sha256": "b5d51f589cc3632d4eae36a315b4179397695042edc01d15312e1bddc2b764a4"
+  },
+  "models/RVC/rmvpe.pt": {
     "bytes": 181184272,
     "sha256": "6d62215f4306e3ca278246188607209f09af3dc77ed4232efdd069798c4ec193"
   },
@@ -66,6 +98,10 @@
   "models/Seed-VC/config_dit_mel_seed_uvit_whisper_base_f0_44k.yml": {
     "bytes": 2408,
     "sha256": "ff86f343b08c2def405f075022eeb10dafba23c4eda36d151010f4ca6d7a1a0a"
+  },
+  "models/Seed-VC/se_db.pt": {
+    "bytes": 102405286,
+    "sha256": "a76e1ad4fac609cfa1a5198bf789427c5e7822d656fab1ffed6cd80fc0d381b7"
   },
   "models/SheetSage2/LICENSE": {
     "bytes": 20000,
@@ -603,6 +639,86 @@
     "bytes": 30043,
     "sha256": "2ad9f7734e3d9f750fe575f22fd9ec03a9a4ab52497a6314e76f53ed9024fa75"
   },
+  "models/SoVitsSVC/D_0.pth": {
+    "bytes": 187027770,
+    "sha256": "60b6936d55d2cfaa717033eafe9d98dbe44d322e6adaf7be7c1c5a835ebb7177"
+  },
+  "models/SoVitsSVC/G_0.pth": {
+    "bytes": 209268661,
+    "sha256": "9d3e408786013590bb3574ade2831ab62c989d303834742fe73ca8d5552d2f03"
+  },
+  "models/SoVitsSVC/contentvec.pt": {
+    "bytes": 189507909,
+    "sha256": "f54b40fd2802423a5643779c4861af1e9ee9c1564dc9d32f54f20b5ffba7db96"
+  },
+  "models/SoVitsSVC/optimization_20261028/diffusion_full.pt": {
+    "bytes": 220895384,
+    "sha256": "409452a27ab310f7a5897844d003d372a7357cc91c4a43562584a1714518cdf9"
+  },
+  "models/SoVitsSVC/optimization_20261028/diffusion_shallow.pt": {
+    "bytes": 220895118,
+    "sha256": "a63ceb5ef523558ed7b8e28964165d2ff4f3583999b297d04998cba7eccb4144"
+  },
+  "models/SoVitsSVC/optimization_20261028/downloads.json": {
+    "bytes": 2400,
+    "sha256": "3abfca37a6d78ec883af0ba0546175995d194ae71ec04b290661b5f1046e965d"
+  },
+  "models/SoVitsSVC/optimization_20261028/fcpe.pt": {
+    "bytes": 69005189,
+    "sha256": "c3a8dd2dbd51baf19ed295006f2ac25dba6dd60adc7ec578ae5fbd94970951da"
+  },
+  "models/SoVitsSVC/optimization_20261028/hubert-soft.pt": {
+    "bytes": 378435957,
+    "sha256": "e82e7d079df05fe3aa535f6f7d42d309bdae1d2a53324e2b2386c56721f4f649"
+  },
+  "models/SoVitsSVC/optimization_20261028/hubertsoft_G.pth": {
+    "bytes": 152358837,
+    "sha256": "a78c3c6f58a11f16c0ba92a8e51c9532697ee598771b729f4c3779afe130ab43"
+  },
+  "models/SoVitsSVC/optimization_20261028/medium.pt": {
+    "bytes": 1528008539,
+    "sha256": "345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1"
+  },
+  "models/SoVitsSVC/optimization_20261028/nsf_hifigan/nsf_hifigan/NOTICE.txt": {
+    "bytes": 3104,
+    "sha256": "a393b44505ccb6d1da63c2c73ccbbdaeb9b877a5227bf41b1b1e4a8429a51dd6"
+  },
+  "models/SoVitsSVC/optimization_20261028/nsf_hifigan/nsf_hifigan/NOTICE.zh-CN.txt": {
+    "bytes": 3046,
+    "sha256": "ea5511e12932a33481c212c1c19f6225af90ff6dc6f3e34a41050f028823ebb5"
+  },
+  "models/SoVitsSVC/optimization_20261028/nsf_hifigan/nsf_hifigan/config.json": {
+    "bytes": 845,
+    "sha256": "9707614b59c299766a91ea25b5ec62cfd813a45a902766c454f75b6868118684"
+  },
+  "models/SoVitsSVC/optimization_20261028/nsf_hifigan/nsf_hifigan/model": {
+    "bytes": 56825430,
+    "sha256": "2c576b63b7ed952161b70fad34e0562ace502ce689195520d8a2a6c051de29d6"
+  },
+  "models/SoVitsSVC/optimization_20261028/nsf_hifigan.zip": {
+    "bytes": 52778967,
+    "sha256": "d86ea84b7e2c9169afb5ccbb720b5542704be519c643f698332f2014a8f2d6bd"
+  },
+  "models/SoVitsSVC/optimization_20261028/nsf_hifigan.zip.part": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "models/SoVitsSVC/optimization_20261028/vec256l9_G.pth": {
+    "bytes": 180619621,
+    "sha256": "ea40d6066461974c36f8984f956a7d2cafcce517a3bc6222a8877fab419c0179"
+  },
+  "models/SoVitsSVC/optimization_20261028/verification.json": {
+    "bytes": 1283,
+    "sha256": "9c081d723740affd0948d1999d890117274944999784766963ee3dd2d3e7d349"
+  },
+  "models/SoVitsSVC/optimization_20261028/whisper_ppg_G.pth": {
+    "bytes": 237719813,
+    "sha256": "b5ff28db8fa5894fdcb29c8aff760e45c9fd3b88a892391dcf0d0257e80a78b1"
+  },
+  "models/SoVitsSVC/rmvpe.pt": {
+    "bytes": 368492925,
+    "sha256": "19dc1809cf4cdb0a18db93441816bc327e14e5644b72eeaae5220560c6736fe2"
+  },
   "models/Whisper-small/added_tokens.json": {
     "bytes": 34604,
     "sha256": "9715fd2243b6f06a5858b5e32950d2853f73dd5bc201aafcf76f5082a2d8acd1"
@@ -739,9 +855,117 @@
     "bytes": 178,
     "sha256": "017d64a4d288217a43fcac3866a0e1d55f796fa891d4dfb6de0bd170ab750026"
   },
+  "models/lyrics/Qwen3-ASR-1.7B/chat_template.json": {
+    "bytes": 1161,
+    "sha256": "75a8cfca24f00de72d796fbfed6858fc9614ef3dabd8696684cc3bc03a9c58ff"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/config.json": {
+    "bytes": 6194,
+    "sha256": "2e74a751548b8ad7d7526d29365ad8144c345d8b412b1152d25dc6698452712f"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/generation_config.json": {
+    "bytes": 142,
+    "sha256": "1da527824d81e07118facff437e03f2e24a23311e3bdeb2368973fe77e5f275c"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/merges.txt": {
+    "bytes": 1671853,
+    "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/model-00001-of-00002.safetensors": {
+    "bytes": 4220320824,
+    "sha256": "a4cd1f1a04d90b757dc7f7dd26254e69a013b19e80efe590a83c6a3bde8608d6"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/model-00002-of-00002.safetensors": {
+    "bytes": 478200688,
+    "sha256": "6e0b9d9e09e2e0238e7ef3cc8a484ab387e91b90f1900bedf88bc92d7929ccfc"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/model.safetensors.index.json": {
+    "bytes": 64821,
+    "sha256": "f994739fe38e5210b9e3e8ce6c6307315e2ceac3cb630e7b7414d69dce520f60"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/preprocessor_config.json": {
+    "bytes": 330,
+    "sha256": "45e120a4eda2c20c5d7f2ea9354e63536bf35e27aa573fb7cdf78017b378770d"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/tokenizer_config.json": {
+    "bytes": 12487,
+    "sha256": "4942d005604266809309cabc9f4e9cb89ce855d59b14681fdc0e1cc62ea26c4c"
+  },
+  "models/lyrics/Qwen3-ASR-1.7B/vocab.json": {
+    "bytes": 2776833,
+    "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+  },
+  "models/lyrics/faster-whisper-large-v3/config.json": {
+    "bytes": 2394,
+    "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9"
+  },
+  "models/lyrics/faster-whisper-large-v3/model.bin": {
+    "bytes": 3087284237,
+    "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1"
+  },
+  "models/lyrics/faster-whisper-large-v3/preprocessor_config.json": {
+    "bytes": 340,
+    "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
+  },
+  "models/lyrics/faster-whisper-large-v3/tokenizer.json": {
+    "bytes": 2480617,
+    "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"
+  },
+  "models/lyrics/faster-whisper-large-v3/vocabulary.json": {
+    "bytes": 1068114,
+    "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+  },
+  "models/lyrics/paraformer-zh/am.mvn": {
+    "bytes": 11203,
+    "sha256": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5"
+  },
+  "models/lyrics/paraformer-zh/config.yaml": {
+    "bytes": 2509,
+    "sha256": "bfd424b9f61846aac63591e96fe24d66b35f4643bddcb4b9bb759db8f987ab79"
+  },
+  "models/lyrics/paraformer-zh/configuration.json": {
+    "bytes": 472,
+    "sha256": "b7d2917954fc547e43ad61486a5248596738cf5909907eade11e71c56f446f34"
+  },
+  "models/lyrics/paraformer-zh/model.pt": {
+    "bytes": 880502012,
+    "sha256": "5bba782a5e9196166233b9ab12ba04cadff9ef9212b4ff6153ed9290ff679025"
+  },
+  "models/lyrics/paraformer-zh/seg_dict": {
+    "bytes": 8287834,
+    "sha256": "59a2ef803a3f1648ad03a2e1480db1c1ee0c0d7dc4ef4dbd16cea33944329022"
+  },
+  "models/lyrics/paraformer-zh/tokens.json": {
+    "bytes": 93676,
+    "sha256": "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
+  },
+  "models/review/basic_pitch.onnx": {
+    "bytes": 230444,
+    "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec"
+  },
+  "models/review/demucs/5c90dfd2-34c22ccb.th": {
+    "bytes": 54996327,
+    "sha256": "34c22ccb381c6f9fdbf324f04e1e2fe21aaaf293f5ded163a162697ff9a02ddd"
+  },
+  "models/review/demucs/htdemucs_6s.yaml": {
+    "bytes": 21,
+    "sha256": "207405151270af8fd81c2373c25d27950916682ac91dca7884a11ce13dad6f58"
+  },
+  "models/separation/config_mel_band_roformer_karaoke.yaml": {
+    "bytes": 1794,
+    "sha256": "30364842112e18500aca7ff7b1acf235251eb4ee93b377278176b432410eae33"
+  },
   "models/separation/download_checks.json": {
     "bytes": 28267,
     "sha256": "d3622e1fa19c161d3cf704927711b453d593a3f1eb0f2e0838c3136907935151"
+  },
+  "models/separation/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt": {
+    "bytes": 913096801,
+    "sha256": "1de20d459332fe8869aeb01327a31df0032262706e1365114e852dc271779813"
+  },
+  "models/separation/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956_config.yaml": {
+    "bytes": 1726,
+    "sha256": "b35077d94861f068097cce1a5e54633c055e7dcc2613eade4e4dc7c7c9c3f48b"
   },
   "models/separation/model_bs_roformer_ep_317_sdr_12.9755.ckpt": {
     "bytes": 639331213,
@@ -750,5 +974,229 @@
   "models/separation/model_bs_roformer_ep_317_sdr_12.9755.yaml": {
     "bytes": 2273,
     "sha256": "2bfdd16c656bd9519aba757cc4f8834b7ede675eb1e00ec4772d74ae1c41af7f"
+  },
+  "models/song_voices/lebron_james/seed_vc/luo_ye_gui_gen/benchmark_v001/config.yml": {
+    "bytes": 2157,
+    "sha256": "0c3d3b1cd81823a0ed38dd9d71537d1012fbcf717510bed487889da9cfaee59e"
+  },
+  "models/song_voices/lebron_james/seed_vc/luo_ye_gui_gen/benchmark_v001/model.pth": {
+    "bytes": 785730303,
+    "sha256": "2d3136a0bee917bdb43d4a6431efd992fa9a9ec756b18586dae07468b785ae37"
+  },
+  "models/song_voices/lebron_james/seed_vc/luo_ye_gui_gen/benchmark_v001/validation.json": {
+    "bytes": 22194,
+    "sha256": "89989c8ee0ab23656ee7c8cf451bb05a3470c5c2e2d0943b58ab4c4b6bb9309c"
+  },
+  "models/song_voices/lebron_james/seed_vc/luo_ye_gui_gen/benchmark_v001/voice.json": {
+    "bytes": 2546,
+    "sha256": "02ac0edeb5ae2f1bf40c5e491f01e03dc606a49567f7daa34f410bb51f1d39c0"
+  },
+  "models/song_voices/lebron_james/seed_vc/qiu_yi_nong/benchmark_v001/config.yml": {
+    "bytes": 2154,
+    "sha256": "3874c70befab8aa52a91976b569e1b5775033202aafab8d8e49d49dc4e744aa3"
+  },
+  "models/song_voices/lebron_james/seed_vc/qiu_yi_nong/benchmark_v001/model.pth": {
+    "bytes": 785730303,
+    "sha256": "b3edc0949aab617a8186d6dcf69e71b75ceb5c9ec9f5e6173359d17e67f26f9b"
+  },
+  "models/song_voices/lebron_james/seed_vc/qiu_yi_nong/benchmark_v001/validation.json": {
+    "bytes": 22148,
+    "sha256": "7f5c4598db3c6371be0942ced5ff5e8e54eabbf51efdb2007c92e1adb0514467"
+  },
+  "models/song_voices/lebron_james/seed_vc/qiu_yi_nong/benchmark_v001/voice.json": {
+    "bytes": 2540,
+    "sha256": "b6d9ce5a7456f1114a1affddf60df15535939d7419b60a84a6db6e23afe001d5"
+  },
+  "models/song_voices/lebron_james/seed_vc/xi_huan_ni_beyond/benchmark_v001/config.yml": {
+    "bytes": 2160,
+    "sha256": "04ec61f5371acc9a22ef8069c604363becc21ea490c98f47fa3410c91d18c3bf"
+  },
+  "models/song_voices/lebron_james/seed_vc/xi_huan_ni_beyond/benchmark_v001/model.pth": {
+    "bytes": 785730303,
+    "sha256": "e5a1519421157b2b99aa64aa4b6bee749a2f995a3f2cc6448cf4d5a3533359f3"
+  },
+  "models/song_voices/lebron_james/seed_vc/xi_huan_ni_beyond/benchmark_v001/validation.json": {
+    "bytes": 22242,
+    "sha256": "9413f01d726857de581a90ec45504620f1d5cb71a1dd5311998657083c9beea4"
+  },
+  "models/song_voices/lebron_james/seed_vc/xi_huan_ni_beyond/benchmark_v001/voice.json": {
+    "bytes": 2552,
+    "sha256": "d7eab7d4a6221e5fef346e4f22a8229de9b91e107fc8fc415f8ef7e1b476c1bc"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/benchmark_v001/config.yml": {
+    "bytes": 2151,
+    "sha256": "cb5ff22725b9785201a4c648365b6743f16d168750bfabdc6fd07accd2d8ab96"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/benchmark_v001/model.pth": {
+    "bytes": 785730303,
+    "sha256": "f516180a71ce34092d1e23559213b317a463bc131ba9af71b50243fdc893366a"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/benchmark_v001/validation.json": {
+    "bytes": 22180,
+    "sha256": "189291b756977bfa14ccbedbeae3e736c59a726f577d1f6f2c7903ce34d00a88"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/benchmark_v001/voice.json": {
+    "bytes": 2483,
+    "sha256": "d4812422c3dc4c3c683fc45ff63f1470b57667fedd00298377672f5f88b4dede"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/pseudo_v001/config.yml": {
+    "bytes": 2129,
+    "sha256": "14c8d01e0d5ac5d7b3e0213be88a031d06cc430e49b0c1fb926d3f0d434446c7"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/pseudo_v001/model.pth": {
+    "bytes": 785730303,
+    "sha256": "c7f229bef0165921ba88f175a88ceb49892de1af92ad4b68f2aae8077f410387"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/pseudo_v001/validation.json": {
+    "bytes": 18455,
+    "sha256": "9cf69677908a7bf76e480dc83d7af4f321d1d4db988982c3323334733796a915"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/qiu_yi_nong/pseudo_v001/voice.json": {
+    "bytes": 2458,
+    "sha256": "707e90a0ce28d03b1c153773f692eb311f23ac48706d1f1c99516771ab2e31ce"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/xi_huan_ni_beyond/benchmark_v001/config.yml": {
+    "bytes": 2157,
+    "sha256": "779ceac20e1ad5c167e4632ab82e6a332615dd2bd94feee92d1ee7efa94c3da3"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/xi_huan_ni_beyond/benchmark_v001/model.pth": {
+    "bytes": 785730303,
+    "sha256": "7f52013cecb122763b4393684170afa6a54bbc19b97d14c1b72f7e639c7777f0"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/xi_huan_ni_beyond/benchmark_v001/validation.json": {
+    "bytes": 22203,
+    "sha256": "a5750cde4c4af693364eed88b670c0defb947b925800f67072af353071a87133"
+  },
+  "models/song_voices/sun_yanzi/seed_vc/xi_huan_ni_beyond/benchmark_v001/voice.json": {
+    "bytes": 2511,
+    "sha256": "6b06d5fb9f9e7abcedd1f293835a2fc5275ca0a747cdaacd23cfca44511716ff"
+  },
+  "models/voice_evaluation/ecapa/embedding_model.ckpt": {
+    "bytes": 83316686,
+    "sha256": "0575cb64845e6b9a10db9bcb74d5ac32b326b8dc90352671d345e2ee3d0126a2"
+  },
+  "models/voice_evaluation/ecapa/hyperparams.yaml": {
+    "bytes": 1919,
+    "sha256": "6f78854fa04ba59e761437b76a2575d3aba5e5016de3e9b69f0c9a5077fb1a41"
+  },
+  "models/voices/huang_qi_shan/rvc/v001_20261029/added.index": {
+    "bytes": 63737901,
+    "sha256": "efd561beaa63e7099944ea4b7b2ce8c905b7f23878f1f10b8a91fa578a4190a5"
+  },
+  "models/voices/huang_qi_shan/rvc/v001_20261029/config.json": {
+    "bytes": 1340,
+    "sha256": "e49f7906e3ef845117fa8f44579db5896e3b87b941909ee60e136e4c8df90c84"
+  },
+  "models/voices/huang_qi_shan/rvc/v001_20261029/index_manifest.json": {
+    "bytes": 17181,
+    "sha256": "5e2c8b2222d88a013c5da8cb7af2f2e8e5787b328d09dfce036c5b77d19bf078"
+  },
+  "models/voices/huang_qi_shan/rvc/v001_20261029/model.pth": {
+    "bytes": 150622169,
+    "sha256": "40e1937f6fa0ca1db18bdb4bc111773524281392fe73a61da443d8a6c6563a26"
+  },
+  "models/voices/huang_qi_shan/rvc/v001_20261029/validation.json": {
+    "bytes": 23140,
+    "sha256": "15a3a4e189e3a2b49dc52e2f8d1df7fbdeb5a2ff1014f8f11a832cf191abe17e"
+  },
+  "models/voices/huang_qi_shan/rvc/v001_20261029/voice.json": {
+    "bytes": 1897,
+    "sha256": "8012294a428201396618029fbb37ccfdfb274b0672ce25663c5c4fad8723d049"
+  },
+  "models/voices/huang_qi_shan/seed_vc/v001_20261029/config.yml": {
+    "bytes": 2128,
+    "sha256": "8d77308cfa820f6e3c2a3917102312c5a67be30815db7fa81b9ad9e221e693e2"
+  },
+  "models/voices/huang_qi_shan/seed_vc/v001_20261029/model.pth": {
+    "bytes": 785729855,
+    "sha256": "39a2cbfc3e67d151b718ec343959f6e6fa6ec160df25b4a9f78bf3c244be12e9"
+  },
+  "models/voices/huang_qi_shan/seed_vc/v001_20261029/validation.json": {
+    "bytes": 9010,
+    "sha256": "39a28f88ebfcf1449e45bc46cf3b52e49834d9dbc75fd2aa9d8cff0085bcc211"
+  },
+  "models/voices/huang_qi_shan/seed_vc/v001_20261029/voice.json": {
+    "bytes": 940,
+    "sha256": "2e4bf043b6da021bfcc557bac8271f216d922e13e308be4b98f2c6e2dec17918"
+  },
+  "models/voices/lebron_james/seed_vc/benchmark_v001/config.yml": {
+    "bytes": 2143,
+    "sha256": "f9ddc3c5f6bd2550747e392d841cd6e34b11b269315cb7c5eadb40629e9c8a8e"
+  },
+  "models/voices/lebron_james/seed_vc/benchmark_v001/model.pth": {
+    "bytes": 785729855,
+    "sha256": "f30c7fe209da0323294bea05e3c4b04d7065bf1e3f758db581ea303f77b5690c"
+  },
+  "models/voices/lebron_james/seed_vc/benchmark_v001/validation.json": {
+    "bytes": 6663,
+    "sha256": "146823375933ca7d9b7933b86e9a69ae787864aeaba5c8718af74bad02a2318a"
+  },
+  "models/voices/lebron_james/seed_vc/benchmark_v001/voice.json": {
+    "bytes": 943,
+    "sha256": "db667d0106e058b0d0417b82468c9215e8135d822d4fc29fdf6740af73c331db"
+  },
+  "models/voices/sun_yanzi/seed_vc/smoke_v001/config.yml": {
+    "bytes": 2120,
+    "sha256": "475154b1702858b1051493136287be6a3cde73e32cfa60b8f77673980003c2a9"
+  },
+  "models/voices/sun_yanzi/seed_vc/smoke_v001/model.pth": {
+    "bytes": 785729855,
+    "sha256": "fab72a3549b05ef42b78f7f363cf754fc80ea95fd325271e4f602ed295153aa2"
+  },
+  "models/voices/sun_yanzi/seed_vc/smoke_v001/validation.json": {
+    "bytes": 11977,
+    "sha256": "59df572767ebcf4ad47983d975d0592be2888e8337b836d0587d05868d89ffbf"
+  },
+  "models/voices/sun_yanzi/seed_vc/smoke_v001/voice.json": {
+    "bytes": 913,
+    "sha256": "203d23f7f53568554b6054f237f0ca865742bcac4672d5a1ac890c80a0643758"
+  },
+  "models/voices/yang_kun/seed_vc/catalog_v001_20261027/config.yml": {
+    "bytes": 2123,
+    "sha256": "d2f42036a8a8a68da6c3cd8c533b7bb59194718d205c5a5c8f5e38887184d6a1"
+  },
+  "models/voices/yang_kun/seed_vc/catalog_v001_20261027/model.pth": {
+    "bytes": 785729855,
+    "sha256": "292cae9459eba3fad2905beec480857d5d3f57d818c3ee2a06f21edcc3a7674a"
+  },
+  "models/voices/yang_kun/seed_vc/catalog_v001_20261027/validation.json": {
+    "bytes": 991,
+    "sha256": "b6c796c8a0368bc5a2a050d191a4c25e2079c72adc1e9e34b01157c4f6042a8c"
+  },
+  "models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json": {
+    "bytes": 1090,
+    "sha256": "83f39346349679cf9af8115fac1790a16bb3833f18de878dea2608ca8dea36f5"
+  },
+  "models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/config.json": {
+    "bytes": 2553,
+    "sha256": "13b933b005322e04c04cea744999964a6b6cfa128c7e0919e9bd86a72d580a10"
+  },
+  "models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/model.pth": {
+    "bytes": 209207799,
+    "sha256": "ac43b20e39b424d570410c6f9ce69e2786df19f7ccc9ad8d7001ba4b87724547"
+  },
+  "models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/validation.json": {
+    "bytes": 4789,
+    "sha256": "0e0099b1d7125419cefba92587444315b6cb319a941e2f5a43953c792525b396"
+  },
+  "models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/voice.json": {
+    "bytes": 1705,
+    "sha256": "b7c6e1decf2ac7dcfe5a39d954e4065a00cc41e9e4a94d9744f56dc4d5ed2689"
+  },
+  "models/voices/yang_kun/so_vits_svc/v001_20261028/config.json": {
+    "bytes": 2194,
+    "sha256": "7c01934de07e5abbec2f15fce35e84014cc47d82512ca595bf14e33d77f1c425"
+  },
+  "models/voices/yang_kun/so_vits_svc/v001_20261028/model.pth": {
+    "bytes": 209207863,
+    "sha256": "7e70e0d601f386091a0346b0aed0deb9d59d214706155b826612623d967c9f86"
+  },
+  "models/voices/yang_kun/so_vits_svc/v001_20261028/validation.json": {
+    "bytes": 11532,
+    "sha256": "98f083ce9d6f93694483810d864230b6482906dd2b0e8ce0e8e6145e64a0b49d"
+  },
+  "models/voices/yang_kun/so_vits_svc/v001_20261028/voice.json": {
+    "bytes": 1455,
+    "sha256": "a110379238188ae9065d4449005ba79536314aa5f11efe87b52583139035191a"
   }
 }

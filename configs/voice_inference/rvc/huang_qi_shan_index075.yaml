@@ -1,0 +1,24 @@
+{
+  "modules": {
+    "05_voice_conversion": {
+      "backend": "rvc",
+      "mode": "finetuned",
+      "voice_profile": "models/voices/huang_qi_shan/rvc/v001_20261029/voice.json",
+      "candidate_count": 3,
+      "candidate_seeds": [
+        42,
+        43,
+        44
+      ],
+      "svc": {},
+      "rvc": {
+        "f0_predictor": "rmvpe",
+        "index_rate": 0.75,
+        "protect": 0.33,
+        "chunk_seconds": 8.0,
+        "overlap_seconds": 0.2,
+        "pad_seconds": 0.5
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
-# v0.3 模型权重清单与准备方法
+# v1.0 模型权重清单与准备方法
 
-本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 按 2026-10-28 的 `v0.3` 代码和模型锁文件核对；基础模型沿用 v0.2，微调/评估依赖见第 9 节。
+本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 按 2026-10-30 的 v1.0 代码与服务器资产核对，覆盖 Seed-VC、SVC、RVC 和 00–11 评审流程。基础模型沿用 v0.2，微调/评估依赖见第 9 节。
 
 原有零样本完整流程（`--transpose auto --review`）需要 **13 组模型资产**，包含主模型和附属模型；同一个模型可被多个阶段复用。GitHub 仓库不包含这些大文件。孙燕姿或詹姆斯的音色由参考录音提供，零样本 Seed-VC 路线无需单独下载对应人物的专用权重。新增微调路线可用目标歌手录音训练专用版本，所需附加资产见本文末尾。
 
@@ -315,7 +315,7 @@ envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --chec
 
 ## 微调候选评估需要的权重
 
-05 的 `finetuned` 模式默认产生三个候选并自动评估；即使显式设为一个候选，也需要冻结的 ECAPA-TDNN 和 RMVPE。零样本 05 仍不需要 ECAPA；10 的可选 voice_check 启用时才需要。加载已导出的通用音色模型进行推理，不需要 OpenVoiceV2 或训练向量库。
+05 的 Seed-VC / RVC `finetuned` 模式默认产生三个候选并自动评估，SVC 当前使用一个候选；即使只有一个候选，也需要冻结的 ECAPA-TDNN 和 RMVPE。零样本 05 仍不需要 ECAPA；10 的可选 voice_check 启用时才需要。加载已导出的通用音色模型进行推理，不需要 OpenVoiceV2 或训练向量库。
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
@@ -328,3 +328,56 @@ envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation
 当前杨坤实例使用 `models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json`，`selected_step=1000`。此 profile 为用户指定 checkpoint，状态是 `unverified_user_selected`，不等于通过独立测试集模型选优。模型 SHA256 为 `292cae9459eba3fad2905beec480857d5d3f57d818c3ee2a06f21edcc3a7674a`；仓库只提供任务配置与使用说明，不分发歌手模型或录音。
 
 本版主流程不调用歌词 ASR、歌词门禁或静音修复；不需要此前实验使用的 Whisper large-v3、Paraformer 或 Qwen3-ASR 权重。表内 Whisper-small 是 Seed-VC 的内容编码器，仍为换声必需资源。
+
+
+## 新增 so-vits-svc 4.1 后端
+
+支持独立歌手微调与 05 音色转换，复用已有 base 环境；Seed-VC 零样本与微调入口继续保留。SVC 目前一个候选，不支持零样本。训练数据、权重清单、完整示例及中间产物见 [SVC 接入指南](18_so_vits_svc.md)。
+
+
+SVC 独立权重（均在工程根目录下）：
+
+| 文件 | 作用 |
+|---|---|
+| `models/SoVitsSVC/contentvec.pt` | 固定 ContentVec 第 12 层内容编码器 |
+| `models/SoVitsSVC/rmvpe.pt` | SVC 兼容格式 RMVPE；与 Seed-VC 同名文件不可直接互换 |
+| `models/SoVitsSVC/G_0.pth`、`D_0.pth` | 训练底模；导出后的推理不需要 D |
+| `models/voices/<歌手>/so_vits_svc/<版本>/model.pth`、`config.json`、`voice.json` | 训练后歌手模型及不可拆分的配置、身份与校验信息 |
+
+固定来源、大小和 SHA256 见 [so_vits_svc_assets.lock.json](../configs/so_vits_svc_assets.lock.json)。下载/校验使用 `/opt/conda/bin/python scripts/setup_svc.py --download --training`。SVC 当前使用 base，保留现有核心包；不安装 fairseq，不需要额外扩散或增强器权重。
+
+## SVC优化实验可选权重（2026-10-28）
+
+直接使用推荐杨坤模型只需要原SVC推理资产ContentVec/RMVPE及 `models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/` 的profile、model/config/validation；用 `configs/voice_inference/so_vits_svc/yang_kun_optimized.yaml`指定推理参数。
+
+复现全部实验额外需要 `configs/so_vits_svc_experiments_assets.lock.json` 中的9个资产：vec256l9、HuBERT-Soft、Whisper-PPG匹配生成器，HuBERT-Soft编码器、Whisper-medium编码器，full/shallow diffusion底模、NSF增强器压缩包、FCPE权重。它们放在 `models/SoVitsSVC/optimization_20261028/`，具有来源URL、大小和SHA256；由 `scripts/05_voice_conversion/so_vits_svc/experiments/assets.py --download` 下载并验证，不是普通Seed-VC推理的依赖。详见 [实验安装命令](../scripts/05_voice_conversion/so_vits_svc/experiments/README.md)和[优化报告](19_svc_optimization.md)。
+
+## RVC 独立权重（v1.0）
+
+RVC 固定源码版本、下载地址、revision、字节数与 SHA256 在 `configs/rvc_assets.lock.json`；不复用并覆盖 Seed-VC/SVC 的权重文件。
+
+| 路径（工程根目录下） | 用途 |
+|---|---|
+| `models/RVC/hubert_base/{config.json,preprocessor_config.json,pytorch_model.bin}` | 768 维内容特征 |
+| `models/RVC/rmvpe.pt` | F0 与清浊音特征 |
+| `models/RVC/pretrained_v2/f0G48k.pth` | 初始化 48 kHz F0 生成器 |
+| `models/RVC/pretrained_v2/f0D48k.pth` | 初始化判别器，仅训练需要 |
+| `models/voices/huang_qi_shan/rvc/v001_20261029/voice.json` | 最终 4000 步黄绮珊模型档案 |
+| 同目录 `model.pth`、`config.json`、`added.index`、`index_manifest.json`、`validation.json` | 推理模型、训练集索引、来源与验收记录，缺一不可 |
+
+在工程根目录执行 `/opt/conda/bin/python scripts/setup_rvc.py --training --download` 获取缺少的公共资产并校验（服务器必须能访问下载地址）；本地已有资产时省略 `--download`。人物专用模型需按 [RVC 指南](20_rvc.md)训练并导出，不能从公共底模推断任意歌手音色。导出是本工程严格加载的模型包，不宣称直接兼容上游 WebUI 的模型导入格式。
+
+## 当前可用人物模型与保留策略（2026-10-29）
+
+以下路径相对工程根目录，已导出人物模型需连同同目录的配置、校验记录和索引整体保留：
+
+| 用途 | profile | 已使用训练步数 |
+|---|---|---:|
+| 黄绮珊 Seed-VC | `models/voices/huang_qi_shan/seed_vc/v001_20261029/voice.json` | 1000 |
+| 黄绮珊 RVC | `models/voices/huang_qi_shan/rvc/v001_20261029/voice.json` | 4000 |
+| 杨坤 SVC 推荐 | `models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/voice.json` | 6000（4000＋2000） |
+| 杨坤 Seed-VC | `models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json` | 1000 |
+
+孙燕姿、詹姆斯的既有 Seed-VC，以及杨坤初版 SVC profile 也保留在 `models/voices/`。名称中的日期与步数是模型版本信息，不代表本次又做了完整训练或选模。新人物的模型使用各自训练入口生成，不能只修改 `voice_id` 复用另一人物权重。
+
+RVC 默认预设 `configs/voice_inference/rvc/huang_qi_shan.yaml` 使用检索比例 0.5；`huang_qi_shan_index075.yaml` 显式使用 0.75，同一份 4000 步权重和索引。两者不是两个不同训练模型。SVC 优化模型使用 ContentVec 768l12 / RMVPE / 标准 NSF-HiFiGAN，推荐推理未开启扩散或增强器；实验资产不是默认推理的必需项。

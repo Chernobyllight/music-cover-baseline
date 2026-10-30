@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "81eed5e8f68b6bed1789f682fe78cdd324495afc",
+  "repo": "lj1995/VoiceConversionWebUI",
+  "revision": "e6d0c1a17da07c33557852f9dfa2bd44cc75737d",
+  "assets": [
+    {
+      "path": "models/RVC/hubert_base/config.json",
+      "bytes": 1492,
+      "sha256": "0346950779dfb7f9316fa74ed846e2b8a22a08eedfdc5387b73f327cb1a4a7cf",
+      "scope": "inference",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/hubert_base/config.json"
+    },
+    {
+      "path": "models/RVC/hubert_base/preprocessor_config.json",
+      "bytes": 225,
+      "sha256": "7c1976a680fb7acc757cd36fb08eef878fa36c70b4c9d2d595df9c608bbbbf0e",
+      "scope": "inference",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/hubert_base/preprocessor_config.json"
+    },
+    {
+      "path": "models/RVC/hubert_base/pytorch_model.bin",
+      "bytes": 189206711,
+      "sha256": "cc8c20f4b90a520757260197a3ff2505705a7adbd20ad9eeaa4e1a9b38442ef5",
+      "scope": "inference",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/hubert_base/pytorch_model.bin"
+    },
+    {
+      "path": "models/RVC/pretrained_v2/f0D48k.pth",
+      "bytes": 142875703,
+      "sha256": "2269b73c7a4cf34da09aea99274dabf99b2ddb8a42cbfb065fb3c0aa9a2fc748",
+      "scope": "training",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/pretrained_v2/f0D48k.pth"
+    },
+    {
+      "path": "models/RVC/pretrained_v2/f0G48k.pth",
+      "bytes": 75465569,
+      "sha256": "b5d51f589cc3632d4eae36a315b4179397695042edc01d15312e1bddc2b764a4",
+      "scope": "training",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/pretrained_v2/f0G48k.pth"
+    },
+    {
+      "path": "models/RVC/rmvpe.pt",
+      "bytes": 181184272,
+      "sha256": "6d62215f4306e3ca278246188607209f09af3dc77ed4232efdd069798c4ec193",
+      "scope": "inference",
+      "url": "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/e6d0c1a17da07c33557852f9dfa2bd44cc75737d/rmvpe.pt"
+    }
+  ]
+}

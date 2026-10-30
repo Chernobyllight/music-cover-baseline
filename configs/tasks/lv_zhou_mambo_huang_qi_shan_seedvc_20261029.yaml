@@ -1,0 +1,37 @@
+{
+  "request": {
+    "name": "lhd_lv_zhou_mambo_big_band_huang_qi_shan_seedvc_20261029",
+    "song": "data/raw/songs/lv_zhou_lala_hsu.mp3",
+    "lyrics": "data/raw/lyrics/lv_zhou_lala_hsu.txt",
+    "reference": "data/raw/references/huang_qi_shan/reference.wav",
+    "reference_start": 0,
+    "reference_duration": 20,
+    "transpose": "auto",
+    "style": "Mandarin Chinese, energetic Afro-Cuban mambo and Latin big-band jazz, a driving double-time dance groove with a clear son clave, interlocking congas, bongos, timbales and cowbell, syncopated acoustic piano montuno, tumbao upright bass, punchy trumpet and trombone riffs answering the vocal, bright saxophone section, lively rhythmic breaks, rich jazz harmony, powerful mature solo female lead with a warm husky soulful chest voice, clear lyrical melodic phrasing, festive polished live-band production",
+    "seed": 42,
+    "steps": 30,
+    "gpu": "0",
+    "review": true
+  },
+  "modules": {
+    "02_pitch_adaptation": {
+      "reference_kind": "singing",
+      "auto_min_semitones": -6,
+      "auto_max_semitones": 6
+    },
+    "05_voice_conversion": {
+      "backend": "seed_vc",
+      "mode": "finetuned",
+      "voice_profile": "models/voices/huang_qi_shan/seed_vc/v001_20261029/voice.json",
+      "candidate_count": 3,
+      "candidate_seeds": [
+        42,
+        43,
+        44
+      ]
+    },
+    "10_evaluation": {
+      "voice_check": true
+    }
+  }
+}

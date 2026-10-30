@@ -92,5 +92,10 @@ class VoiceMetrics:
 def evaluate_voice(request, output):
     result = VoiceMetrics().compare(request['source'], request['converted'], [request['reference']], Path(output) / 'voice_diagnostics')
     result['reference_independence'] = 'same_inference_prompt; diagnostic_only'
-    if request.get('conversion'): result['conversion'] = json.loads(Path(request['conversion']).read_text())
+    if request.get('conversion'):
+        result['conversion'] = json.loads(Path(request['conversion']).read_text())
+        if result['conversion'].get('backend') == 'so_vits_svc':
+            result['reference_independence'] = 'held_out_reference; not_inference_condition'
+        elif result['conversion'].get('backend') == 'rvc':
+            result['reference_independence'] = 'not_inference_condition; independence_requires_dataset_check'
     write_json(Path(output) / 'voice_conversion_evaluation.json', result)

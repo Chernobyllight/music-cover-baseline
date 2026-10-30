@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from ..audio import sha256
 
-ENVIRONMENTS = {'sheetsage': 'sheetsage2', 'yue': 'yue2', 'separator': 'separator',
+ENVIRONMENTS = {'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': 'sheetsage2', 'yue': 'yue2', 'separator': 'separator',
                 'seed_vc': 'seed-vc', 'rmvpe': 'seed-vc', 'review_stems': 'separator',
                 'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': 'seed-vc'}
 MODEL_GROUPS = {
@@ -16,9 +16,20 @@ MODEL_GROUPS = {
 }
 
 
+def python_for(root, backend):
+    """Resolve one backend interpreter consistently for preflight and execution."""
+    environment = Path(ENVIRONMENTS[backend])
+    prefix = environment if environment.is_absolute() else Path(root) / 'envs' / environment
+    return prefix / 'bin/python'
+
+
 def resource_data(root, backend):
     """Only the selected model entries; editing another model's lock does not invalidate this stage."""
     root = Path(root)
+    if backend == 'rvc':
+        return json.loads((root / 'configs/rvc_assets.lock.json').read_text())
+    if backend == 'so_vits_svc':
+        return json.loads((root / 'configs/so_vits_svc_assets.lock.json').read_text())
     if backend == 'voice_metrics':
         data = json.loads((root / 'configs/voice_training_assets.lock.json').read_text())
         pitch = json.loads((root / 'configs/voice_models.lock.json').read_text())['RMVPE']
@@ -40,7 +51,7 @@ def signature(root, backends):
     result = {}
     for backend in sorted(set(backends)):
         env = ENVIRONMENTS[backend]
-        freeze = root / 'configs' / (env + '.installed.txt')
+        freeze = root / 'configs' / ('rvc-base.installed.txt' if backend == 'rvc' else 'svc-base.installed.txt' if backend == 'so_vits_svc' else env + '.installed.txt')
         entry = {'models': resource_data(root, backend), 'environment': env,
                  'installed_lock_sha256': sha256(freeze)}
         if backend == 'seed_vc':
@@ -48,11 +59,12 @@ def signature(root, backends):
         if backend == 'voice_metrics':
             entry['additional_requirements_sha256'] = sha256(root / 'configs/requirements-voice-adaptation.txt')
         # Small local model implementation files are executable dependencies, too.
-        prefixes = {'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
+        prefixes = {'rvc': ('third_party/rvc/infer', 'third_party/rvc/tools', 'third_party/rvc/train'), 'so_vits_svc': ('third_party/so-vits-svc',), 'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
                     'yue': ('models/YuE2-3B', 'models/YuE2-Vae', 'third_party/YuE'),
                     'seed_vc': ('third_party/seed-vc',), 'rmvpe': ('third_party/seed-vc/modules',),
                     'voice_metrics': ('third_party/seed-vc/modules',)}.get(backend, ())
-        files = [p for prefix in prefixes for p in (root / prefix).rglob('*.py') if '__pycache__' not in p.parts]
+        files = [p for prefix in prefixes for p in (root / prefix).rglob('*.py')
+                 if '__pycache__' not in p.parts and not p.name.startswith('._')]
         entry['upstream_code'] = {str(p.relative_to(root)): sha256(p) for p in sorted(files)}
         result[backend] = entry
     return result
@@ -60,7 +72,13 @@ def signature(root, backends):
 
 def requirements(root, backend):
     root = Path(root)
-    required = [root / 'envs' / ENVIRONMENTS[backend] / 'bin/python']
+    required = [python_for(root, backend)]
+    if backend == 'rvc':
+        required += [root / a['path'] for a in resource_data(root, backend)['assets'] if a.get('scope') != 'training']
+        required += [root / 'third_party/rvc/infer/module/models.py']
+    if backend == 'so_vits_svc':
+        required += [root / a['path'] for a in resource_data(root, backend)['assets'] if a.get('scope') != 'training']
+        required += [root / 'third_party/so-vits-svc/models.py']
     if backend == 'voice_metrics':
         required += [root / a['path'] for a in resource_data(root, backend)['assets']]
         required += [root / 'models/RMVPE/rmvpe.pt']
@@ -86,16 +104,24 @@ def preflight(root, backends=(), mp3=False):
         raise FileNotFoundError('Selected modules need these files:\n' + '\n'.join(missing))
     if not shutil.which('ffmpeg'):
         raise RuntimeError('ffmpeg is not available; add /opt/conda/bin to PATH')
+    if not shutil.which('ffprobe'):
+        raise RuntimeError('ffprobe is not available; add the FFmpeg binary directory to PATH')
     if mp3:
         result = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], check=True, capture_output=True, text=True, timeout=30)
         if 'libmp3lame' not in result.stdout:
             raise RuntimeError('ffmpeg must support libmp3lame')
     for backend in sorted(set(backends)):
-        command = [str(Path(root) / 'envs' / ENVIRONMENTS[backend] / 'bin/python'), '-c',
+        command = [str(python_for(root, backend)), '-c',
                    'import importlib; ' + '; '.join('importlib.import_module(' + repr(name) + ')' for name in IMPORTS[backend])]
         result = subprocess.run(command, capture_output=True, text=True, timeout=90)
         if result.returncode:
             raise RuntimeError(f'{backend} environment imports failed:\n{result.stderr[-2000:]}')
+    if 'so_vits_svc' in backends:
+        from ..svc import check_assets
+        check_assets(root)
+    if 'rvc' in backends:
+        from ..rvc import check_assets as check_rvc_assets
+        check_rvc_assets(root)
     for b in set(backends) & {'midi', 'review_stems'}:
         for item in resource_data(root, b)['assets']:
             p = Path(root) / item['path']
@@ -104,6 +130,8 @@ def preflight(root, backends=(), mp3=False):
 
 
 IMPORTS = {
+    'rvc': ['torch', 'torchaudio', 'transformers.models.hubert.modeling_hubert', 'librosa', 'soundfile', 'faiss'],
+    'so_vits_svc': ['torch', 'torchaudio', 'transformers.models.hubert.modeling_hubert', 'librosa', 'soundfile', 'faiss'],
     'sheetsage': ['torch', 'transformers'], 'yue': ['yue2'],
     'separator': ['audio_separator.separator'], 'seed_vc': ['torch', 'librosa', 'yaml'],
     'rmvpe': ['torch', 'librosa'], 'review_stems': ['demucs.pretrained', 'audio_separator.separator'],

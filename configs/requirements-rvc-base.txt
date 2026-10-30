@@ -1,0 +1,12 @@
+# Headless adapter dependencies already present in /opt/conda.
+# This is the tested core set, not upstream WebUI requirements.
+# Do not pip-install the upstream requirements into the working base environment.
+torch==2.8.0
+torchaudio==2.8.0
+transformers==4.57.3
+numpy==2.2.6
+scipy==1.15.3
+librosa==0.11.0
+soundfile==0.13.1
+faiss-cpu==1.11.0
+PyYAML>=6,<7

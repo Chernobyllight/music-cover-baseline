@@ -8,13 +8,15 @@ from pathlib import Path
 from ..audio import sha256, inspect_audio
 from ..common.io import write_json
 from ..common.paths import ROOT
+from ..common.resources import python_for
 from ..voice import resolve_voice, voice_record
 from ..voice_candidates import candidate_seeds, rejection_reasons, recommend, render_report
 
 
 def generate(request, output):
     out = Path(output)
-    voice = resolve_voice('finetuned', request['voice_profile'])
+    backend = request.get('backend', 'seed_vc')
+    voice = resolve_voice('finetuned', request['voice_profile'], backend=backend)
     seeds = candidate_seeds(request['seed'], request['candidate_count'], request.get('candidate_seeds'))
     source, reference = Path(request['source']), Path(request['reference'])
     source_info = inspect_audio(source)
@@ -23,7 +25,8 @@ def generate(request, output):
               'settings': {'steps': request['steps'], 'seeds': seeds, 'semitones': 0, 'auto_f0_adjust': False},
               'candidates': [], 'recommended_id': None,
               'selection_rule': 'highest ECAPA among technically eligible candidates; tie: lower seed then ID',
-              'reference_independence': 'same_inference_reference; diagnostic_only',
+              'reference_independence': ('same_inference_reference; diagnostic_only' if backend == 'seed_vc' else ('not_inference_condition; independence_requires_dataset_check' if backend == 'rvc' else 'held_out_reference; not_inference_condition')),
+              'backend': backend,
               'training_performed': False, 'subjective_quality': 'awaiting_human_review', 'lyrics_accuracy': 'not_evaluated'}
     for index, seed in enumerate(seeds, 1):
         name = f'candidate_{index:03d}'; folder = out/'candidates'/name; folder.mkdir(parents=True)
@@ -31,6 +34,10 @@ def generate(request, output):
         command = [sys.executable, '-m', 'music_cover.backends.cli', 'convert', '--input', str(source),
                    '--reference', str(reference), '--output', str(folder), '--steps', str(request['steps']),
                    '--seed', str(seed), '--voice-mode', 'finetuned', '--voice-profile', str(voice['profile'])]
+        if backend in {'so_vits_svc', 'rvc'}:
+            write_json(folder/'request.json', {**request, 'seed': seed})
+            command = [str(python_for(ROOT, backend)), '-m', 'music_cover.backends.cli',
+                       'convert_rvc' if backend == 'rvc' else 'convert_svc', '--request', str(folder/'request.json'), '--output', str(folder)]
         write_json(folder/'command.json', {'argv': command})
         try:
             with (folder/'inference.log').open('w') as log:

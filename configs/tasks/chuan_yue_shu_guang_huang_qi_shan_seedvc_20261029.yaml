@@ -1,0 +1,37 @@
+{
+  "request": {
+    "name": "lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_seedvc_20261029",
+    "song": "data/raw/songs/chuan_yue_shu_guang_tv.mp3",
+    "lyrics": "data/raw/lyrics/chuan_yue_shu_guang_tv.txt",
+    "reference": "data/raw/references/huang_qi_shan/reference.wav",
+    "reference_start": 0,
+    "reference_duration": 20,
+    "transpose": "auto",
+    "style": "Mandarin Chinese, cinematic orchestral soul pop, sweeping warm strings, lyrical grand piano, deep rounded bass, spacious half-time live drums, subtle French horn swells, uplifting dramatic progression, intimate verses building to a soaring emotional chorus, powerful mature solo female lead vocal with a warm soulful chest register, clear sustained melodic phrasing, clean studio production",
+    "seed": 42,
+    "steps": 30,
+    "gpu": "1",
+    "review": true
+  },
+  "modules": {
+    "02_pitch_adaptation": {
+      "reference_kind": "singing",
+      "auto_min_semitones": -6,
+      "auto_max_semitones": 6
+    },
+    "05_voice_conversion": {
+      "backend": "seed_vc",
+      "mode": "finetuned",
+      "voice_profile": "models/voices/huang_qi_shan/seed_vc/v001_20261029/voice.json",
+      "candidate_count": 3,
+      "candidate_seeds": [
+        42,
+        43,
+        44
+      ]
+    },
+    "10_evaluation": {
+      "voice_check": true
+    }
+  }
+}

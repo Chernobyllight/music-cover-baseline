@@ -1,0 +1,69 @@
+{
+  "upstream_commit": "730930d337d171479eadf305f96cbed4bb393e77",
+  "assets": [
+    {
+      "name": "vec256l9_G.pth",
+      "url": "https://huggingface.co/Sucial/so-vits-svc4.1-pretrain_model/resolve/a42897099a881c0545a466da1161933785e19fa2/vec256l9/G_0.pth",
+      "bytes": 180619621,
+      "sha256": "ea40d6066461974c36f8984f956a7d2cafcce517a3bc6222a8877fab419c0179",
+      "status": "downloaded"
+    },
+    {
+      "name": "hubertsoft_G.pth",
+      "url": "https://huggingface.co/Sucial/so-vits-svc4.1-pretrain_model/resolve/a42897099a881c0545a466da1161933785e19fa2/hubertsoft/G_0.pth",
+      "bytes": 152358837,
+      "sha256": "a78c3c6f58a11f16c0ba92a8e51c9532697ee598771b729f4c3779afe130ab43",
+      "status": "downloaded"
+    },
+    {
+      "name": "whisper_ppg_G.pth",
+      "url": "https://huggingface.co/Sucial/so-vits-svc4.1-pretrain_model/resolve/a42897099a881c0545a466da1161933785e19fa2/whisper-ppg/G_0.pth",
+      "bytes": 237719813,
+      "sha256": "b5ff28db8fa5894fdcb29c8aff760e45c9fd3b88a892391dcf0d0257e80a78b1",
+      "status": "downloaded"
+    },
+    {
+      "name": "diffusion_full.pt",
+      "url": "https://huggingface.co/Sucial/so-vits-svc4.1-pretrain_model/resolve/a42897099a881c0545a466da1161933785e19fa2/diffusion/768l12/model_0.pt",
+      "bytes": 220895384,
+      "sha256": "409452a27ab310f7a5897844d003d372a7357cc91c4a43562584a1714518cdf9",
+      "status": "downloaded"
+    },
+    {
+      "name": "diffusion_shallow.pt",
+      "url": "https://huggingface.co/datasets/ms903/Diff-SVC-refactor-pre-trained-model/resolve/main/Diffusion-SVC/shallow_512_20/model_0.pt",
+      "bytes": 220895118,
+      "sha256": "a63ceb5ef523558ed7b8e28964165d2ff4f3583999b297d04998cba7eccb4144",
+      "status": "downloaded"
+    },
+    {
+      "name": "hubert-soft.pt",
+      "url": "https://github.com/bshall/hubert/releases/download/v0.1/hubert-soft-0d54a1f4.pt",
+      "bytes": 378435957,
+      "sha256": "e82e7d079df05fe3aa535f6f7d42d309bdae1d2a53324e2b2386c56721f4f649",
+      "status": "downloaded"
+    },
+    {
+      "name": "nsf_hifigan.zip",
+      "url": "https://github.com/openvpi/vocoders/releases/download/nsf-hifigan-v1/nsf_hifigan_20221211.zip",
+      "bytes": 52778967,
+      "sha256": "d86ea84b7e2c9169afb5ccbb720b5542704be519c643f698332f2014a8f2d6bd",
+      "status": "downloaded"
+    },
+    {
+      "name": "fcpe.pt",
+      "url": "https://huggingface.co/datasets/ylzz1997/rmvpe_pretrain_model/resolve/main/fcpe.pt",
+      "bytes": 69005189,
+      "sha256": "c3a8dd2dbd51baf19ed295006f2ac25dba6dd60adc7ec578ae5fbd94970951da",
+      "status": "downloaded"
+    },
+    {
+      "name": "medium.pt",
+      "bytes": 1528008539,
+      "sha256": "345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1",
+      "url": "https://openaipublic.azureedge.net/main/whisper/models/345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1/medium.pt",
+      "status": "downloaded"
+    }
+  ],
+  "note": "Optional experimental assets; not required by default Seed-VC or SVC inference"
+}

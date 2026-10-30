@@ -1,10 +1,10 @@
-当前版本：`v0.3`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。逐步操作见 [实操手册](11_modular_walkthrough.md)。
+当前版本：`v1.0`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。当前操作见 [USAGE.md](../USAGE.md)，交付验收见 [交付说明](21_delivery.md)。
 
 模型资产的集中清单、固定版本、下载命令与校验方法见[模型权重指南](12_model_weights.md)。
 
 本仓库用于保存音乐换曲风与参考音色转换 baseline 的代码、文档及版本记录。原始工作目录为 `/data/liuhongda/music-cover-baseline`；现有模型和音频产物继续保留在该目录，不随 Git 提交上传。
 
-v0.3 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
+v1.0 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
 
 | 内容 | Git 管理方式 |
 | --- | --- |
@@ -12,21 +12,22 @@ v0.3 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模
 | `README.md`、`USAGE.md`、`VALIDATION.md`、`docs/` | 提交说明和验证记录 |
 | `configs/` | 提交模型 revision、校验值、环境快照和当前配置 |
 | `data/demo_sources.json` | 提交内置演示素材的来源和哈希，不包含音频或歌词正文 |
-| `third_party/YuE`、`third_party/seed-vc` | 作为 Git 子模块固定上游代码 commit |
+| `third_party/YuE`、`third_party/seed-vc`、`third_party/so-vits-svc`、`third_party/rvc` | 作为 Git 子模块固定上游代码 commit |
 | `models/`、`envs/`、`cache/`、`checkpoints/` | 本地资源，不提交 |
 | `data/raw/`、`data/prepared/`、`data/voice_datasets/`、`runs/` | 本地输入、中间结果和交付音频，不提交 |
 
-在新目录获取代码时，同时初始化两个上游子模块：
+在新目录获取 v1.0 代码，并仅初始化本项目需要的四个直接子模块：
 
 ```bash
-git clone --branch v0.3 --recurse-submodules https://github.com/Chernobyllight/music-cover-baseline.git
+git clone --branch v1.0 https://github.com/Chernobyllight/music-cover-baseline.git
 cd music-cover-baseline
+git submodule update --init third_party/YuE third_party/seed-vc third_party/so-vits-svc third_party/rvc
 ```
 
 如果已经普通克隆，在仓库内执行：
 
 ```bash
-git submodule update --init --recursive
+git submodule update --init third_party/YuE third_party/seed-vc third_party/so-vits-svc third_party/rvc
 ```
 
 子模块固定版本如下；使用普通 `git submodule update` 恢复记录的版本，不使用 `--remote` 更新至上游最新分支。
@@ -35,6 +36,18 @@ git submodule update --init --recursive
 | --- | --- |
 | [multimodal-art-projection/YuE](https://github.com/multimodal-art-projection/YuE) | `1647252d68b70cbead046ffd3f7caf036dde47ee` |
 | [Plachtaa/seed-vc](https://github.com/Plachtaa/seed-vc) | `51383efd921027683c89e5348211d93ff12ac2a8` |
+| [svc-develop-team/so-vits-svc](https://github.com/svc-develop-team/so-vits-svc) | `730930d337d171479eadf305f96cbed4bb393e77` |
+| [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI) | `81eed5e8f68b6bed1789f682fe78cdd324495afc` |
+
+SVC 与 RVC 的适配器、训练入口和配置均随 v1.0 提交。初始化子模块后，在已准备依赖的环境中恢复其固定资产：
+
+```bash
+git submodule update --init third_party/so-vits-svc third_party/rvc
+/opt/conda/bin/python scripts/setup_svc.py
+/opt/conda/bin/python scripts/setup_rvc.py --training
+```
+
+RVC 不需要递归初始化实时 VST 子模块；其权重、现有 base 依赖、训练和具体路径见 [RVC 指南](20_rvc.md)。
 
 克隆代码不会同时获得可直接运行的 GPU 环境。现有 `envs/` 复用了原服务器 `/opt/conda` 的基础包，不能直接复制到另一台机器使用。迁移时需分别重建 `control`、`sheetsage2`、`yue2`、`separator`、`seed-vc` 环境，实际 Python、Torch、CUDA 与关键包版本见 `configs/environments.lock.json`。
 
@@ -50,7 +63,7 @@ envs/control/bin/python scripts/download_separator_model.py
 
 下载脚本需要相应的 `huggingface_hub`、`PyYAML` 等依赖。它们会创建模型目录并更新本地模型清单；`download_voice_models.py` 还会按当前仓库位置重建 `configs/seed_svc.local.yml` 中的绝对路径。版本清单里的原始绝对路径是原服务器记录，迁移时不能直接照搬。
 
-从 `v0.1` 起默认开启成品分轨和 MIDI 评审，`v0.3` 继续保留。基础 separator 环境配置好后，还需要安装附加依赖和模型：
+从 `v0.1` 起默认开启成品分轨和 MIDI 评审，`v1.0` 继续保留。基础 separator 环境配置好后，还需要安装附加依赖和模型：
 
 ```bash
 envs/separator/bin/python -m pip install --no-deps -r configs/review-requirements.txt
@@ -72,6 +85,8 @@ envs/control/bin/python scripts/prepare_demo.py
 代码检查可在现有服务器执行，不会启动整首音乐生成：
 
 ```bash
+export PATH="/opt/conda/bin:$PATH"
+/opt/conda/bin/python scripts/check_project.py --output cache/source_check.json
 PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests -v
 ```
 
@@ -81,12 +96,12 @@ PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests -v
 
 ```bash
 envs/separator/bin/python scripts/verify_review.py /绝对路径/runs/某次运行 \
-  --output /绝对路径/runs/某次运行/delivery_verification.json
+  --output /绝对路径/cache/delivery_verification.json
 ```
 
 `configs/project_code.lock.json` 记录本次归档时项目 Python 和 Shell 源码的 SHA256。后续代码变化由 Git commit 追溯；需要新的文件级快照时应同步更新该清单。
 
-## v0.3 的微调资源恢复
+## Seed-VC 微调资源恢复
 
 仅恢复代码不会获得歌手模型。已导出的音色版本需从自己的训练/备份恢复整个 `models/voices/<voice_id>/seed_vc/<version>/`，包含 `voice.json`、`model.pth`、`config.yml`、`validation.json`；解析器核对文件哈希、44.1 kHz 和 F0 条件。模型配置中的本机路径也需适配新机器。标准训练/验证/导出步骤见 [音色微调手册](13_voice_adaptation.md)。
 
@@ -99,3 +114,11 @@ bash scripts/run_baseline.sh --config configs/tasks/bu_bai_de_ying_xiong_celtic_
 ```
 
 最后一条要求已经恢复该任务指定的杨坤 profile；其他歌手请换自己的任务配置。旧歌手录音、导出权重及训练状态均不随仓库发布；本版不包含单曲伪标签方案、歌词审核模型或歌词检查接口。
+
+## v1.0 交付边界
+
+v1.0 保留现有 CLI 和模型默认参数，纳入已验证的三种音色后端与交付检查。代码包不包含媒体、人物权重和 Python 环境。`.gitmodules` 记录四个上游仓库；固定 commit 见上表、Git gitlink 和 `configs/environments.lock.json`。2026-10-29 的独立源码归档另携带 `UPSTREAM.json`；不能把上游最新版本当成已验证版本。
+
+老版主说明及技术记录位于 [历史文档目录](archive/README.md)。`scripts/verify_result.py` 只兼容非模块化 v0.1 运行；现有 00–11 运行使用 `scripts/verify_review.py`，检查报告写到 `cache/`，避免修改已发布产物的哈希。
+
+本轮验证覆盖当前服务器的实际运行。迁移新机器仍需重建依赖、恢复模型和数据、重新预检；本轮没有宣称任意新机器的一键部署已经验证。

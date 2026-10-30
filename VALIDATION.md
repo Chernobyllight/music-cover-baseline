@@ -1,3 +1,121 @@
+# v1.0 发布前复核（2026-10-30）
+
+本版纳入 Seed-VC 零样本/微调、SVC、RVC 及 2026-10-29 工程整理；`VERSION` 为 `v1.0`。README、使用说明、模型清单、仓库恢复和交付文档已同步，历史版本记录保留原日期和范围。
+
+- 125 项自动测试重新执行通过。
+- Seed-VC zero_shot / finetuned、杨坤 SVC、黄绮珊 RVC index_rate=0.5 / 0.75 五组预检重新通过。
+- 对既有 `runs/project_delivery_validation_20261029/rvc_full` 重新运行 `verify_review.py`：12 个阶段、190 个交付文件、69.8787 秒音频、12 组分轨与 10 个非空 MIDI 均通过；分轨重构最大绝对误差 1.31717e-7。
+- 150 个项目 Python/Shell 文件的 SHA256 与发布源码锁一致。本轮更新版本与文档，并移除一个实验脚本末尾多余空行（AST 不变），没有改动运行逻辑、重新训练或生成整首音乐；真实生成及训练入口验证见下方 2026-10-29 记录。
+- 发布前检查源码语法、配置、模块入口和文档链接；核对四个子模块固定 commit；提交范围排除媒体、权重、训练数据、环境与缓存，并检查凭据模式和异常大文件。
+
+本轮检查记录保存在服务器 `cache/publish_v1_0_20261030/`，包括 `tests.log`、`runtime_checks.json`、`existing_delivery.json`、`source_check.json` 和 `source_audit.json`。源代码可按 v1.0 的 Git commit 恢复，运行资产需另行备份。新机器全量安装与人工听感验收仍未覆盖。
+
+---
+
+# 2026-10-29 工程整理与交付验收
+
+本节记录 2026-10-29 工程整理验收，相关代码已纳入 v1.0；下方更早章节保留为历史实验记录，历史路径未必仍存在。代码改动、使用方式和数据边界见 [交付指南](docs/21_delivery.md)与 [USAGE](USAGE.md)。
+
+## 验收结果
+
+| 检查 | 实际结果 |
+|---|---|
+| 自动测试 | 125 项通过；整理前 114 项，新增 11 项覆盖后端切换、资产校验、解释器与 FFprobe |
+| 源码/配置/文档 | 119 个 Python、31 个 Shell、44 个配置、69 个 Markdown；324 个本地链接通过 |
+| 环境与模型预检 | Seed-VC zero_shot / finetuned、SVC、RVC 0.5 / 0.75 五组通过 |
+| 完整真实生成 | 黄绮珊 RVC +《穿越曙光》+ 管弦灵魂乐，从 00 至 11 共 12 阶段重新执行通过 |
+| 成品检查 | 69.8787 秒，12 组音轨（10 个叶轨），10 个 MIDI 文件均非空；190 个交付文件检查通过 |
+| 分轨重构 | 最大绝对误差 1.31717e-7，RMS 误差 4.57926e-9 |
+| 续跑缓存 | 同一完整命令再次运行，12/12 阶段复用，无模型重推理 |
+| 其它真实推理 | Seed-VC 两路线与原杨坤 SVC 各完成 6 秒推理，生成有效音频 |
+| 跨后端复用 | 从 RVC 上游切换到杨坤 SVC，05–06 成功；原 RVC 私有参数被清除，SVC 使用单候选 |
+| 训练入口 | Seed-VC / SVC / RVC 各实际训练 2 步，权重发生变化且 loss 有限；RVC 特征与索引阶段也通过 |
+| 旧验证入口保护 | v0.1 验证器对模块化 run 提前退出，未产生或修改文件 |
+| 清理后保留检查 | 7 个人物 profile 保留；228 个受保护文件核验；9,040 个数据文件大小/修改时间保持不变；139 个阶段清单哈希及 3,875 个输出路径/大小检查通过 |
+
+完整验证使用现有黄绮珊 RVC 4000 步模型、index_rate=0.5、protect=0.33、候选种子42/43/44，不改已有模型和默认参数。SVC 跨后端验证用杨坤模型，只验证接口与运行，不作为黄绮珊音色质量对照。
+
+训练是入口连通性验证，不是新的质量训练或模型选优：Seed-VC 第2步 loss=0.616986；SVC 第2步 G=72.199837、D=3.421398；RVC 第2步 G=65.269844、D=3.592915。未导出这批临时权重；验证后删除了新建的约9.80 GB训练检查点，保留训练配置、日志、结果和 checkpoint SHA256 回执。原有训练检查点均保留。
+
+## 文件位置
+
+完整新 run：`/data/liuhongda/music-cover-baseline/runs/project_delivery_validation_20261029/rvc_full/`。
+
+- 最终音频：`deliverables/final.mp3`、`deliverables/final.wav`。
+- 专业评审：`deliverables/review/index.html`、`review/audio/`、`review/midi/`。
+- 全部过程：`stages/00_prepare`～`stages/11_delivery`，当前 attempt 见 `stage_state.json`。
+- SVC 切换测试：同一验证父目录下的 `svc_switch/`，只执行至06，不冒充完整交付。
+
+验收证据位于 `/data/liuhongda/music-cover-baseline/cache/project_cleanup_20261029/`：
+
+- `tests_after.log`、`source_check.json`、`preflight.json`。
+- `full_rvc.log`、`delivery_verification.json`、`cache_reuse.log`。
+- `regression/regression.json`、三组 `training_*.log`、`training_*_checkpoint_receipt.json`。
+- `cleanup_plan.json`、`cleanup_receipt.json`、`preservation.json`。
+- `source_before.tar.gz`：修改前源码快照，包含当时尚未提交的接入改动。
+
+清理旧冗余文件共 **1,588,523,519 字节（约1.59 GB / 1.48 GiB）**：已合并的分离模型下载分片、未完成的旧 Torch 下载分片、过期评审自测副本、17 个与正式歌曲逐字节相同的下载副本和4个操作系统元数据文件。没有删除原 `runs/`、`models/`、`data/` 下的业务数据；九组黄绮珊对照和 SVC 优化依赖继续可用。
+
+## 验证范围
+
+本轮确认当前服务器的工程功能、兼容性、数据完整性和交付文件可用。自动指标不证明主观音乐质量提升；没有新增人工盲听评分。新机器从零安装尚未独立验证，需要按环境/权重文档恢复资源并验收。
+
+---
+
+# RVC 黄绮珊接入验证（2026-10-29，v0.3 后续开发）
+
+RVC v2 / 768 维内容编码器 / RMVPE / 48 kHz NSF，使用既有 base，无新环境或全局依赖安装。固定上游与资产哈希，独立训练与推理入口；使用方式见 [RVC 指南](docs/20_rvc.md)。当次接入尚未单独发布，现已纳入 v1.0。
+
+沿用黄绮珊原 dataset 的歌曲组划分：训练52段416秒、验证8段64秒、测试5段40秒，排除20秒prompt。训练完整生成器与判别器，编码器和RMVPE冻结；20步连通检查后恢复到总计4000步。**本次直接使用4000步，不扫描检查点或参数；接口仍支持 `--checkpoint` 指定其他权重。** 推理固定index_rate=0.5、protect=0.33、8秒块/0.2秒重叠/0.5秒上下文；训练与推理均保留无声F0=0。
+
+三组对照复用 Seed-VC finetuned 的全部00–04产物，哈希逐项相同；曲风分别为管弦灵魂乐、Funk/Soul、Mambo/大乐队爵士。Seed-VC继续使用已有黄绮珊1000步模型。两种方法都用42/43/44三候选及既有技术门槛/prompt评分自动推荐；以下使用原dataset/test五段未参与训练、索引、候选选择的参考，对推荐干人声独立计算。
+
+| 歌曲 | Seed-VC 独立ECAPA | RVC 独立ECAPA | Seed-VC 音高±1半音 | RVC 音高±1半音 |
+|---|---:|---:|---:|---:|
+| 穿越曙光 | 0.624578 | 0.651737 | 100.0000% | 99.6169% |
+| Last Dance | 0.632828 | 0.632311 | 99.6739% | 99.8915% |
+| 绿洲 | 0.645801 | 0.651737 | 99.2327% | 99.6149% |
+
+三首等权ECAPA：Seed-VC 0.634403，RVC 0.645262。仅说明这三组的嵌入相似度；Last Dance基本持平，不能据此声称RVC在整体听感上已胜出。音高比例以对齐后的有效配对片段为分母，覆盖率及逐参考结果见完整JSON。未收集人工盲听评分，原始参考存在有损来源和分离残留。
+
+模型：`models/voices/huang_qi_shan/rvc/v001_20261029/voice.json`。训练：`runs/voice_training/huang_qi_shan_rvc_v001_20261029/`。独立对照指标与来源校验：`cache/rvc_integration_20261029/heldout_metrics/metrics.json`、`comparison_integrity.json`。
+
+验证命令：`PATH=/opt/conda/bin:$PATH PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests`，114项通过；包含其他检查点可显式指定的测试。Seed-VC zero-shot、Seed-VC finetuned、原有SVC各完成6秒实际推理回归，原模型哈希不变；RVC权重/环境预检、全部新增README链接及脚本语法检查通过。
+
+三组新 run 的05–11全部执行成功，00–04复用并校验原产物。最终MP3、WAV、分轨、MIDI和交付检查均完成：
+
+- `runs/lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_rvc_20261029/deliverables/final.mp3`
+- `runs/lhd_last_dance_funk_soul_huang_qi_shan_rvc_20261029/deliverables/final.mp3`
+- `runs/lhd_lv_zhou_mambo_big_band_huang_qi_shan_rvc_20261029/deliverables/final.mp3`
+
+同目录 `final.wav` 与 `review/` 保留评审数据。本次未删除原有实验、Seed-VC/SVC权重或素材。
+
+---
+
+# so-vits-svc 接入验证（2026-10-28，v0.3 后续开发）
+
+使用现有 `/opt/conda/bin/python`（base）完成 SVC 训练和推理，没有新增 SVC 环境。Seed-VC zero_shot / finetuned 接口保留。具体命令、权重与中间产物见 [SVC 使用说明](docs/18_so_vits_svc.md)。本节不是新版本发布记录。
+
+杨坤训练数据沿用原有按歌曲分组的数据集：41 段 / 328 秒训练、6 段 / 48 秒验证、5 段 / 40 秒测试。完成 2 步检查及断点恢复至 1000 步；750 项非歌手生成器参数全部从预训练权重匹配加载，仅初始化歌手嵌入；生成器和判别器全参数训练，ContentVec 与 RMVPE 固定。训练、验证、导出四个阶段全部成功。
+
+歌手 profile：`models/voices/yang_kun/so_vits_svc/v001_20261028/voice.json`。训练 run：`runs/voice_training/yang_kun_so_vits_svc_v001_20261028`。
+
+整曲验证 run：`runs/lhd_bu_bai_de_ying_xiong_celtic_epic_yang_kun_svc_20261028`。与原 Seed-VC 1000 步版本共享哈希完全一致的 00–04 产物，使用《不败的英雄》、杨坤音色、凯尔特史诗风格；仅替换 05 的音色转换后端。05 保持输入 F0，不额外移调。
+
+| 模型 | 同参考 ECAPA | 独立测试参考平均 ECAPA | 换声前后音高差 ±1 半音比例 |
+| --- | ---: | ---: | ---: |
+| Seed-VC 1000 步 | 0.821432471 | 0.599371600 | 98.0545% |
+| so-vits-svc 1000 步 | 0.700481176 | 0.542442620 | 98.0620% |
+
+以上统一使用 05 原始转换人声，报告在 SVC run 的 `comparison_raw/metrics.json`。同参考音频参与 Seed-VC 推理，但不参与 SVC 推理；独立测试参考是未参与训练或选模的另两首歌、5 段录音。这一次 Seed-VC 音色相似度更高，两者音高保持接近。ECAPA 不是身份百分比，也不是主观音质结论。
+
+- 94 项回归测试通过：`PATH=/opt/conda/bin:$PATH PYTHONPATH=src envs/separator/bin/python -m unittest discover -s tests -q`。
+- Seed-VC 两条路线的环境预检及真实 20 秒推理回归通过。
+- ContentVec 同权重适配与独立函数参考实现在两段 CPU FP32 输入上的最大绝对差均为 0；复核脚本为 `scripts/verify_svc_contentvec.py`。此检查不代表不同 GPU 运行逐位相同。
+- 最终 00–11 全部 succeeded，交付检查 passed；再次运行全部阶段可复用。
+- 成品 128.198667 秒，包含 WAV/MP3、12 路音频、10 个非空 MIDI；检查 181 个交付文件，叶轨重建最大绝对误差 `1.379594323e-7`。
+- 完整记录：SVC run 下 `svc_integration_validation.json`；最终音频：`deliverables/final.mp3`。主观状态仍为 `awaiting_human_review`。
+
 # v0.3 发布验证（2026-10-28）
 
 当前代码已撤回上一轮歌词检测与自动静音修复，保留 zero_shot、目标音色 finetuned、候选评估、分轨和 MIDI。新实例及命令见 [v0.3 实操](docs/17_v03_walkthrough.md)。下方旧日期记录保留历史数值；部分旧运行已按用户要求清理，不再作为当前下载入口。
@@ -148,7 +266,7 @@ envs/separator/bin/python scripts/verify_review.py \
 | 评审音轨 | 12 条 48 kHz 立体声 FLOAT 音轨；其中 10 条为可相加的叶轨 |
 | 重建最大绝对误差 / RMS 误差 | `1.1428164725657552e-7` / `5.2050908815840604e-9` |
 | 主 MIDI 文件 | 10 个，音符数和时间范围通过检查，没有空轨 |
-| MIDI 示例音符数 | 主唱 584、背景人声 492、合并编曲 9607 |
+| MIDI 示例音符数（2026-10-30 复核） | 主唱 175、背景人声 164、合并编曲 1777 |
 | 最终 WAV SHA256 | `f989d6c930c7efc395a730d826fdd13970ae7e32092639e3c0475416805a7b3e` |
 | 最终 MP3 SHA256 | `e0872bee0e4e054da094026fcbffbb736afc144b51b5966bd5557eeb418edba5` |
 
@@ -239,3 +357,7 @@ SheetSage2 使用当前固定版本的 `default` preset，由 FFmpeg 8.0 命令�
 首次演示验证了整首技术链路、输出格式、时长和对齐，以及缓存恢复。当时没有进行人工听感验收，也未验证用户目标人物的参考录音或商业歌曲输入；后续歌曲验证见本页前文。所有技术记录均不能据此宣称目标音色、自然度和曲风达到生产要求。
 
 建议按 `USAGE.md` 中的试听顺序，重点听主副歌、高音、间奏前后及结尾。首次演示曾通过 `runs/demo_verified` 验收；该旧入口已清理，现有结果和上传前检查见本页前文。
+
+## 2026-10-28 杨坤SVC优化回归
+
+97项单元测试通过；12份整曲比较的WAV/MP3与音频指标校验通过。正式run `runs/lhd_yang_kun_svc_optimized_validation_20261028` 复用00–04并执行05–11完成，182项交付文件检查、分轨重建与MIDI非空检查通过。Seed-VC两条原接口实际音频回归成功；原模型SHA256保持匹配。确定性CuDNN下实验/正式SVC适配器输出一致，普通跨进程GPU运行不要求逐位一致。技术结果及限制见 [SVC优化报告](docs/19_svc_optimization.md)。

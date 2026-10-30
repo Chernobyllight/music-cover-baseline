@@ -1,0 +1,38 @@
+{
+  "voice_id": "huang_qi_shan",
+  "version": "v001_20261029",
+  "gpu": 0,
+  "source_dataset": "data/raw/references/huang_qi_shan/dataset",
+  "dataset_dir": "data/voice_datasets/huang_qi_shan/rvc/v001_20261029",
+  "export_dir": "models/voices/huang_qi_shan/rvc/v001_20261029",
+  "training": {
+    "max_steps": 4000,
+    "save_every": 1000,
+    "batch_size": 6,
+    "learning_rate": 0.0001,
+    "seed": 42,
+    "input_crop_frames": 400
+  },
+  "inference": {
+    "f0_predictor": "rmvpe",
+    "chunk_seconds": 8.0,
+    "overlap_seconds": 0.2,
+    "pad_seconds": 0.5,
+    "protect": 0.33,
+    "index_rate": 0.5
+  },
+  "validation": {
+    "cases": [
+      {
+        "source_run": "runs/lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_seedvc_20261029",
+        "start": 12,
+        "duration": 20
+      },
+      {
+        "source_run": "runs/lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_seedvc_20261029",
+        "start": 40,
+        "duration": 20
+      }
+    ]
+  }
+}

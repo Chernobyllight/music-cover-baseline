@@ -178,7 +178,7 @@ reference: data/voice_datasets/raw/sun_yanzi/prompt_e.wav
 
 训练采用固定上游 Seed-VC 的音色扰动与条件流匹配目标：原目标歌手片段提供目标 Mel/F0/说话人条件；OpenVoice 随机改变输入音色，Whisper 提取内容，模型学习重建原目标音色。训练时更新 CFM/DiT 和 length regulator 的全部可训练参数；Whisper、CAMPPlus、RMVPE、OpenVoiceV2、BigVGAN 冻结。它不是把源歌曲加入目标歌手训练集，也不要求源/目标歌手配对演唱同一首歌。
 
-当前实现是上述 Seed-VC 路线，未实现 RVC/so-vits-svc 或 LoRA。验证时继续检查旋律、歌词清晰度、发音和自然度，不能以训练 loss 下降或某个音色指标提高替代人工判断。
+本手册描述 Seed-VC 路线；另已接入独立 [so-vits-svc 歌手训练与转换](18_so_vits_svc.md)。[RVC 歌手训练与转换](20_rvc.md)也已接入；LoRA 尚未实现。验证时继续检查旋律、歌词清晰度、发音和自然度，不能以训练 loss 下降或某个音色指标提高替代人工判断。
 
 正式训练按同样 00→01→02→03 命令执行，换成正式配置和新 run。先用 validation 选择 checkpoint，再对唯一选中的模型运行独立 test：
 

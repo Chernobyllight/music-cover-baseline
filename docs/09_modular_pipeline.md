@@ -1,6 +1,6 @@
 # 模块化 baseline：执行、产物契约与技术迭代
 
-v0.3 沿用下述依赖结构，05 增加 zero_shot / finetuned 双入口，06/11 支持微调候选混音和交付，10 支持可选 ECAPA。详见 [音色训练](13_voice_adaptation.md)、[候选说明](15_voice_candidates.md) 和 [当前整曲实例](17_v03_walkthrough.md)。
+当前工作区沿用下述依赖结构：05 支持 Seed-VC zero_shot / finetuned、SVC 和 RVC；06/11 支持微调候选混音和交付，10 支持可选 ECAPA。详见 [当前使用手册](../USAGE.md)、[音色训练](13_voice_adaptation.md)、[候选说明](15_voice_candidates.md)、[SVC](18_so_vits_svc.md) 和 [RVC](20_rvc.md)。
 
 v0.2 基于 v0.1 重构，保留 SheetSage2、YuE2、BS-RoFormer、Seed-VC、Demucs、Basic Pitch 等现有模型；02 的选调现已升级为[双向算法](10_bidirectional_pitch.md)。目标是使每个阶段可独立执行、检查、替换和重跑，不改变“原曲 → 改曲风 → 换音色 → 评审”的技术路线。默认主流程串行执行；目录编号是阅读顺序，真实依赖由模块声明。
 
@@ -20,6 +20,8 @@ scripts/
     zero_shot/run.sh          # 通用模型推理
     finetuned/run.sh          # 已训练音色模型推理
     finetuned/training/       # 独立 00–03 训练/验证/导出
+    so_vits_svc/              # SVC 推理、独立训练与优化实验
+    rvc/                     # RVC 推理、独立特征/训练/索引/导出
   06_mix/run.sh
   07_stem_separation/run.sh
   08_final_score/run.sh
@@ -194,3 +196,10 @@ runs/<run>/
 ## 05 音色模型迭代
 
 05 现有入口保留，新增 `zero_shot/run.sh` 与 `finetuned/run.sh`。训练流程独立放在 `finetuned/training/00_prepare` 至 `03_export`，不插入歌曲00–11。两种推理输出保持一致，模型模式、版本和哈希进入05缓存与记录。具体命令见 [音色微调手册](13_voice_adaptation.md)。
+
+
+05 另有独立 `so_vits_svc/run.sh` 和四阶段歌手训练入口，使用已有 base；后端与模式分别配置，SVC 目前单候选、仅 finetuned。详见 [SVC 指南](18_so_vits_svc.md)。
+
+## RVC 音色后端
+
+05 新增独立 `scripts/05_voice_conversion/rvc/run.sh`，在已有 run 的 04 分离人声上转换；输出契约继续是 44.1 kHz `converted.wav`，后续 06–11 不变。人物模型训练另放在 `scripts/05_voice_conversion/rvc/training/00_prepare` 至 `05_export`，不会在推理中启动。具体黄绮珊训练、复用编曲和中间路径见 [RVC 指南](20_rvc.md)。本次验证使用 4000 步模型；04 验证入口仍可用 `--checkpoint` 显式指定其他步数权重。

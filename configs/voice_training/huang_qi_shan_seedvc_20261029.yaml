@@ -1,0 +1,365 @@
+{
+  "voice_id": "huang_qi_shan",
+  "version": "v001_20261029",
+  "dataset_dir": "data/raw/references/huang_qi_shan/dataset",
+  "smoke_test": false,
+  "segment_seconds": 8,
+  "gpu": 0,
+  "sources": [
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1298435074_00.wav",
+      "group": "huang_qi_shan:iwillbegood",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/test/1490856012_01.wav",
+      "group": "huang_qi_shan:你不要那樣看著我的眼睛",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/test/1490856012_02.wav",
+      "group": "huang_qi_shan:你不要那樣看著我的眼睛",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1753220136_00.wav",
+      "group": "huang_qi_shan:理想之地",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1753220136_01.wav",
+      "group": "huang_qi_shan:理想之地",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1753220136_02.wav",
+      "group": "huang_qi_shan:理想之地",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1750146979_01.wav",
+      "group": "huang_qi_shan:你也懷念嗎",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324183_00.wav",
+      "group": "huang_qi_shan:遇見明天的你",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324183_01.wav",
+      "group": "huang_qi_shan:遇見明天的你",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324183_02.wav",
+      "group": "huang_qi_shan:遇見明天的你",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1488095316_01.wav",
+      "group": "huang_qi_shan:小茉莉",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1488095316_02.wav",
+      "group": "huang_qi_shan:小茉莉",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1490856009_00.wav",
+      "group": "huang_qi_shan:月半彎",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1490856009_01.wav",
+      "group": "huang_qi_shan:月半彎",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324185_01.wav",
+      "group": "huang_qi_shan:聽愛",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324185_02.wav",
+      "group": "huang_qi_shan:聽愛",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1488095250_02.wav",
+      "group": "huang_qi_shan:別送我",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1856772979_00.wav",
+      "group": "huang_qi_shan:有你才能回家",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1856772979_01.wav",
+      "group": "huang_qi_shan:有你才能回家",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1856772979_02.wav",
+      "group": "huang_qi_shan:有你才能回家",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1490856015_00.wav",
+      "group": "huang_qi_shan:永遠的微笑",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1490856015_01.wav",
+      "group": "huang_qi_shan:永遠的微笑",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324182_00.wav",
+      "group": "huang_qi_shan:倒淌河",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324182_01.wav",
+      "group": "huang_qi_shan:倒淌河",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1397324182_02.wav",
+      "group": "huang_qi_shan:倒淌河",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308363_00.wav",
+      "group": "huang_qi_shan:dummy",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308363_01.wav",
+      "group": "huang_qi_shan:dummy",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308363_02.wav",
+      "group": "huang_qi_shan:dummy",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1066174990_01.wav",
+      "group": "huang_qi_shan:拆穿",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/test/1598308368_00.wav",
+      "group": "huang_qi_shan:wrongthenrightnow",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/test/1598308368_01.wav",
+      "group": "huang_qi_shan:wrongthenrightnow",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/test/1598308368_02.wav",
+      "group": "huang_qi_shan:wrongthenrightnow",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1720087057_00.wav",
+      "group": "huang_qi_shan:xiaoxia",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1720087057_02.wav",
+      "group": "huang_qi_shan:xiaoxia",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/reference.wav",
+      "group": "huang_qi_shan:missingakindoflove",
+      "split": "prompt"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308145_01.wav",
+      "group": "huang_qi_shan:bored",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308145_02.wav",
+      "group": "huang_qi_shan:bored",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308361_00.wav",
+      "group": "huang_qi_shan:whentherainstops",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308361_01.wav",
+      "group": "huang_qi_shan:whentherainstops",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308361_02.wav",
+      "group": "huang_qi_shan:whentherainstops",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308359_01.wav",
+      "group": "huang_qi_shan:mybeauty",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308359_02.wav",
+      "group": "huang_qi_shan:mybeauty",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1598308377_00.wav",
+      "group": "huang_qi_shan:manners",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1598308377_01.wav",
+      "group": "huang_qi_shan:manners",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1598308377_02.wav",
+      "group": "huang_qi_shan:manners",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1720087061_01.wav",
+      "group": "huang_qi_shan:secret_related_versions",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1720087061_02.wav",
+      "group": "huang_qi_shan:secret_related_versions",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308375_00.wav",
+      "group": "huang_qi_shan:dream",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308375_01.wav",
+      "group": "huang_qi_shan:dream",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308375_02.wav",
+      "group": "huang_qi_shan:dream",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308358_00.wav",
+      "group": "huang_qi_shan:stunnerii",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308358_01.wav",
+      "group": "huang_qi_shan:stunnerii",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308358_02.wav",
+      "group": "huang_qi_shan:stunnerii",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308366_00.wav",
+      "group": "huang_qi_shan:doubtfullady",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308366_01.wav",
+      "group": "huang_qi_shan:doubtfullady",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1598308366_02.wav",
+      "group": "huang_qi_shan:doubtfullady",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1720087238_00.wav",
+      "group": "huang_qi_shan:unprecedentedbond",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1720087238_02.wav",
+      "group": "huang_qi_shan:unprecedentedbond",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1066175035_00.wav",
+      "group": "huang_qi_shan:secret_related_versions",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1066175035_01.wav",
+      "group": "huang_qi_shan:secret_related_versions",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/validation/1066175035_02.wav",
+      "group": "huang_qi_shan:secret_related_versions",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1720087058_00.wav",
+      "group": "huang_qi_shan:innocent",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1720087058_01.wav",
+      "group": "huang_qi_shan:innocent",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1066175115_00.wav",
+      "group": "huang_qi_shan:蠻荒的幽默",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1066175115_01.wav",
+      "group": "huang_qi_shan:蠻荒的幽默",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/huang_qi_shan/clips/train/1066175115_02.wav",
+      "group": "huang_qi_shan:蠻荒的幽默",
+      "split": "train"
+    }
+  ],
+  "reference": "data/raw/references/huang_qi_shan/reference.wav",
+  "training": {
+    "seed": 42,
+    "learning_rate": 1e-05,
+    "batch_size": 1,
+    "max_steps": 1000,
+    "save_every": 200
+  },
+  "validation": {
+    "source_run": "runs/lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_seedvc_20261029",
+    "windows": [
+      {
+        "start": 12,
+        "duration": 12
+      },
+      {
+        "start": 40,
+        "duration": 12
+      }
+    ],
+    "steps": 30,
+    "seed": 42
+  },
+  "export_dir": "models/voices/huang_qi_shan/seed_vc/v001_20261029",
+  "dataset_note": "Automated screening of lossy public-preview derived estimated lead vocals. Human listening pending. Pilot corpus; not sufficient evidence of production training quality."
+}

@@ -59,6 +59,10 @@ def render_report(report, destination, *, mixed=False):
     title = '三个微调候选对比' if len(report['candidates']) == 3 else '微调候选对比'
     text = '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>'+title+'</title><style>body{font:16px/1.6 system-ui;max-width:1250px;margin:40px auto;padding:0 20px;background:#f6f8fb;color:#182238}table{border-collapse:collapse;background:white;width:100%}td,th{padding:12px;border:1px solid #ddd}audio{width:260px}</style><h1>'+title+'</h1>'
     text += '<p>同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。先通过音高、对齐、时长与音频完整性检查，再按 ECAPA 降序推荐。ECAPA 不是身份百分比，人工听感与歌词准确性仍需确认。</p>'
+    if report.get('backend') == 'so_vits_svc':
+        text = text.replace('同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。', 'so-vits-svc 歌手模型转换；参考音频仅用于评估，不参与推理。当前接入提供一个候选。')
+    if report.get('backend') == 'rvc':
+        text = text.replace('同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。', 'RVC 歌手模型转换；同一模型、索引和源人声，显式控制随机种子。参考音频仅用于评估，不参与推理；独立测试集指标另行报告。')
     text += '<p>推荐：<strong>'+html.escape(selected or '无合格候选')+'</strong>。'+('入口 final.wav / final.mp3 对应推荐候选。' if mixed and selected else '')+'</p>'
     text += '<table><tr><th>候选</th><th>种子</th><th>ECAPA ↑</th><th>音高检查</th><th>误差≤1半音</th><th>结论</th><th>试听</th></tr>'+''.join(rows)+'</table><p>详细指标：<a href="candidates.json">candidates.json</a>。</p></html>'
     Path(destination).write_text(text, encoding='utf-8')

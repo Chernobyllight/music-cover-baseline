@@ -1,5 +1,6 @@
 # 05_voice_conversion · 转换目标音色
 
+默认及本页原有命令为 Seed-VC；新增 SVC 歌手模型路线见文末及 [独立入口](so_vits_svc/README.md)。
 用 Seed-VC 将生成歌曲的人声转换为参考录音的目标音色。默认保留零样本模式，并新增独立的微调模型入口。
 
 - 零样本：`bash scripts/05_voice_conversion/zero_shot/run.sh --run runs/lhd_test_modular`。
@@ -68,3 +69,21 @@ bash scripts/run_baseline.sh --run runs/qiu_yi_nong_modular_test --from 05_voice
 微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，推荐版本进入分轨、MIDI 和最终交付入口；零样本入口仍为单次推理。
 
 具体命令与中间文件路径见[三个候选与推荐结果使用说明](../../docs/15_voice_candidates.md)。
+
+
+## 新增 so-vits-svc 4.1 后端
+
+支持独立歌手微调与 05 音色转换，复用已有 base 环境；Seed-VC 零样本与微调入口继续保留。SVC 目前一个候选，不支持零样本。训练数据、权重清单、完整示例及中间产物见 [SVC 接入指南](../../docs/18_so_vits_svc.md)。
+
+## RVC 已训练歌手模型
+
+读取同一 run 的 04 分离人声，写入 05 的 `converted.wav`、候选指标和模型哈希，供 06 混音使用。
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+bash scripts/05_voice_conversion/rvc/run.sh \
+  --run runs/my_lv_zhou_huang_qi_shan_rvc \
+  --config configs/voice_inference/rvc/huang_qi_shan.yaml --gpu 0
+```
+
+新 run 应先运行 00–04 或按 [RVC 指南](../../docs/20_rvc.md)从现有 Seed-VC run 创建独立副本。模型训练入口位于 `rvc/training/00_prepare` 至 `05_export`，固定使用训练配置的最终步数模型，不要求用户比较检查点。

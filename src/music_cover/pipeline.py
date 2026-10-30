@@ -16,6 +16,7 @@ from .common.lyrics import clean_lyrics
 from .common.paths import ROOT
 from .common.resources import preflight as check_resources
 from .modules import load_modules, IDS, active_ids, normalize
+from .voice import merge_voice_config
 
 DEFAULT_REQUEST = {'name': 'cover', 'seed': 42, 'steps': 30, 'gpu': '0', 'reference_start': 0.0,
                    'reference_duration': 15.0, 'transpose': '0', 'review': True}
@@ -79,8 +80,9 @@ def main():
         parser.add_argument('--' + name, type=float)
     parser.add_argument('--review', action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument('--preflight', action='store_true', help='只检查选中模块的依赖')
+    parser.add_argument('--voice-backend', choices=['seed_vc', 'so_vits_svc', 'rvc'])
     parser.add_argument('--voice-mode', choices=['zero_shot', 'finetuned'])
-    parser.add_argument('--voice-profile', help='已导出的 Seed-VC 音色版本 voice.json')
+    parser.add_argument('--voice-profile', help='已导出的音色版本 voice.json，须与所选后端一致')
     parser.add_argument('--voice-candidates', type=int, help='微调推理候选数，默认 3')
     parser.add_argument('--voice-candidate-seeds', type=int, nargs='+', help='明确指定每个微调候选的随机种子')
     args = parser.parse_args()
@@ -113,12 +115,18 @@ def main():
             unknown = set(task) - {'request', 'modules'}
             if unknown: parser.error(f'Unknown task sections: {sorted(unknown)}')
             request.update(task.get('request', {}))
-            for stage, values in task.get('modules', {}).items(): configs[normalize(stage)].update(values)
+            for stage, values in task.get('modules', {}).items():
+                stage = normalize(stage)
+                if stage == '05_voice_conversion':
+                    configs[stage] = merge_voice_config(configs[stage], values)
+                else:
+                    configs[stage].update(values)
         if set(request) - REQUEST_KEYS: parser.error(f'Unknown request keys: {sorted(set(request) - REQUEST_KEYS)}')
-        if args.voice_mode: configs['05_voice_conversion']['mode'] = args.voice_mode
-        if args.voice_profile: configs['05_voice_conversion']['voice_profile'] = args.voice_profile
-        if args.voice_candidates is not None: configs['05_voice_conversion']['candidate_count'] = args.voice_candidates
-        if args.voice_candidate_seeds is not None: configs['05_voice_conversion']['candidate_seeds'] = args.voice_candidate_seeds
+        voice_overrides = {key: value for key, value in {
+            'backend': args.voice_backend, 'mode': args.voice_mode, 'voice_profile': args.voice_profile,
+            'candidate_count': args.voice_candidates, 'candidate_seeds': args.voice_candidate_seeds,
+        }.items() if value is not None}
+        configs['05_voice_conversion'] = merge_voice_config(configs['05_voice_conversion'], voice_overrides)
         if configs['05_voice_conversion']['mode'] == 'zero_shot':
             configs['05_voice_conversion']['voice_profile'] = None
         for key in REQUEST_KEYS:
@@ -152,7 +160,7 @@ def main():
             if '05_voice_conversion' in selected:
                 from .voice import resolve_voice
                 c = configs['05_voice_conversion']
-                resolve_voice(c['mode'], c['voice_profile'])
+                resolve_voice(c['mode'], c['voice_profile'], backend=c['backend'])
             check_resources(ROOT, [b for name in selected for b in modules[name].backends(request, configs[name])], mp3='06_mix' in selected)
             print('Selected module preflight OK')
             return

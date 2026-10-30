@@ -4,13 +4,31 @@ from pathlib import Path
 import yaml
 from .audio import sha256
 from .common.paths import ROOT
+from .common.voice_profiles import verified_files
 
 BASE_CHECKPOINT = 'models/Seed-VC/DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth'
 BASE_CONFIG = 'configs/seed_svc.local.yml'
 
 
-def resolve_voice(mode='zero_shot', profile=None, root=ROOT):
+def merge_voice_config(current, overrides):
+    """Keep resume settings, but never inherit another backend's private preset."""
+    merged = dict(current)
+    if overrides.get('backend', current.get('backend')) != current.get('backend'):
+        merged.update(voice_profile=None, svc={}, rvc={}, candidate_seeds=None,
+                      candidate_count=1 if overrides['backend'] == 'so_vits_svc' else 3)
+    merged.update(overrides)
+    return merged
+
+
+def resolve_voice(mode='zero_shot', profile=None, root=ROOT, backend='seed_vc'):
     root = Path(root)
+    if backend == 'rvc':
+        from .rvc import resolve_rvc_voice
+        return resolve_rvc_voice(mode, profile, root)
+    if backend == 'so_vits_svc':
+        from .svc import resolve_svc_voice
+        return resolve_svc_voice(mode, profile, root)
+    if backend != 'seed_vc': raise ValueError('Unsupported voice backend: ' + backend)
     if mode not in {'zero_shot', 'finetuned'}:
         raise ValueError('voice mode must be zero_shot or finetuned')
     result = {'mode': mode, 'backend': 'seed_vc'}
@@ -27,12 +45,7 @@ def resolve_voice(mode='zero_shot', profile=None, root=ROOT):
             raise ValueError('Only speaker-level voice profiles are supported')
         result.update(profile=path, voice_id=data['voice_id'], version=data['version'],
                       validation_status=data.get('validation_status', 'unverified'))
-        for key in ('checkpoint', 'config', 'validation'):
-            item = data[key]
-            file = (path.parent / item['path']).resolve()
-            if not file.is_file() or sha256(file) != item['sha256']:
-                raise ValueError(f'Voice profile {key} missing or checksum mismatch: {file}')
-            result[key] = file
+        result.update(verified_files(path, data, ('checkpoint', 'config', 'validation')))
     for key in ('checkpoint', 'config'):
         if not result[key].is_file():
             raise FileNotFoundError(result[key])
@@ -44,7 +57,7 @@ def resolve_voice(mode='zero_shot', profile=None, root=ROOT):
 
 def voice_record(resolved):
     result = {k: v for k, v in resolved.items() if not isinstance(v, Path)}
-    for key in ('checkpoint', 'config', 'profile', 'validation'):
+    for key in ('checkpoint', 'config', 'profile', 'validation', 'index', 'index_manifest'):
         if key in resolved:
             result[key] = {'path': str(resolved[key]), 'sha256': sha256(resolved[key])}
     return result

@@ -1,0 +1,4 @@
+# Additions only: keep the existing base Python, torch, torchaudio, transformers, numpy.
+librosa==0.11.0
+faiss-cpu==1.11.0
+scikit-learn==1.7.2

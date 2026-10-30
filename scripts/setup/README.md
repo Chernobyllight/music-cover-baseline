@@ -36,7 +36,7 @@ bash scripts/00_prepare/run.sh \
 | `envs/control/bin/python scripts/setup/download_voice_models.py` | 固定 revision 的 Seed-VC、RMVPE 等模型仓库 | `models/` 中换声及音高模型、`configs/voice_models.lock.json`、`configs/seed_svc.local.yml`；供 02、05、10 使用 |
 | `envs/separator/bin/python scripts/setup/setup_review_assets.py` | 固定的评审分离权重及已安装的 Basic Pitch 包 | `models/separation/` 中的 karaoke 权重、`models/review/` 和 `configs/review_models.lock.json`；供 07、09 使用 |
 | `envs/control/bin/python scripts/setup/prepare_demo.py` | 官方演示歌曲、歌词和 LibriSpeech 参考素材 | `data/raw/` 下《今晚不眠》演示素材、`configs/demo.json`、`data/demo_sources.json`；供使用 `--demo` 的 00 读取。本脚本不下载本例的《秋意浓》和孙燕姿素材 |
-| `/opt/conda/bin/python scripts/setup/capture_environment.py` | 已安装的五个环境、模型文件、GPU/FFmpeg 信息及上游 commit | `configs/*.installed.txt`、`configs/environments.lock.json`、`configs/local_assets.lock.json`；用于环境追溯与缓存身份 |
+| `/opt/conda/bin/python scripts/setup/capture_environment.py` | 已安装的五个项目环境及 base、模型文件、GPU/FFmpeg 信息及四个上游 commit | `configs/*.installed.txt`、`configs/environments.lock.json`、`configs/local_assets.lock.json`；用于环境追溯与缓存身份 |
 | `/opt/conda/bin/python scripts/setup/fetch_wheels.py` | 脚本中列出的安装包下载地址 | `cache/wheels/`；供后续安装使用，不自动安装，也不生成歌曲产物 |
 
 例如，调整环境并完成安装后重新记录实际环境和模型哈希：
@@ -45,10 +45,11 @@ bash scripts/00_prepare/run.sh \
 cd /mnt/afs_f/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
 
-/opt/conda/bin/python scripts/setup/capture_environment.py
+/opt/conda/bin/python scripts/setup/capture_environment.py \
+  --output-dir cache/environment_snapshot --skip-assets
 ```
 
-## v0.3 音色训练与评估资源
+## Seed-VC 音色训练与评估资源
 
 `setup_voice_training.py` 用固定 revision 和完整 SHA256 下载/检查附加资源。已有 Seed-VC 环境先按 [权重指南](../../docs/12_model_weights.md) 安装 `configs/requirements-voice-adaptation.txt`。
 
@@ -62,3 +63,5 @@ envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --chec
 ```
 
 读取 `configs/voice_training_assets.lock.json`；evaluation 输出到 `models/voice_evaluation/ecapa/`，training 输出到 `models/OpenVoiceV2/` 与 `models/Seed-VC/se_db.pt`。训练的 00–03 和主流程 00–11 分开执行，见 [音色手册](../../docs/13_voice_adaptation.md)。
+
+使用 `--output-dir` 仅生成新快照，不改参与缓存身份的运行锁。省略该参数才会更新 configs；详见[当前环境说明](../../docs/03-environment.md)。

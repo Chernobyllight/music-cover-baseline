@@ -1,0 +1,29 @@
+{
+  "voice_id": "yang_kun",
+  "version": "v001_20261028",
+  "gpu": 0,
+  "source_dataset": "data/raw/references/yang_kun/dataset",
+  "dataset_dir": "data/voice_datasets/yang_kun/so_vits_svc/v001_20261028",
+  "reference": "data/raw/references/yang_kun/reference.wav",
+  "export_dir": "models/voices/yang_kun/so_vits_svc/v001_20261028",
+  "training": {
+    "max_steps": 1000,
+    "save_every": 500,
+    "batch_size": 6,
+    "learning_rate": 0.0001,
+    "seed": 42
+  },
+  "validation": {
+    "source_run": "runs/lhd_yang_kun_svc_optimized_validation_20261028",
+    "windows": [
+      {
+        "start": 15,
+        "duration": 20
+      },
+      {
+        "start": 65,
+        "duration": 20
+      }
+    ]
+  }
+}

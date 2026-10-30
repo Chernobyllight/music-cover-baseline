@@ -1,0 +1,12 @@
+# Optional isolated packages; install with --target cache/svc_optimization/python_deps --no-deps
+einx==0.4.3
+ffmpeg-python==0.2.0
+future==1.0.0
+hyper-connections==0.4.11
+local-attention==1.11.2
+praat-parselmouth==0.4.7
+pyworld==0.3.5
+resampy==0.4.3
+torchcrepe==0.0.24
+torchdiffeq==0.2.5
+torchfcpe==0.0.4
