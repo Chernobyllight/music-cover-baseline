@@ -4,9 +4,11 @@
 
 新增 `backend=so_vits_svc, mode=finetuned`；原来的 Seed-VC zero-shot / finetuned 入口继续保留。SVC 不支持参考音频零样本转换。SVC 训练不使用源歌曲伪标签，只使用目标歌手的训练录音；模型可用于多首歌曲。
 
+亲自从原始录音制作数据并生成新配置，请使用 [SVC 手动验证脚本流程](svc_config_scripts.md)。它提供预检、训练配置生成、推理配置生成的独立 shell 入口，不要求复用本文历史杨坤配置。SVC 专用推理入口现已直接使用 base。
+
 ## 环境与权重
 
-本次按用户要求使用已有 `(base)`：`/opt/conda/bin/python`。保留 Python 3.11、PyTorch 2.8、CUDA 12.8、NumPy 2.2.6、Transformers 4.57.3；不新建 SVC Conda 环境。新增依赖见 `configs/requirements-svc-base.txt`，实际依赖快照见 `configs/svc-base.installed.txt`。指标计算继续使用原有 `envs/seed-vc`，其它模块继续使用原有环境。
+本次按用户要求使用已有 `(base)`：`/opt/conda/bin/python`。保留 Python 3.11、PyTorch 2.8、CUDA 12.8、NumPy 2.2.6、Transformers 4.57.3；不新建 SVC Conda 环境。新增依赖见 `configs/requirements-svc-base.txt`，实际依赖快照见 `configs/svc-base.installed.txt`。SVC 训练、推理和指标计算均使用 `/opt/conda/bin/python`。
 
 ContentVec 通过现有 Transformers 的 HuBERT 实现加载同一份权重，逐项检查 211 个推理参数；仅丢弃训练用的标签嵌入和最终投影。无需安装旧 fairseq/hydra，也无需降级 base。适配代码位于 `src/music_cover/backends/svc_contentvec.py`。
 
@@ -78,7 +80,7 @@ bash scripts/05_voice_conversion/so_vits_svc/training/03_export/run.sh \
 
 短训练与恢复示例（请用新 run / 新版本，不要覆盖上面的验证产物）：第一次加 `--max-steps 2`，第二次加 `--resume --max-steps 1000`。训练只使用指定 GPU，不自动占用所有 GPU。
 
-02 可多次传 `--checkpoint`，在验证集上按技术合格后平均 ECAPA 选择；无合格候选则拒绝导出。测试集仅审计已经在 validation 上选好的单个检查点：在 02 命令追加 `--evaluation-split test`。先导出验证选中的模型再做测试审计；03 不接受以 test 报告重新选模。
+02 可多次传 `--checkpoint`，在验证集上按技术合格后平均 ECAPA 选择；无合格候选仍保留指标最好的已验证检查点供导出试听，标记 quality_review_required，不宣称验收通过。测试集仅审计已经在 validation 上选好的单个检查点：在 02 命令追加 `--evaluation-split test`。先导出验证选中的模型再做测试审计；03 不接受以 test 报告重新选模。
 
 ## 转换：复用同一份 00–04，公平比较模型
 

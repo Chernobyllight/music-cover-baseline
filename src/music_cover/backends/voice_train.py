@@ -13,6 +13,7 @@ from ..common.io import write_json, identity
 from ..audio import sha256
 from ..voice import BASE_CHECKPOINT, BASE_CONFIG
 from ..voice_weights import check_parameter_coverage
+from ..common.voice_paths import portable_path, runtime_model_config
 
 
 def verify_training_assets():
@@ -48,10 +49,10 @@ def train_voice(c, run, out, resume=False):
     # Validation/test/prompt folders never enter the upstream recursive dataset reader.
     train_dir = path(c['dataset_dir']) / 'train'
     cfg = yaml.safe_load(source_config.read_text())
-    cfg['log_dir'] = str(run / 'upstream')
+    cfg['log_dir'] = portable_path(run / 'upstream')
     cfg['pretrained_model'] = ''
-    cfg['model_params']['vocoder']['name'] = str(ROOT / 'models/BigVGAN')
-    cfg['model_params']['speech_tokenizer']['name'] = str(ROOT / 'models/Whisper-small')
+    cfg['model_params']['vocoder']['name'] = 'models/BigVGAN'
+    cfg['model_params']['speech_tokenizer']['name'] = 'models/Whisper-small'
     model_config = run / 'model_config.yml'
     config_text = yaml.safe_dump(cfg, sort_keys=False)
     stable = {'dataset': manifest['identity'], 'base_sha256': sha256(checkpoint),
@@ -66,13 +67,26 @@ def train_voice(c, run, out, resume=False):
     if resume and not latest.is_file(): raise ValueError('--resume requested but latest.pth is absent')
     state = torch.load(latest, map_location='cpu', weights_only=False) if resume else None
     if state is not None and state['training_identity'] != key:
-        raise ValueError('Resume dataset/base/config/hyperparameters changed')
+        # Legacy runs hashed the original absolute model config. Verify every
+        # other identity field unchanged before retaining that legacy identity.
+        legacy = dict(stable, model_config_sha256=sha256(model_config)) if model_config.is_file() else {}
+        if identity(legacy) != state['training_identity']:
+            raise ValueError('Resume dataset/base/config/hyperparameters changed')
+        key = state['training_identity']
+        stable = legacy
+        config_text = model_config.read_text()
     model_config.write_text(config_text)
+    runtime_config = runtime_model_config(model_config, out / 'runtime_model_config.yml')
+    write_json(out / 'runtime.json', {'python': sys.executable, 'prefix': sys.prefix,
+        'model_config': portable_path(model_config), 'model_config_sha256': sha256(model_config),
+        'runtime_model_config_sha256': sha256(runtime_config)})
     torch.set_num_threads(4)
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
     upstream_dir = ROOT / 'third_party/seed-vc'
     os.chdir(upstream_dir)
     sys.path.insert(0, str(upstream_dir))
+    from .seed_vc_runtime import configure_bigvgan_loader
+    configure_bigvgan_loader()
     spec = importlib.util.spec_from_file_location('seed_vc_training_upstream', upstream_dir / 'train.py')
     upstream = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(upstream)
@@ -84,7 +98,7 @@ def train_voice(c, run, out, resume=False):
         del weights
         return base_loader(model, optimizer, filename, **kwargs)
     upstream.load_checkpoint = strict_parameters
-    trainer = upstream.Trainer(str(model_config), str(checkpoint), str(train_dir), 'fit',
+    trainer = upstream.Trainer(str(runtime_config), str(checkpoint), str(train_dir), 'fit',
         batch_size=t['batch_size'], num_workers=0, steps=t['max_steps'], save_interval=t['save_every'], device='cuda:0')
     for name in ('whisper_model', 'campplus_model', 'bigvgan_model'):
         model = getattr(trainer, name, None)
@@ -141,7 +155,7 @@ def train_voice(c, run, out, resume=False):
         changes[name] = sum(not torch.equal(old, p.detach().flatten()[:128].cpu())
                             for old, p in zip(snapshots[name], net.parameters()))
     write_json(out / 'training.json', {'training_identity': key, 'inputs': stable,
-        'start_step': started, 'end_step': step, 'last_loss': last_loss, 'checkpoint': str(final),
+        'start_step': started, 'end_step': step, 'last_loss': last_loss, 'checkpoint': portable_path(final), 'path_base': 'project',
         'checkpoint_sha256': sha256(final), 'resumed_optimizer_scheduler_rng': resume,
         'changed_parameter_tensor_samples': changes,
         'trainable_parameters': {k: sum(p.numel() for p in net.parameters() if p.requires_grad) for k, net in trainer.model.items()},

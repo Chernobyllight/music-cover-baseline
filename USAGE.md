@@ -1,6 +1,8 @@
-# 使用说明（v1.0）
+# 使用说明（v1.1）
 
-以下命令在已配置服务器执行。工程根目录为 `/data/liuhongda/music-cover-baseline`，与 `/mnt/afs_f/liuhongda/music-cover-baseline` 指向同一工程。新机器先按[环境说明](docs/03-environment.md)和[模型权重指南](docs/12_model_weights.md)恢复依赖。
+新使用者优先按[部署 Skill](skill/SKILL.md)准备自己的数据和全新配置；包含可复制的 00–06 命令、权重下载与三种训练路线。
+
+以下历史素材示例在已配置服务器执行，需要先确认对应媒体和人物模型仍存在。工程根目录为 `/data/liuhongda/music-cover-baseline`，与 `/mnt/afs_f/liuhongda/music-cover-baseline` 指向同一工程。新机器先按[环境说明](docs/03-environment.md)和[模型权重指南](docs/12_model_weights.md)恢复依赖。
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
@@ -104,7 +106,7 @@ SVC/RVC 推理不把参考人声作为音色条件；主流程仍需要参考文
 公平比较时先引用同一份已完成的 00–04。下面源运行在本服务器保留；克隆源码后需要自行生成上游。
 
 ```bash
-/opt/conda/bin/python scripts/fork_voice_run.py \
+bash scripts/05_voice_conversion/fork_run.sh \
   --source-run runs/lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_seedvc_20261029 \
   --run runs/my_chuan_yue_shu_guang_rvc
 bash scripts/05_voice_conversion/rvc/run.sh \
@@ -118,7 +120,7 @@ RVC 项目预设为 `index_rate=0.5, protect=0.33`。官方单次推理检索比
 Seed-VC 零样本的同编曲对照：
 
 ```bash
-/opt/conda/bin/python scripts/fork_voice_run.py \
+bash scripts/05_voice_conversion/fork_run.sh \
   --source-run runs/lhd_chuan_yue_shu_guang_orchestral_soul_huang_qi_shan_seedvc_20261029 \
   --run runs/my_chuan_yue_shu_guang_zero_shot
 bash scripts/05_voice_conversion/zero_shot/run.sh --run runs/my_chuan_yue_shu_guang_zero_shot --gpu 0
@@ -128,7 +130,7 @@ bash scripts/run_baseline.sh --run runs/my_chuan_yue_shu_guang_zero_shot --from 
 杨坤 SVC 优化版例子：
 
 ```bash
-/opt/conda/bin/python scripts/fork_voice_run.py \
+bash scripts/05_voice_conversion/fork_run.sh \
   --source-run runs/lhd_yang_kun_svc_optimized_validation_20261028 \
   --run runs/my_yang_kun_svc
 bash scripts/05_voice_conversion/so_vits_svc/run.sh \
@@ -151,7 +153,7 @@ fork 引用原来的文件并校验哈希，必须保留源 run。切换后端�
 
 - `final.wav`：48 kHz 立体声 24-bit；`final.mp3`：48 kHz 立体声 192 kbps。
 - `listen.html`、`original.wav`、`reference.wav`、`restyled.flac`、`vocals_before.wav`、`vocals_after.wav`：试听与过程对照。
-- 微调候选由 `candidates.json` / `candidates.html` 说明；分轨和 MIDI 对应推荐候选。
+- 微调候选由 `candidates.json` / `candidates.html` 说明；分轨和 MIDI 对应默认输出；有合格候选时优先采用推荐，无合格者时保留待复核标记。
 - `review/audio/`、`review/midi/`、`review/notes/`、`review/index.html`：专业评审资料。
 - `report.md`、`checks.json`、`review/manifest.json`：技术检查与来源。
 

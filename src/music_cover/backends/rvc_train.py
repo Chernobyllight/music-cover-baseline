@@ -1,10 +1,13 @@
 """Bounded RVC training with upstream architecture, dataset and four losses."""
 import json
 import random
+import sys
 import time
 from pathlib import Path
 from ..common.paths import ROOT
 from ..common.io import identity,write_json
+from ..common.voice_paths import portable_path
+from ..common.rvc_paths import runtime_filelist
 from ..audio import sha256
 from .rvc import runtime,Features,build_model,checked_load
 
@@ -27,11 +30,12 @@ def features(folder,manifest):
                 artifacts.append({'path':str(p.relative_to(folder)),'sha256':sha256(p)})
             a16=folder/'audio16'/f'{stem}.wav';a16.parent.mkdir(exist_ok=True);sf.write(a16,audio16,16000,subtype='FLOAT')
             artifacts.append({'path':str(a16.relative_to(folder)),'sha256':sha256(a16)})
-            lines.append('|'.join([str(folder/row['path']),str(paths[0]),str(paths[2]),str(paths[1]),'0']))
+            lines.append('|'.join([row['path'],str(paths[0].relative_to(folder)),str(paths[2].relative_to(folder)),str(paths[1].relative_to(folder)),'0']))
             print('features: '+row['path'],flush=True)
     (folder/'train.txt').write_text('\n'.join(lines)+'\n')
     artifacts.append({'path':'train.txt','sha256':sha256(folder/'train.txt')})
-    result={'dataset_identity':manifest['identity'],'artifacts':artifacts,'normalization':extractor.normalize,
+    result={'dataset_identity':manifest['identity'],'artifacts':artifacts,'normalization':extractor.normalize,'filelist_path_base':'dataset',
+            'runtime':{'python':sys.executable,'prefix':sys.prefix},
             'feature_dim':768,'f0_policy':'unvoiced_zero','training_only':True}
     write_json(folder/'features.json',result);return result
 
@@ -66,7 +70,9 @@ def train(c,run,out,manifest,resume=False):
         checked_load(d,torch.load(ROOT/'models/RVC/pretrained_v2/f0D48k.pth',map_location='cpu',weights_only=True)['model'])
         kw={'lr':settings['learning_rate'],'betas':tuple(config['train']['betas']),'eps':config['train']['eps']}
         og=torch.optim.AdamW(g.parameters(),**kw);od=torch.optim.AdamW(d.parameters(),**kw)
-        dataset=TextAudioLoaderMultiNSFsid(str(folder/'train.txt'),HParams(**config['data']))
+        filelist=runtime_filelist(folder,out/'runtime_train.txt',feature_manifest.get('filelist_path_base'))
+        write_json(out/'runtime.json',{'python':sys.executable,'prefix':sys.prefix,'filelist':str(filelist)})
+        dataset=TextAudioLoaderMultiNSFsid(str(filelist),HParams(**config['data']))
         cached=[dataset[i] for i in range(len(dataset))];collate=TextAudioCollateMultiNSFsid()
         print('Cached training clips: '+str(len(cached)),flush=True)
         before=g.enc_p.emb_phone.weight.detach().cpu().clone();step=0;order=[];cursor=0;resumed=None
@@ -77,7 +83,7 @@ def train(c,run,out,manifest,resume=False):
             og.load_state_dict(payload['optimizer_g']);od.load_state_dict(payload['optimizer_d'])
             step=payload['step'];order=payload['order'];cursor=payload['cursor'];before=payload['initial_weight']
             random.setstate(payload['rng_python']);np.random.set_state(payload['rng_numpy']);torch.set_rng_state(payload['rng_torch']);torch.cuda.set_rng_state_all(payload['rng_cuda'])
-            resumed={'path':str(file),'step':step,'sha256':sha256(file)};del payload
+            resumed={'path':portable_path(file,ROOT),'step':step,'sha256':sha256(file)};del payload
         initial=step
         if step>=settings['max_steps']:raise ValueError('max_steps must exceed restored step')
         g.train();d.train();last={}
@@ -90,7 +96,7 @@ def train(c,run,out,manifest,resume=False):
             # Small strict inference checkpoint, independently checksum recorded.
             inference=checkpoints/f'model_{step:08d}.pth';torch.save({'model':{k:v.detach().cpu() for k,v in g.state_dict().items()},'step':step,'dataset_identity':manifest['identity']},inference)
             write_json(checkpoints/f'step_{step:08d}.json',{'step':step,'training_identity':key,'checkpoint_sha256':sha256(file),
-                'inference':str(inference),'inference_sha256':sha256(inference),'losses':last})
+                'path_base':'project','inference':portable_path(inference,ROOT),'inference_sha256':sha256(inference),'losses':last})
             return file
         while step<settings['max_steps']:
             if cursor>=len(order):order=torch.randperm(len(cached)).tolist();cursor=0
@@ -125,7 +131,8 @@ def train(c,run,out,manifest,resume=False):
         delta=float(torch.linalg.vector_norm(g.enc_p.emb_phone.weight.detach().cpu()-before))
         if not delta>0:raise RuntimeError('RVC parameters did not update')
         report={'step':step,'initial_step':initial,'training_identity':key,'dataset_identity':manifest['identity'],'resumed_from':resumed,
-                'checkpoint':str(last_checkpoint),'core_weight_delta_l2':delta,'parameter_loading':coverage,'wall_seconds':time.monotonic()-start,
+                'path_base':'project','checkpoint':portable_path(last_checkpoint,ROOT),'core_weight_delta_l2':delta,'parameter_loading':coverage,'wall_seconds':time.monotonic()-start,
+                'runtime':{'python':sys.executable,'prefix':sys.prefix},
                 'precision':'FP32 with TF32','losses':last,'generator_parameters':sum(p.numel() for p in g.parameters()),
                 'discriminator_parameters':sum(p.numel() for p in d.parameters()),'frozen':['HuBERT/ContentVec','RMVPE'],
                 'peak_cuda_allocated_bytes':torch.cuda.max_memory_allocated()}

@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 import numpy as np,soundfile as sf
-from music_cover.common.paths import ROOT
+from music_cover.common.paths import ROOT, read_run_state
 from music_cover.audio import sha256
 r=ROOT/'runs/svc_optimization_yang_kun_20261028';run=ROOT/'runs/lhd_yang_kun_svc_optimized_validation_20261028'
-state=json.loads((run/'stage_state.json').read_text());assert len(state['stages'])==12 and all(s['status']=='succeeded' for s in state['stages'].values())
+state=read_run_state(run);assert len(state['stages'])==12 and all(s['status']=='succeeded' for s in state['stages'].values())
 prod=Path(state['stages']['05_voice_conversion']['outputs']['converted']['path']);experiment=r/'optimized_full/low_lr_refine_2000/chunk8/hero_celtic/converted.wav'
 a,sr=sf.read(prod,dtype='float32');b,srb=sf.read(experiment,dtype='float32');assert sr==srb and a.shape==b.shape
 error=float(np.max(np.abs(a-b)));rms_error=float(np.sqrt(np.mean((a-b)**2)))

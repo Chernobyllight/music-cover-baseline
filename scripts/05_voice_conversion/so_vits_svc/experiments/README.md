@@ -63,7 +63,7 @@ CUDA_VISIBLE_DEVICES=0 PYTHONPATH=src:cache/svc_optimization/python_deps \
 
 # 只在冻结selection.json后评估最终测试集；使用已有Seed环境加载指标。
 CUDA_VISIBLE_DEVICES=0 PYTHONPATH=src OMP_NUM_THREADS=4 \
-  envs/seed-vc/bin/python -u scripts/05_voice_conversion/so_vits_svc/experiments/evaluate.py \
+  /opt/conda/bin/python -u scripts/05_voice_conversion/so_vits_svc/experiments/evaluate.py \
   --outputs runs/svc_optimization_yang_kun_20261028/optimized_full/outputs.json --split test
 
 PATH="/opt/conda/bin:$PATH" PYTHONPATH=src OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 \

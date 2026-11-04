@@ -2,6 +2,9 @@
 
 检查成品音频、分轨重建和 MIDI 数据，并输出供后续评审使用的技术指标。
 
+独立 `pitch` 操作直接使用 base `/opt/conda/bin/python` 提取 RMVPE 基频，与 02 一致。
+音频汇总评估和 ECAPA 音色评估仍使用各自既有环境；实际解释器记录在 attempt 的 `command.json`。
+
 ## 使用示例
 
 以下示例统一使用“孙燕姿参考音色＋秋意浓＋Synthwave / Dance-pop”，运行目录为 `runs/qiu_yi_nong_modular_test`。各模块使用同一个 `--run`，串联同一首歌曲的中间产物。
@@ -84,4 +87,4 @@ bash scripts/10_evaluation/run.sh \
 
 本例读取已完成的杨坤凯尔特史诗运行，其保存配置已启用 voice_check。读取04的源人声、06的已对齐转换人声、00的参考片段，以及05的转换记录；需要相同配置下的00–09已完成，创建方法见 [v0.3 实操](../../docs/17_v03_walkthrough.md)。输出本阶段 `artifacts/voice_conversion_evaluation.json` 和 `voice_diagnostics/`，并合入 `evaluation.json`。该相似度使用同一推理参考，仅为诊断，不是盲测结论。附加权重及完整流程见 [音色微调手册](../../docs/13_voice_adaptation.md)。
 
-05 使用微调候选模式时，evaluation.json 自动包含 voice_candidates，汇总三个候选在 05 干声上的指标和推荐，不要求再开启 voice_check。后者仅额外评估推荐版本在 06 对齐后的干声。
+05 使用微调候选模式时，evaluation.json 自动包含 voice_candidates，汇总三个候选在 05 干声上的指标和推荐，不要求再开启 voice_check。后者仅额外评估默认输出版本在 06 对齐后的干声；不保证存在合格推荐。

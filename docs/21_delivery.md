@@ -1,6 +1,6 @@
 # 交付、验证与数据保留
 
-本指南对应 v1.0，包含 Seed-VC 零样本/微调、SVC、RVC 和 00–11 模块流程。源码版本由 `VERSION` 和 Git commit 标识；验收记录见 VALIDATION.md，模型/数据仍在服务器。
+本指南对应 v1.1，包含 Seed-VC 零样本/微调、SVC、RVC 和 00–11 模块流程。源码版本由 `VERSION` 和 Git commit 标识；验收记录见 VALIDATION.md，模型/数据仍在服务器。
 
 ## 可执行入口
 
@@ -10,7 +10,8 @@
 | Seed-VC 零样本 / 微调 | `scripts/05_voice_conversion/zero_shot/run.sh`、`finetuned/run.sh` |
 | SVC / RVC | `scripts/05_voice_conversion/so_vits_svc/run.sh`、`rvc/run.sh` |
 | 独立训练 | 各后端的 `training/`；Seed/SVC 四阶段，RVC 六阶段 |
-| 复用编曲 | `scripts/fork_voice_run.py` |
+| 复用编曲 | `bash scripts/05_voice_conversion/fork_run.sh` |
+| 新用户部署 00–06 | [部署 Skill](../skill/SKILL.md) |
 | 源码与文档检查 | `scripts/check_project.py` |
 | 已完成运行验收 | `scripts/verify_review.py` |
 
@@ -38,7 +39,7 @@ PYTHONPATH=src envs/separator/bin/python scripts/verify_review.py \
   --output cache/project_cleanup_20261029/full_delivery_check.json
 ```
 
-上面的完整验证运行由此次整理生成，最终路径为 `runs/project_delivery_validation_20261029/rvc_full/deliverables/final.mp3`。检查报告写在 cache，不修改已经发布的 artifacts。此次具体通过项与限制在 [VALIDATION](../VALIDATION.md) 的工程整理章节记录。
+上面的完整验证运行是 2026-10-29 的历史记录，可能已按后续要求清理；请将命令中的 run 换成自己已完成的完整运行。其历史最终路径为 `runs/project_delivery_validation_20261029/rvc_full/deliverables/final.mp3`。检查报告写在 cache，不修改已经发布的 artifacts。各次具体通过项与限制在 [VALIDATION](../VALIDATION.md) 的工程整理章节记录。
 
 ## 数据依赖和保留规则
 
@@ -54,12 +55,12 @@ PYTHONPATH=src envs/separator/bin/python scripts/verify_review.py \
 | 下载失败/已合并分片、过期自测副本、操作系统元数据 | 经依赖核对后可清理，记录路径与字节数 |
 | 历史文档 | 移入 docs/archive 或明确标注历史，不冒充当前状态 |
 
-本机原有九组黄绮珊对照（Seed-VC、RVC 0.5、RVC 0.75 各三首）继续保留。RVC 的 fork 使用 Seed-VC 的 00–04 文件；即使其最终 MP3 已复制到桌面，也不能据此删除源 run。
+2026-10-29 曾保留九组黄绮珊对照（Seed-VC、RVC 0.5、RVC 0.75 各三首），这不是当前目录库存保证。RVC 的 fork 使用 Seed-VC 的 00–04 文件；即使其最终 MP3 已复制到桌面，也不能据此删除源 run。
 
 当前没有提供“删除整个 runs/cache”的命令。2026-10-29 清理使用明确清单，完成后核验受保护权重和既有结果，修改前源码另有快照。v1.0 发布代码可按 Git commit 恢复；任何回退前都应备份未提交的本地改动和运行资产。
 
 ## 源码、运行资产与迁移
 
-源码交付应包含 src/scripts/tests/configs/docs、顶层说明、四个子模块 commit、检查报告与 SHA256。权重、歌曲、训练集、环境及生成音频不装入源码包；其路径、来源与校验方法见 [权重指南](12_model_weights.md) 和 [仓库说明](08-repository.md)。
+源码交付应包含 src/scripts/tests/configs/docs/skill、顶层说明、四个子模块 commit、检查报告与 SHA256。权重、歌曲、训练集、环境及生成音频不装入源码包；其路径、来源与校验方法见 [权重指南](12_model_weights.md) 和 [仓库说明](08-repository.md)。
 
 现有服务器验收通过不等于任意新机器可直接运行。尚未在空白机器独立验证全量安装；迁移必须重建各环境，处理模型配置中的绝对路径，恢复数据后再做短推理和完整验收。

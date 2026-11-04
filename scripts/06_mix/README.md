@@ -2,27 +2,30 @@
 
 对齐转换后的人声，匹配增益并与伴奏合成 WAV 和 MP3。
 
+本阶段独立脚本自动定位项目根目录、设置 PATH/PYTHONPATH，并直接调用现有 base 的 `/opt/conda/bin/python`。不需要手动导出模块路径或安装项目包；本阶段不加载模型权重。
+
 ## 使用示例
 
-以下示例统一使用“孙燕姿参考音色＋秋意浓＋Synthwave / Dance-pop”，运行目录为 `runs/qiu_yi_nong_modular_test`。各模块使用同一个 `--run`，串联同一首歌曲的中间产物。
+以下示例统一使用“单依纯参考音色＋绿洲”，运行目录为 `runs/lhd_lv_zhou_shan_yi_chun_modular_test`。各模块使用同一个 `--run`，串联同一首歌曲的中间产物。
 
 前置条件：同一个运行目录中，下列直接依赖及其上游已成功完成，且产物和参数仍有效：[03_style_generation](../03_style_generation/README.md)、[04_vocal_separation](../04_vocal_separation/README.md)、[05_voice_conversion](../05_voice_conversion/README.md)。
 
 本例沿用 00 创建的运行目录，自动读取其中已保存的请求与模块配置。只执行当前模块，不自动补跑上游。
 
 ```bash
-cd /mnt/afs_f/liuhongda/music-cover-baseline
-export PATH="/opt/conda/bin:$PATH"
+cd /data/liuhongda/music-cover-baseline
 
 bash scripts/06_mix/run.sh \
-  --run runs/qiu_yi_nong_modular_test
+  --run runs/lhd_lv_zhou_shan_yi_chun_modular_test
 ```
+
+可在命令末尾加 `--preflight`，只检查依赖，不执行混音。也可从其它工作目录使用脚本的绝对路径启动；脚本按自身位置定位项目。
 
 执行到这里即可在本模块 artifacts 中试听 final.wav / final.mp3。运行目录顶层 deliverables 的发布由 11 完成。
 
 ## 读取哪些输入
 
-以下路径相对于 `runs/qiu_yi_nong_modular_test/stages/`。以各模块首次成功尝试 `attempt_001` 为例；重跑后，程序按运行状态和成功清单自动读取匹配的 attempt，无需手动传文件路径。
+以下路径相对于 `runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/`。以各模块首次成功尝试 `attempt_001` 为例；重跑后，程序按运行状态和成功清单自动读取匹配的 attempt，无需手动传文件路径。
 
 | 上游模块 | 中间产物路径 | 本模块用途 |
 | --- | --- | --- |
@@ -33,7 +36,7 @@ bash scripts/06_mix/run.sh \
 
 ## 本模块输出
 
-首次执行的输出目录：`runs/qiu_yi_nong_modular_test/stages/06_mix/attempt_001/artifacts/`。
+首次执行的输出目录：`runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/06_mix/attempt_001/artifacts/`。
 
 | 文件 / 目录 | 内容及下游用途 |
 | --- | --- |
@@ -55,7 +58,7 @@ bash scripts/06_mix/run.sh \
 本模块完成后，如需从这里继续到最终交付，在同一项目根目录执行：
 
 ```bash
-bash scripts/run_baseline.sh --run runs/qiu_yi_nong_modular_test --from 06_mix
+bash scripts/run_baseline.sh --run runs/lhd_lv_zhou_shan_yi_chun_modular_test --from 06_mix
 ```
 
 总入口先校验并复用有效的本模块及上游结果，再执行后续阶段。
@@ -68,12 +71,11 @@ bash scripts/run_baseline.sh --run runs/qiu_yi_nong_modular_test --from 06_mix
 
 ## 微调三个候选
 
-当 05 采用 finetuned 三候选时，本阶段也保留三个版本；根目录 final 为推荐版本。具体例子：
+当 05 采用 finetuned 三候选时，本阶段也保留三个版本；根目录 final 为默认输出；有合格者时采用推荐，无合格者时标记待复核。具体例子：
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
-export PATH="/opt/conda/bin:$PATH"
 bash scripts/06_mix/run.sh --run runs/lhd_candidates_example
 ```
 
-需要同一运行的前置模块已完成。读取的候选来自 05 的 candidates.json 及三条 converted.wav。本模块输出在 `runs/lhd_candidates_example/stages/06_mix/attempt_001/artifacts/`，查看 `candidates.html`、`candidates.json` 和 `candidates/candidate_001/final.mp3`（002、003 同理）。实际 attempt 由 stage_state.json 决定。分轨与 MIDI 对应推荐版本。完整顺序见[三候选指南](../../docs/15_voice_candidates.md)。
+需要同一运行的前置模块已完成。读取的候选来自 05 的 candidates.json 及三条 converted.wav。本模块输出在 `runs/lhd_candidates_example/stages/06_mix/attempt_001/artifacts/`，查看 `candidates.html`、`candidates.json` 和 `candidates/candidate_001/final.mp3`（002、003 同理）。实际 attempt 由 stage_state.json 决定。分轨与 MIDI 对应默认输出版本；无合格推荐时仍生成混音，并在报告标记待人工确认。完整顺序见[三候选指南](../../docs/15_voice_candidates.md)。

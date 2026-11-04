@@ -10,10 +10,13 @@ import sys
 from pathlib import Path
 import numpy as np
 import soundfile as sf
-from ..audio import decode, read_at, shift_audio, estimate_alignment, sha256, export_mp3
+from ..audio import decode, read_at, shift_audio, sha256, export_mp3
+from ..voice_alignment import assess_alignment
+from ..voice_candidates import assessment
 from ..common.io import write_json
-from ..common.paths import ROOT
+from ..common.paths import ROOT, read_run_state
 from .voice_metrics import VoiceMetrics
+from ..common.voice_paths import portable_path, training_output
 
 
 def infer(source, reference, out, settings, checkpoint=None, config=None):
@@ -22,6 +25,7 @@ def infer(source, reference, out, settings, checkpoint=None, config=None):
             '--reference', str(reference), '--output', str(out), '--steps', str(settings.get('steps', 30)),
             '--seed', str(settings.get('seed', 42))]
     if checkpoint: argv += ['--checkpoint', str(checkpoint), '--model-config', str(config)]
+    write_json(out / 'command.json', {'argv': argv, 'python': sys.executable, 'prefix': sys.prefix, 'cwd': str(ROOT)})
     print(f'Converting {source.name}: {checkpoint.name if checkpoint else "zero_shot"}; log: {out / "inference.log"}', flush=True)
     with (out / 'inference.log').open('w') as log:
         try:
@@ -39,8 +43,7 @@ def validate_voice(c, run, out, requested, split):
     candidates = [path(x) for x in requested] if requested else sorted((run / 'checkpoints').glob('step_*.pth'))
     if not candidates: raise ValueError('No training checkpoints available')
     import torch
-    training_state = json.loads((run / 'state.json').read_text())
-    trained = json.loads((Path(training_state['stages']['01_train']['output']) / 'training.json').read_text())
+    trained = json.loads((training_output(run, '01_train') / 'training.json').read_text())
     for checkpoint in candidates:
         payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
         if payload.get('training_identity') != trained['training_identity']:
@@ -51,7 +54,7 @@ def validate_voice(c, run, out, requested, split):
     if split == 'test':
         reports = list((run / 'stages/02_validate').glob('attempt_*/artifacts/validation.json'))
         selected_before = [json.loads(p.read_text()) for p in reports]
-        if not any(r['evaluation_split'] == 'validation' and r['selected_checkpoint'] == str(candidates[0])
+        if not any(r['evaluation_split'] == 'validation' and path(r['selected_checkpoint']) == candidates[0]
                    and r['dataset_identity'] == manifest['identity'] for r in selected_before):
             raise ValueError('Run validation selection before auditing the selected checkpoint on test')
     refs = [path(c['dataset_dir']) / x['path'] for x in manifest['clips'] if x['split'] == split]
@@ -61,7 +64,7 @@ def validate_voice(c, run, out, requested, split):
         if not c.get('smoke_test'): raise ValueError(f'No {split} references')
         refs = [reference]
     source_run = path(c['validation']['source_run'])
-    state = json.loads((source_run / 'stage_state.json').read_text())
+    state = read_run_state(source_run)
     source_items = state['stages']['04_vocal_separation']['outputs']
     for role in ('vocals', 'instrumental'):
         item = source_items[role]
@@ -90,6 +93,7 @@ def validate_voice(c, run, out, requested, split):
             row = metrics.compare(case['source'], converted, refs, folder / 'diagnostics')
             row['baseline_speaker_similarity'] = case['base_metrics']['speaker_similarity']
             row['speaker_similarity_delta'] = row['speaker_similarity'] - row['baseline_speaker_similarity']
+            row['assessment'] = assessment(row, len(read_at(case['source'],16000))/16000)
             row['case'] = i + 1
             print(f'{label} case={i+1}: similarity_delta={row["speaker_similarity_delta"]:+.4f}, pitch={row["pitch"]["status"]}', flush=True)
             rows.append(row)
@@ -101,7 +105,7 @@ def validate_voice(c, run, out, requested, split):
             mixed = []
             for mode, file in files:
                 vocal = read_at(file, 48000)
-                shift = estimate_alignment(source_audio, vocal, 48000)['applied_shift_samples']
+                shift = assess_alignment(source_audio, vocal, 48000)['applied_shift_samples']
                 vocal = shift_audio(vocal, shift, len(backing))
                 vocal *= max(float(np.sqrt(np.mean(source_audio ** 2))), 1e-5) / max(float(np.sqrt(np.mean(vocal ** 2))), 1e-5)
                 mixed.append(backing + vocal)
@@ -110,25 +114,27 @@ def validate_voice(c, run, out, requested, split):
                 shutil.copy2(file, blind / f'{letter}.wav')
                 sf.write(blind / f'{letter}_mix.wav', mix * gain, 48000, subtype='PCM_24')
                 export_mp3(blind / f'{letter}_mix.wav', blind / f'{letter}_mix.mp3')
-                key.append({'trial': blind.name, 'label': letter, 'mode': mode, 'checkpoint': str(checkpoint), 'case': i + 1})
+                key.append({'trial': blind.name, 'label': letter, 'mode': mode, 'checkpoint': portable_path(checkpoint), 'case': i + 1})
             shutil.copy2(case['source'], blind / 'source.wav'); shutil.copy2(prompt, blind / 'reference.wav')
             rel = blind.relative_to(out).as_posix()
             listening.append(f'<article><h2>试听组 {blind.name}</h2><p>参考音色</p><audio controls src="{rel}/reference.wav"></audio><p>源人声</p><audio controls src="{rel}/source.wav"></audio>' +
                 ''.join(f'<p>{letter} 干声 / 相同伴奏混音</p><audio controls src="{rel}/{letter}.wav"></audio><audio controls src="{rel}/{letter}_mix.mp3"></audio>' for letter in ['A','B']) + '</article>')
-        results.append({'checkpoint': str(checkpoint), 'checkpoint_sha256': sha256(checkpoint), 'cases': rows,
+        results.append({'checkpoint': portable_path(checkpoint), 'checkpoint_sha256': sha256(checkpoint), 'cases': rows,
                         'mean_similarity_delta': float(np.mean([x['speaker_similarity_delta'] for x in rows])),
                         'pitch_verified_cases': sum(x['pitch']['status'] == 'verified' for x in rows),
-                        'eligible': all(x['pitch']['status'] == 'verified' for x in rows)})
-    eligible = [x for x in results if x['pitch_verified_cases'] == len(cases)]
+                        'eligible': all(x['assessment']['status'] == 'passed' for x in rows)})
+    eligible = [x for x in results if x['eligible']]
     selected = max(eligible or results, key=lambda x: x['mean_similarity_delta'])
-    report = {'schema_version': 1, 'dataset_identity': manifest['identity'], 'evaluation_split': split,
+    report = {'schema_version': 1, 'path_base': 'project', 'dataset_identity': manifest['identity'], 'evaluation_split': split,
               'reference_independent': independent, 'candidates': results, 'selected_checkpoint': selected['checkpoint'],
+              'recommended_checkpoint':selected['checkpoint'] if eligible else None, 'blocks_export':False,
+              'assessment_status':'passed' if eligible else 'review_required',
               'selection': 'highest speaker-similarity delta among pitch-verified candidates; fallback flagged if none',
-              'pitch_eligible_candidate_exists': bool(eligible), 'source_run': str(source_run),
+              'pitch_eligible_candidate_exists': bool(eligible), 'source_run': portable_path(source_run),
               'source_windows': [x['window'] for x in cases], 'reference_sha256': sha256(prompt),
-              'technical_validation': 'passed', 'subjective_quality': 'awaiting_human_review',
+              'technical_validation': 'passed' if eligible else 'review_required', 'subjective_quality': 'awaiting_human_review',
               'quality_conclusion': 'integration_only' if not independent else 'requires_independent_test_and_listening',
-              'test_references': [str(x) for x in refs], 'listening_key': 'listening_key.json'}
+              'test_references': [portable_path(x) for x in refs], 'listening_key': 'listening_key.json'}
     write_json(out / 'validation.json', report)
     write_json(out / 'listening_key.json', key)
     with (out / 'metrics.csv').open('w') as stream:

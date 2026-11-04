@@ -2,12 +2,14 @@
 
 使用已有 base 环境；模型必须先完成独立训练和导出。完整步骤见 [SVC 指南](../../../docs/18_so_vits_svc.md)。
 
+用户亲自生成数据与配置的单依纯实例见 [SVC 手动验证](../../../docs/svc_config_scripts.md)。新入口为 `preflight/run.sh`、`training/create_config/run.sh`、`create_inference_config/run.sh`；本目录 `run.sh` 直接使用 `/opt/conda/bin/python`。
+
 输入：本 run 的 04 阶段 vocals，以及指定 SVC voice.json；00 的参考音频仅用于指标和音区分析。
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
 # 新输出目录需尚不存在；从保留的验证结果复用00–04。
-/opt/conda/bin/python scripts/fork_voice_run.py \
+bash scripts/05_voice_conversion/fork_run.sh \
   --source-run runs/lhd_yang_kun_svc_optimized_validation_20261028 \
   --run runs/my_yang_kun_svc_optimized
 

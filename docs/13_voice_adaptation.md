@@ -1,6 +1,6 @@
 # 参考音色转换：零样本与目标音色微调
 
-项目根目录：`/mnt/afs_f/liuhongda/music-cover-baseline`。以下命令都在该目录执行，并先设置 `export PATH="/opt/conda/bin:$PATH"`。
+以下命令在项目根目录执行；本次服务器入口为 `/data/liuhongda/music-cover-baseline`。项目可以放在其他目录，配置中的相对路径统一以脚本定位的项目根目录解析。先设置 `export PATH="/opt/conda/bin:$PATH"`。05 的两个 Seed-VC 入口、训练 00–03、验证子进程和 06 混音均直接使用 `/opt/conda/bin/python`。
 
 05 阶段提供两个独立入口，输出同一种 `converted.wav`，接入原来的 06–11 阶段。旧入口 `scripts/05_voice_conversion/run.sh` 保留，旧配置默认 `zero_shot`；已有运行显式保存的模式会继续沿用。想强制使用通用模型，请用 `zero_shot/run.sh`。
 
@@ -54,20 +54,20 @@ models/voices/<voice_id>/seed_vc/<version>/voice.json
 
 ## 2. 环境与附加权重
 
-先准备原有 Seed-VC 推理环境和基础模型，见 [模型权重指南](12_model_weights.md)。零样本 05 不需要下列训练和候选评估资源；若在 10 显式开启 voice_check，则仍需要 ECAPA。微调 05 的单候选和多候选均需要评估资源。
+先按[环境说明](03-environment.md)准备 base 中的 Seed-VC 依赖和基础模型，见 [模型权重指南](12_model_weights.md)。零样本 05 不需要下列训练和候选评估资源；若在 10 显式开启 voice_check，则仍需要 ECAPA。微调 05 的单候选和多候选均需要评估资源。
 
 ```bash
-cd /mnt/afs_f/liuhongda/music-cover-baseline
+cd /data/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
 
-# 已有 seed-vc 环境上的附加依赖；保留现有 PyTorch/Transformers 版本。
-envs/seed-vc/bin/python -m pip install --no-deps \
+# 已有 base 环境上的附加依赖；保留现有 PyTorch/Transformers 版本。
+/opt/conda/bin/python -m pip install --no-deps \
   -r configs/requirements-voice-adaptation.txt
 
 # 显式下载训练和独立评估资产，固定 revision 和 SHA256。
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope all
 # 已下载时只校验。
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
 ```
 
 新增训练资产是 OpenVoiceV2 converter 和 Seed-VC `se_db.pt`；新增评估模型是 SpeechBrain ECAPA-TDNN。它们各自的用途、精确路径和固定版本见模型权重指南。本脚本不会从空白机器安装全部 CUDA/Python 环境。
@@ -154,7 +154,7 @@ bash scripts/run_baseline.sh \
 
 以上 A/B 在同一个歌曲运行目录顺序执行时各自产生不同 attempt，最后成功的 B 成为后续 06 的输入。需要把两套完整交付长期并排保存时，应使用不同歌曲运行目录。不要手动改 `stage_state.json`；依赖失效按提示从对应上游重新运行。
 
-`/data/liuhongda/music-cover-baseline` 在当前服务器指向 `/mnt/afs_f/liuhongda/music-cover-baseline`。旧 v0.2 缓存记录了 Python 模块的入口路径；复用旧运行时沿用原入口别名，避免仅路径别名变化导致上游失效。新运行可以统一使用 `/mnt/afs_f/...`。
+运行配置、模型资产路径和训练阶段状态使用项目相对路径或运行目录相对路径。新导出的模型无需修改挂载前缀；旧导出的绝对资产路径通过训练配置中的旧项目根定位，仅在运行时生成解析副本，不修改模型原文件及其校验值。明确配置的外部绝对路径仍由调用者负责。
 
 两个入口都输出 `stages/05_voice_conversion/attempt_*/artifacts/converted.wav`。`conversion.json` 记录模式、音色版本、主权重和配置哈希、源/参考哈希、推理步数、随机种子，以及 `training_performed: false`。模式或模型变化会让 05 及相关下游重新计算，00–04 仍可校验复用。
 
@@ -162,7 +162,9 @@ bash scripts/run_baseline.sh \
 
 ## 5. 正式训练数据与训练方式
 
-复制 `configs/voice_training/sun_yanzi_seed_vc.yaml` 并填入 `sources`。示例（路径需替换为服务器上的实际干声录音）：
+从原始音乐开始准备时，先运行[原始录音分离](../scripts/voice_data/separate/README.md)，再用[训练配置生成脚本](../scripts/05_voice_conversion/finetuned/training/create_config/README.md)从本次产物和命令参数生成全新 YAML。该入口使用 base Python、项目相对路径，显式划分 train/validation/test，并核验歌曲 00/04 产物；不会复制历史实验配置。完整的单依纯第 5 步命令、输入、默认参数及输出路径见链接文档。
+
+对于已有独立干声录音的其他数据集，也可以手动编写 YAML 并填入 `sources`。格式示例（路径需替换为服务器上的实际干声录音）：
 
 ```yaml
 smoke_test: false
@@ -197,7 +199,7 @@ bash scripts/05_voice_conversion/finetuned/training/02_validate/run.sh \
 - `speaker_similarity`：独立 ECAPA 编码器的余弦相似度，不是“像某歌手的百分比”，且模型原本面向说话人识别，用于歌声仅作辅助。
 - `speaker_similarity_delta`：在同一个源片段、目标参考、随机种子和推理步数下，微调结果减去通用模型结果。
 - `pitch.status`：RMVPE F0 在延迟校正后的音高保持检查。`unassessable` 表示片段/对齐/有效帧不足等，不等同于成功。
-- 验证优先从音高检查通过的候选中按平均音色相似度增量选择。若没有通过者，只保留对照结果，拒绝导出。
+- 验证优先从音高检查通过的候选中按平均音色相似度增量选择。若没有通过者，仍保留对照结果并允许导出默认检查点，标记 quality_review_required，待人工试听。
 - `listening.html` 含源干声、目标参考、随机 A/B 干声与同伴奏混音。混音统一对齐并按源 RMS 配平；A/B 干声保留原推理输出。身份表在 `listening_key.json`，评审时先不要看。
 - 训练验证包保留每个候选的音频、模型哈希、F0、指标和评分表。评审人应另存填写后的评分表，保留原始产物。
 - 主流程 10 的 `voice_check: true` 会额外生成 `voice_conversion_evaluation.json` 与 F0 诊断，即使 `transpose=0` 也执行。这使用主流程同一提示录音，仅是运行诊断。原来的整曲评审和分轨/MIDI 仍保留。
@@ -206,6 +208,50 @@ bash scripts/05_voice_conversion/finetuned/training/02_validate/run.sh \
 
 ## 微调推理的三个候选
 
-微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，推荐版本进入分轨、MIDI 和最终交付入口；零样本入口仍为单次推理。
+微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，优先使用推荐版本；无合格者时默认试听输出仍进入混音和后续交付，保留未通过的验收结论。零样本入口仍为单次推理。
 
 具体命令与中间文件路径见[三个候选与推荐结果使用说明](15_voice_candidates.md)。
+
+
+## 7. 单依纯 + 绿洲：base 环境训练与单版本混音
+
+配置为 `configs/voice_training/shan_yi_chun_seedvc_base_20261030.yaml`。使用已有单依纯资料：训练 424 秒、验证 48 秒、测试 40 秒、独立参考 20 秒。录音按歌曲分组；素材为公开预览的估计分离人声，自动检查不替代试听。训练步数采用[官方 README 示例](https://github.com/Plachtaa/seed-vc#training%EF%B8%8F)和 `train.py` 默认的 1000 步；这不是官方保证的最优步数。本次 batch size 1、学习率 1e-5，保存间隔 200 步。本例只验证最终 1000 步权重，不遍历选择早期 checkpoint。
+
+验证的歌曲输入来自 `runs/lhd_lv_zhou_shan_yi_chun_modular_test` 已成功完成的 00–04，沿用其曲风、移调、人声、伴奏和参考片段；该目录必须保留。以下运行名若已执行过，不要重复当作新训练；新实验需复制配置并改 version/export_dir/run，续训则显式使用 `--resume`。
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+export PATH="/opt/conda/bin:$PATH"
+
+CONFIG=configs/voice_training/shan_yi_chun_seedvc_base_20261030.yaml
+TRAIN_RUN=runs/voice_training/shan_yi_chun_seedvc_base_20261030
+CHECKPOINT="$TRAIN_RUN/checkpoints/step_001000.pth"
+
+bash scripts/05_voice_conversion/finetuned/training/00_prepare/run.sh --config "$CONFIG" --run "$TRAIN_RUN"
+bash scripts/05_voice_conversion/finetuned/training/01_train/run.sh --config "$CONFIG" --run "$TRAIN_RUN"
+bash scripts/05_voice_conversion/finetuned/training/02_validate/run.sh --config "$CONFIG" --run "$TRAIN_RUN" --checkpoint "$CHECKPOINT"
+bash scripts/05_voice_conversion/finetuned/training/03_export/run.sh --config "$CONFIG" --run "$TRAIN_RUN" --checkpoint "$CHECKPOINT"
+
+# 校验并引用共同的 00–04，不覆盖原来的零样本结果。
+bash scripts/05_voice_conversion/fork_run.sh   --source-run runs/lhd_lv_zhou_shan_yi_chun_modular_test   --run runs/lhd_lv_zhou_shan_yi_chun_seedvc_finetuned_20261030
+
+bash scripts/05_voice_conversion/finetuned/run.sh   --run runs/lhd_lv_zhou_shan_yi_chun_seedvc_finetuned_20261030   --voice-profile models/voices/shan_yi_chun/seed_vc/base_portable_v001_20261030/voice.json   --voice-candidates 1 --voice-candidate-seeds 42 --gpu 0
+
+bash scripts/06_mix/run.sh   --run runs/lhd_lv_zhou_shan_yi_chun_seedvc_finetuned_20261030 --gpu 0
+```
+
+- 模型：`models/voices/shan_yi_chun/seed_vc/base_portable_v001_20261030/`。
+- 训练记录：`runs/voice_training/shan_yi_chun_seedvc_base_20261030/loss.jsonl`、`checkpoints/step_001000.pth`。
+- 训练、验证、导出实际 Python：各训练 attempt 的 `command.json`；验证推理子目录也有 `command.json`。
+- 换声：新歌曲 run 下 `stages/05_voice_conversion/attempt_002/artifacts/converted.wav`（本次实际成功 attempt；后续重跑以 `stage_state.json` 为准）；`conversion.json` 记录实际 Python、源/参考/模型哈希。
+- 混音：同一新 run 下 `stages/06_mix/attempt_001/artifacts/final.wav` 和 `final.mp3`。
+- 量化：训练验证的 `validation.json` 使用独立验证录音；整曲 05 的 `candidates.json` 使用推理参考，二者统计口径不同。ECAPA 不是音色相似百分比。
+
+`runtime_model_config.yml` 和执行命令日志允许保存该次执行的绝对路径，它们是审计记录；复用和迁移使用规范配置、profile 和状态。导出版本不可覆盖，源数据和模型文件仍执行哈希校验。
+
+
+### v1.1 统一音色对齐复核
+
+Seed-VC、SVC、RVC 的训练验证、05 候选、06 混音和独立音色评估统一采用活跃人声窗口包络检查，必要时用起音检查复核。按 20 秒窗口分析，过滤源人声活跃比例不足 20% 的窗口；相关系数至少 0.3，长音频至少 3 个且至少 70% 的有效窗口通过，延迟跨度不超过 30 ms。对齐证据不足时保留音高估计并标记 unassessable，不能据此断定音高错误；无合格推荐时仍输出音频并标记待复核。详见[当前评估规则](05-evaluation.md)。
+
+这是对齐的工程复核，并不证明自然度或歌词准确。旧运行 attempt 保留为历史证据，当前输出以 stage_state.json 为准；不能将先前示例的 attempt 编号当成所有运行的固定位置。

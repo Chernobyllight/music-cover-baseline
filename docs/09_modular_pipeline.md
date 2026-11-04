@@ -58,7 +58,7 @@ configs/
 | 02_pitch_adaptation | 01 的 ABC；非零或 auto 时还使用 00 原曲和参考 | `score_original.abc`、`score_transposed.abc`、`transposition.json`、`score_transposed.mid`、候选 CSV/HTML、谱/音频一致性 JSON；启用时包含原曲分离结果、F0 和音区分析。`0` 明确记录直通，不加载分离/F0 模型 |
 | 03_style_generation | 02 的乐谱、00 歌词、style / seed | `generated/audio.flac`、生成请求、长度预算及原生模型数据；截断生成拒绝通过 |
 | 04_vocal_separation | 03 生成的歌曲 | `vocals.wav`、`instrumental.wav`（模型原生 44.1k） |
-| 05_voice_conversion | 04 人声、00 参考、steps / seed | `converted.wav`、`conversion.json`；微调还含 `candidates.json/csv/html` 与各候选干声，推荐版本供下游使用 |
+| 05_voice_conversion | 04 人声、00 参考、steps / seed | `converted.wav`、`conversion.json`；微调还含 `candidates.json/csv/html` 与各候选干声，默认输出供下游使用，推荐状态单独记录 |
 | 06_mix | 03 原混音、04 人声和伴奏、05 换声 | `final.wav`、`final.mp3`、`mix.json`、对齐人声、直接重混对照；新增 `vocal_post_gain.wav`、`instrumental_post_gain.wav`、`mix_residual.wav` 记录实际入混音成分 |
 | 07_stem_separation | 06 最终音频与增益/对齐结果、04 伴奏 | `stems.json`、`audio/*.wav`、重建对照；12 条父/子/残差轨中只有指定 10 条叶轨相加 |
 | 08_final_score | 06 最终音频 | 成品完整转谱、`chords.mid`、`transcription_summary.json`；使用成品而非原曲时间轴 |
@@ -186,6 +186,31 @@ runs/<run>/
 - `failed`：错误和日志保留；没有成功清单的 attempt 不能被下游消费。
 
 每次执行只接受显式依赖的成功产物。缓存同时检查输入哈希、相关参数、模块及其声明的代码依赖、模型/环境锁，以及所有输出文件。任一输出损坏都不会静默复用；无需重算的模块会打印 `[reuse]`。
+
+### 路径与跨机器续跑
+
+工程根目录从当前代码位置自动确定，不依赖固定挂载点。新保存的 `request.json` 与
+`config.resolved.json` 中，工程内的歌曲、歌词、参考音频使用项目相对路径，例如
+`data/raw/songs/lv_zhou_lala_hsu.mp3`。工程外的素材保留绝对路径，迁移后应显式传入其新位置。
+
+`stage_state.json` / `manifest.json` 标记 `path_base: run`，其中 attempt 和产物路径相对于当前运行目录；
+同一项目内共享上游可以使用 `../另一运行目录/...`。`inputs.json` 标记 `path_base: project`；
+`outputs.json` 保持相对于所属 attempt。`command.json` 记录当时实际执行的绝对路径，作为历史审计信息。
+
+旧运行的绝对路径通过已记录的工程根目录和 attempt 布局解析到当前目录，
+不创建挂载别名，不按文件名搜索或硬编码服务器路径，也不修改历史产物及其哈希。
+缺失文件、变更内容与损坏的成功清单仍会阻止缓存复用。主流程和 Seed-VC/SVC/RVC
+训练验证读取主流程记录时共用 `music_cover.common.paths.read_run_state`。
+
+已经完成 00–02 的《绿洲》示例，在当前工程根目录执行：
+
+```bash
+export PATH="/opt/conda/bin:$PATH"
+bash scripts/03_style_generation/run.sh \
+  --run runs/lhd_lv_zhou_shan_yi_chun_modular_test --gpu 0
+```
+
+这里的 `runs/...` 不加开头的 `/`；`/runs/...` 表示操作系统根目录下的另一个目录。
 
 `deliverables` 为相对符号链接，指向已验证的不可变 attempt，避免再复制一套大体积分轨。下载时读取链接中的文件即可。开始局部修改后，原交付仍保留，但 `delivery_status=pending`，不能当作当前参数的新结果；新交付通过后才原子切换。各历史 attempt 不删除。
 

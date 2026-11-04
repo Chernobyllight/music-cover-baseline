@@ -37,3 +37,6 @@ __pycache__/
 
 # Versioned voice datasets are local training assets
 data/voice_datasets/
+
+# Local voice separation batches, manifests and training clips
+data/voice_training/

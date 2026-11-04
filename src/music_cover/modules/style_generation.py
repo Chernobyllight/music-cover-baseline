@@ -11,5 +11,5 @@ def params(r, c): return {**c, 'style': r.get('style', ''), 'seed': r['seed']}
 
 def run(ctx, out, i, p):
     write_json(out / 'generation_request.json', {'style': p['style'], 'lyrics': i['lyrics'].read_text(), 'seed': p['seed'], 'cot': 'melody'})
-    ctx.execute('yue2', 'cover', out, '--request', out / 'generation_request.json', '--score', i['score'])
+    ctx.execute('yue', 'cover', out, '--request', out / 'generation_request.json', '--score', i['score'])
     return {'cover': out / 'generated/audio.flac'}

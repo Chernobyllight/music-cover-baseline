@@ -2,12 +2,19 @@
 
 从原曲、歌词和参考人声生成新编曲，支持 Seed-VC 零样本/微调、so-vits-svc 和 RVC 歌手模型，输出最终 WAV、MP3、分轨、MIDI 和评审资料。
 
-当前版本 **v1.0**（分支 `v1.0`），包含 Seed-VC 零样本/微调、SVC、RVC、候选推荐和工程整理。交付范围与验收证据见 [交付指南](docs/21_delivery.md) 和 [验证记录](VALIDATION.md)。
+当前版本 **v1.1**（分支 `v1.1`），新增部署 Skill、可移植配置生成脚本、base 训练/推理适配，以及保留音频输出的统一质量评估。交付范围与验收证据见 [交付指南](docs/21_delivery.md) 和 [验证记录](VALIDATION.md)。
+
+## English overview
+
+Modular music restyling and voice conversion with YuE2, Seed-VC, so-vits-svc and RVC, featuring reproducible training, staged inference, audio review and deployment guidance.
+
+Version 1.1 adds a repository deployment skill, script-based training configuration, portable project paths, and consistent voice-quality assessment. Generated audio remains available for review even when quality checks do not pass. Models and media are provisioned separately; fresh-machine deployment still requires environment validation.
 
 ## 从哪里开始
 
 | 需要做什么 | 文档 |
 |---|---|
+| 新使用者部署并运行 00–06 | [部署 Skill](skill/SKILL.md) |
 | 直接生成、分步检查中间文件 | [使用说明](USAGE.md) |
 | 理解整个流程与模块职责 | [当前架构](docs/01-architecture.md)、[模块化说明](docs/09_modular_pipeline.md) |
 | 准备环境与模型权重 | [环境说明](docs/03-environment.md)、[权重清单](docs/12_model_weights.md) |

@@ -3,7 +3,7 @@ import hashlib,json,math,shutil,sys
 from pathlib import Path
 import numpy as np,soundfile as sf
 from scipy.signal import butter,sosfilt
-from music_cover.common.paths import ROOT
+from music_cover.common.paths import ROOT, read_run_state
 from music_cover.audio import sha256,decode
 
 EXP=ROOT/'runs/svc_optimization_yang_kun_20261028';EXP.mkdir(exist_ok=True)
@@ -69,7 +69,7 @@ for version in ['expanded_lead','expanded_clean']:
 mapping=[('hero_celtic','lhd_bu_bai_de_ying_xiong_celtic_epic_yang_kun_finetuned_20261028','selection'),('bad_girl_funk','lhd_huai_nv_hai_funk_soul_yang_kun_finetuned_20261027','selection'),('hero_blues','lhd_bu_bai_de_ying_xiong_blues_rock_yang_kun_finetuned_20261028','test'),('autumn_bossa','lhd_voice_candidates_validation','test')]
 cases=[]
 for name,run_name,split in mapping:
- run=ROOT/'runs'/run_name;state=json.loads((run/'stage_state.json').read_text());cfg=json.loads((run/'config.resolved.json').read_text())
+ run=ROOT/'runs'/run_name;state=read_run_state(run);cfg=json.loads((run/'config.resolved.json').read_text())
  item=state['stages']['04_vocal_separation']['outputs']['vocals'];p=Path(item['path']);assert sha256(p)==item['sha256']
  out=EXP/'cases'/name;out.mkdir(parents=True,exist_ok=True)
  decode(p,out/'source.wav',rate=44100,channels=1)

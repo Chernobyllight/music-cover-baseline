@@ -1,0 +1,102 @@
+purpose: dataset_preparation_only
+voice_id: shan_yi_chun
+version: svc_manual_20261104
+gpu: 0
+smoke_test: false
+segment_seconds: 8.0
+dataset_dir: data/voice_training/shan_yi_chun/svc_manual_20261104/dataset
+reference: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+sources:
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1601948938/lead.wav
+  group: shan_yi_chun:1601948938
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1607512257/lead.wav
+  group: shan_yi_chun:1607512257
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1623988866/lead.wav
+  group: shan_yi_chun:1623988866
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1632874979/lead.wav
+  group: shan_yi_chun:1632874979
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1637412537/lead.wav
+  group: shan_yi_chun:1637412537
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1682401768/lead.wav
+  group: shan_yi_chun:1682401768
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1686959781/lead.wav
+  group: shan_yi_chun:1686959781
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1698020394/lead.wav
+  group: shan_yi_chun:1698020394
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1698244260/lead.wav
+  group: shan_yi_chun:1698244260
+  split: validation
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1707131492/lead.wav
+  group: shan_yi_chun:1707131492
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1717367431/lead.wav
+  group: shan_yi_chun:1717367431
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1724135449/lead.wav
+  group: shan_yi_chun:1724135449
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1771288303/lead.wav
+  group: shan_yi_chun:1771288303
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1816871080/lead.wav
+  group: shan_yi_chun:1816871080
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1828393857/lead.wav
+  group: shan_yi_chun:1828393857
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1842315470/lead.wav
+  group: shan_yi_chun:1842315470
+  split: validation
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1843079931/lead.wav
+  group: shan_yi_chun:1843079931
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1843079941/lead.wav
+  group: shan_yi_chun:1843079941
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1843079986/lead.wav
+  group: shan_yi_chun:1843079986
+  split: test
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1860218751/lead.wav
+  group: shan_yi_chun:1860218751
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1862847848/lead.wav
+  group: shan_yi_chun:1862847848
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1864010428/lead.wav
+  group: shan_yi_chun:1864010428
+  split: test
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1864543209/lead.wav
+  group: shan_yi_chun:1864543209
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1864543219/lead.wav
+  group: shan_yi_chun:1864543219
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1865110632/lead.wav
+  group: shan_yi_chun:1865110632
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/1888556667/lead.wav
+  group: shan_yi_chun:1888556667
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/6804196344/lead.wav
+  group: shan_yi_chun:6804196344
+  split: train
+- path: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/6821283086/lead.wav
+  group: shan_yi_chun:6821283086
+  split: train
+configuration_generation:
+  tool: music_cover.voice_data_config
+  schema_version: 1
+  separation_manifest: data/voice_training/shan_yi_chun/svc_manual_20261104/recordings/manifest.json
+  separation_manifest_sha256: c1272f4015417daa35eb221f810d0c0c779dfb77af804b8f4154b3ddfb22669b
+  excluded_ids:
+  - '1787247852'
+  - '6779157198'
+  reference_sha256: bad26839b86d0314ca52face539f2c87ac54fe3a5897d656c46a73cea166959e

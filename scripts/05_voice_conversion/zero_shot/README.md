@@ -1,5 +1,8 @@
 # 05 · zero_shot
 
+Seed-VC 推理、微调训练及候选评估直接使用已有 base：`/opt/conda/bin/python`，不调用 `envs/seed-vc`。
+依赖与环境快照见[环境说明](../../../docs/03-environment.md)；不要安装上游整套 requirements 或改动其它模型的基础依赖。
+
 本例的 `runs/lhd_test_modular` 是可新建的运行名，旧数据已清理。先按 [三候选指南](../../../docs/15_voice_candidates.md) 完成 00–04（使用同一个 --run），或运行下面的准备命令；不能直接使用已删除的上游。
 
 使用通用 Seed-VC，保留原有 training-free 转换接口。

@@ -13,7 +13,7 @@ import yaml
 from .engine import Pipeline
 from .common.io import write_json
 from .common.lyrics import clean_lyrics
-from .common.paths import ROOT
+from .common.paths import ROOT, RunPaths
 from .common.resources import preflight as check_resources
 from .modules import load_modules, IDS, active_ids, normalize
 from .voice import merge_voice_config
@@ -100,12 +100,14 @@ def main():
     try:
         default_request, configs = module_config()
         request = {**DEFAULT_REQUEST, **default_request}
+        paths = RunPaths(ROOT, run)
         if args.demo:
             request.update(json.loads((ROOT / 'configs/demo.json').read_text()))
         if run and (run / 'request.json').exists():
             state = json.loads((run / 'stage_state.json').read_text())
             if state.get('schema_version') != 2:
                 parser.error('历史 v0.1 运行目录保留不动。请指定新的 --run，或不传 --run 自动创建。')
+            paths = RunPaths(ROOT, run, state)
             request.update(json.loads((run / 'request.json').read_text()))
             saved = read_config(run / 'config.resolved.json')
             for stage, values in saved.get('modules', {}).items(): configs[stage].update(values)
@@ -129,6 +131,8 @@ def main():
         configs['05_voice_conversion'] = merge_voice_config(configs['05_voice_conversion'], voice_overrides)
         if configs['05_voice_conversion']['mode'] == 'zero_shot':
             configs['05_voice_conversion']['voice_profile'] = None
+        elif configs['05_voice_conversion'].get('voice_profile'):
+            configs['05_voice_conversion']['voice_profile'] = paths.project_relative(configs['05_voice_conversion']['voice_profile'])
         for key in REQUEST_KEYS:
             value = getattr(args, key, None)
             if value is not None: request[key] = value
@@ -167,8 +171,7 @@ def main():
         for key in ['song', 'lyrics', 'reference', 'style']:
             if not request.get(key): parser.error(f'--{key} is required (or use --config / --demo)')
         for key in ['song', 'lyrics', 'reference']:
-            path = Path(request[key]).expanduser()
-            request[key] = str((ROOT / path).resolve())
+            request[key] = str(paths.resolve(request[key]))
             if not Path(request[key]).is_file(): parser.error(f'File does not exist: {request[key]}')
         if run is None:
             name = re.sub(r'[^\w-]+', '_', request['name'])[:60]

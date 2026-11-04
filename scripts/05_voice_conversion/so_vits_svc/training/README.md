@@ -2,6 +2,8 @@
 
 依次执行 00_prepare、01_train、02_validate、03_export。此流程使用已有 base，不会调用 Seed-VC 训练。
 
+需要亲自生成新配置时，先运行 [create_config](create_config/README.md)，不要复制下面的旧实验 YAML。单依纯的数据准备与配置生成命令见 [SVC 手动流程](../../../../docs/svc_config_scripts.md)。模型结构 JSON 由 00 根据官方模板新生成。
+
 第一步实例：
 
 ```bash

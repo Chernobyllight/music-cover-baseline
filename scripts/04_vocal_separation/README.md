@@ -2,6 +2,9 @@
 
 用 BS-RoFormer 将 03 生成的歌曲拆成人声和伴奏，供换声与混音使用。
 
+分离后端直接调用现有 base `/opt/conda/bin/python`，与 02 使用相同的分离模型及运行环境。
+无需激活项目 separator 环境；依赖与预检见[环境说明](../../docs/03-environment.md)。
+
 ## 使用示例
 
 以下示例统一使用“孙燕姿参考音色＋秋意浓＋Synthwave / Dance-pop”，运行目录为 `runs/qiu_yi_nong_modular_test`。各模块使用同一个 `--run`，串联同一首歌曲的中间产物。

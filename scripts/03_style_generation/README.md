@@ -2,6 +2,11 @@
 
 用 YuE2 结合移调后的旋律、歌词和目标曲风生成新编曲歌曲。
 
+实际 YuE2 后端解释器为 `/opt/conda/bin/python`（base），预检与运行使用同一路径；
+不再调用 `envs/yue2/bin/python`。主控制器仍复用已有 control 环境。
+base 的最小安装与版本说明见[环境说明](../../docs/03-environment.md#yue2-直接使用-base)。
+权重仍为 `models/YuE2-3B/model.safetensors` 和 `models/YuE2-Vae/model.safetensors`。
+
 ## 使用示例
 
 以下示例统一使用“孙燕姿参考音色＋秋意浓＋Synthwave / Dance-pop”，运行目录为 `runs/qiu_yi_nong_modular_test`。各模块使用同一个 `--run`，串联同一首歌曲的中间产物。
@@ -9,6 +14,10 @@
 前置条件：同一个运行目录中，下列直接依赖及其上游已成功完成，且产物和参数仍有效：[00_prepare](../00_prepare/README.md)、[02_pitch_adaptation](../02_pitch_adaptation/README.md)。
 
 本例沿用 00 创建的运行目录，自动读取其中已保存的请求与模块配置。只执行当前模块，不自动补跑上游。
+
+运行配置中的工程内素材保存为项目相对路径；切换机器时按当前工程根目录解析。
+旧绝对路径记录也由公共路径解析器兼容，不需要创建 `/mnt/afs_f` 等挂载别名。
+`--run runs/...` 的 `runs` 前不要加 `/`。详细路径契约见[跨机器续跑](../../docs/09_modular_pipeline.md#路径与跨机器续跑)。
 
 ```bash
 cd /mnt/afs_f/liuhongda/music-cover-baseline
@@ -37,6 +46,9 @@ bash scripts/03_style_generation/run.sh \
 | --- | --- |
 | `generated/audio.flac` | 新曲风的完整歌曲；供 04 分离和 06 混音对照 |
 | `generation_request.json` | 实际使用的曲风、歌词及随机种子 |
+| `generation_budget.json` | 乐谱时长、上下文长度与语义 token 预算 |
+| `generated/result.json` | 生成时长、采样率、截断状态与模型信息；正常完成时 truncated 均为 false |
+| `generated/score.abc` | 本次生成使用的旋律乐谱 |
 
 ## 查看记录与重跑
 

@@ -1,25 +1,25 @@
-当前版本：`v1.0`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。当前操作见 [USAGE.md](../USAGE.md)，交付验收见 [交付说明](21_delivery.md)。
+当前版本：`v1.1`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。当前操作见 [USAGE.md](../USAGE.md)，交付验收见 [交付说明](21_delivery.md)。
 
 模型资产的集中清单、固定版本、下载命令与校验方法见[模型权重指南](12_model_weights.md)。
 
 本仓库用于保存音乐换曲风与参考音色转换 baseline 的代码、文档及版本记录。原始工作目录为 `/data/liuhongda/music-cover-baseline`；现有模型和音频产物继续保留在该目录，不随 Git 提交上传。
 
-v1.0 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
+v1.1 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
 
 | 内容 | Git 管理方式 |
 | --- | --- |
 | `src/`、`scripts/`、`tests/` | 提交项目源码和测试 |
-| `README.md`、`USAGE.md`、`VALIDATION.md`、`docs/` | 提交说明和验证记录 |
+| `README.md`、`USAGE.md`、`VALIDATION.md`、`docs/`、`skill/` | 提交说明和验证记录 |
 | `configs/` | 提交模型 revision、校验值、环境快照和当前配置 |
 | `data/demo_sources.json` | 提交内置演示素材的来源和哈希，不包含音频或歌词正文 |
 | `third_party/YuE`、`third_party/seed-vc`、`third_party/so-vits-svc`、`third_party/rvc` | 作为 Git 子模块固定上游代码 commit |
 | `models/`、`envs/`、`cache/`、`checkpoints/` | 本地资源，不提交 |
-| `data/raw/`、`data/prepared/`、`data/voice_datasets/`、`runs/` | 本地输入、中间结果和交付音频，不提交 |
+| `data/raw/`、`data/prepared/`、`data/voice_training/`、`data/voice_datasets/`、`runs/` | 本地输入、中间结果和交付音频，不提交 |
 
-在新目录获取 v1.0 代码，并仅初始化本项目需要的四个直接子模块：
+在新目录获取 v1.1 代码，并仅初始化本项目需要的四个直接子模块：
 
 ```bash
-git clone --branch v1.0 https://github.com/Chernobyllight/music-cover-baseline.git
+git clone --branch v1.1 https://github.com/Chernobyllight/music-cover-baseline.git
 cd music-cover-baseline
 git submodule update --init third_party/YuE third_party/seed-vc third_party/so-vits-svc third_party/rvc
 ```
@@ -43,15 +43,19 @@ SVC 与 RVC 的适配器、训练入口和配置均随 v1.0 提交。初始化�
 
 ```bash
 git submodule update --init third_party/so-vits-svc third_party/rvc
-/opt/conda/bin/python scripts/setup_svc.py
-/opt/conda/bin/python scripts/setup_rvc.py --training
+/opt/conda/bin/python scripts/setup_svc.py --download
+/opt/conda/bin/python scripts/setup_rvc.py --download --training
 ```
 
 RVC 不需要递归初始化实时 VST 子模块；其权重、现有 base 依赖、训练和具体路径见 [RVC 指南](20_rvc.md)。
 
-克隆代码不会同时获得可直接运行的 GPU 环境。现有 `envs/` 复用了原服务器 `/opt/conda` 的基础包，不能直接复制到另一台机器使用。迁移时需分别重建 `control`、`sheetsage2`、`yue2`、`separator`、`seed-vc` 环境，实际 Python、Torch、CUDA 与关键包版本见 `configs/environments.lock.json`。
+克隆代码不会同时获得可直接运行的 GPU 环境。现有 `envs/` 复用了原服务器 `/opt/conda` 的基础包，不能直接复制到另一台机器使用。迁移时需恢复 base，以及仍在使用的 `control`、`sheetsage2` 环境；需要 07–11 评审时另恢复 `separator` 环境，不再要求旧 `seed-vc` 环境，实际 Python、Torch、CUDA 与关键包版本见 `configs/environments.lock.json`。03 YuE2 现在直接调用 base，不需要重建 yue2 环境；在已经配置的 base 中以 `--no-deps --no-build-isolation -e third_party/YuE` 安装该子模块，具体兼容版本与限制见[环境说明](03-environment.md)。当前运行锁为 `configs/yue-base.installed.txt`。
 
 `configs/*.installed.txt` 是当时各环境的局部安装记录，部分条目引用原服务器 wheel 路径，而且没有列出从基础环境继承的全部包；它们不是可直接在任意机器执行的完整安装清单。当前验证记录见 [VALIDATION.md](../VALIDATION.md)。
+
+02/04 的 BS-RoFormer 与 02/10 的独立 RMVPE 后端现在直接使用 base `/opt/conda/bin/python`。
+恢复时还需核对 `configs/pitch-base.installed.txt`，在已有 base 上按 `configs/requirements-pitch-base.txt`
+补充依赖并执行实际音频验证；具体步骤及 NumPy 版本边界见[当前环境说明](03-environment.md)。
 
 在所需 Python 环境和下载依赖准备好后，可使用现有脚本恢复固定版本的模型：
 
@@ -105,20 +109,20 @@ envs/separator/bin/python scripts/verify_review.py /绝对路径/runs/某次运�
 
 仅恢复代码不会获得歌手模型。已导出的音色版本需从自己的训练/备份恢复整个 `models/voices/<voice_id>/seed_vc/<version>/`，包含 `voice.json`、`model.pth`、`config.yml`、`validation.json`；解析器核对文件哈希、44.1 kHz 和 F0 条件。模型配置中的本机路径也需适配新机器。标准训练/验证/导出步骤见 [音色微调手册](13_voice_adaptation.md)。
 
-微调推理（候选数为 1 也一样）需 ECAPA/RMVPE；OpenVoiceV2 和 `se_db.pt` 只在训练时需要。配置好原有 Seed-VC 环境后，按 [权重指南](12_model_weights.md) 安装附加依赖并执行：
+微调推理（候选数为 1 也一样）需 ECAPA/RMVPE；OpenVoiceV2 和 `se_db.pt` 只在训练时需要。配置好当前 base 的 Seed-VC 与评估依赖后，按 [权重指南](12_model_weights.md) 安装附加依赖并执行：
 
 ```bash
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation --check-only
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation --check-only
 bash scripts/run_baseline.sh --config configs/tasks/bu_bai_de_ying_xiong_celtic_epic_yang_kun.yaml --preflight
 ```
 
 最后一条要求已经恢复该任务指定的杨坤 profile；其他歌手请换自己的任务配置。旧歌手录音、导出权重及训练状态均不随仓库发布；本版不包含单曲伪标签方案、歌词审核模型或歌词检查接口。
 
-## v1.0 交付边界
+## v1.1 交付边界
 
-v1.0 保留现有 CLI 和模型默认参数，纳入已验证的三种音色后端与交付检查。代码包不包含媒体、人物权重和 Python 环境。`.gitmodules` 记录四个上游仓库；固定 commit 见上表、Git gitlink 和 `configs/environments.lock.json`。2026-10-29 的独立源码归档另携带 `UPSTREAM.json`；不能把上游最新版本当成已验证版本。
+v1.1 保留四条音色入口和 00–11 流程，加入部署 Skill、配置生成、base 适配和统一验收。代码包不包含媒体、人物权重和 Python 环境。`.gitmodules` 记录四个上游仓库；固定 commit 见上表、Git gitlink 和 `configs/environments.lock.json`。2026-10-29 的独立源码归档另携带 `UPSTREAM.json`；不能把上游最新版本当成已验证版本。
 
 老版主说明及技术记录位于 [历史文档目录](archive/README.md)。`scripts/verify_result.py` 只兼容非模块化 v0.1 运行；现有 00–11 运行使用 `scripts/verify_review.py`，检查报告写到 `cache/`，避免修改已发布产物的哈希。
 
-本轮验证覆盖当前服务器的实际运行。迁移新机器仍需重建依赖、恢复模型和数据、重新预检；本轮没有宣称任意新机器的一键部署已经验证。
+本轮发布检查与环境缺项见 [VALIDATION.md](../VALIDATION.md)。新部署按[部署 Skill](../skill/SKILL.md)恢复依赖和权重；本轮没有宣称任意新机器的一键部署已经验证。

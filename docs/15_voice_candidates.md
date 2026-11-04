@@ -62,7 +62,7 @@ bash scripts/05_voice_conversion/finetuned/run.sh \
 ```bash
 # 06 把三个版本分别与同一个伴奏混音。
 bash scripts/06_mix/run.sh --run runs/lhd_candidates_example
-# 07–11 以推荐版本继续，最终包同时保留三个混音版本。
+# 07–11 以默认输出继续；有合格者时采用推荐，否则标记待复核。
 bash scripts/run_baseline.sh --run runs/lhd_candidates_example --from 07_stem_separation
 ```
 
@@ -70,7 +70,7 @@ bash scripts/run_baseline.sh --run runs/lhd_candidates_example --from 07_stem_se
 
 - `candidates/candidate_001/final.mp3`、`candidate_002/final.mp3`、`candidate_003/final.mp3`：三个完整混音，同时有对应 WAV 和 `mix.json`。
 - `candidates.html`：同伴奏试听和 05 干声指标对照。
-- 根目录 `final.wav` / `final.mp3`：推荐候选的精确副本；后续分轨和 MIDI 只处理这一版。
+- 根目录 `final.wav` / `final.mp3`：默认输出候选的精确副本；优先采用合格推荐，无合格者时保留待复核音频，后续分轨和 MIDI 处理这一版。
 
 10 的 `evaluation.json` 增加 `voice_candidates`，即使 `voice_check: false` 也保留 05 已计算的全部候选指标。若开启 `voice_check`，另评估推荐人声经 06 对齐后的结果，音频处理不同，分数可能略有差异。
 
@@ -81,8 +81,8 @@ bash scripts/run_baseline.sh --run runs/lhd_candidates_example --from 07_stem_se
 | `listen.html` | 原曲、生成曲、最终曲与候选页入口 |
 | `candidates.html`、`candidates.json` | 全部候选的相似度、技术检查、推荐和试听 |
 | `candidates/candidate_001/final.mp3` | 第 1 个完整候选；002、003 同理，各有 WAV |
-| `final.mp3` / `final.wav` | 推荐版本，可直接交给用户 |
-| `review/index.html`、`review/midi_bundle.zip` | 推荐版本的分轨、MIDI 和专业评审包 |
+| `final.mp3` / `final.wav` | 默认输出版本；是否合格见 candidates.json |
+| `review/index.html`、`review/midi_bundle.zip` | 默认输出版本的分轨、MIDI 和专业评审包 |
 | `evaluation.json` | 整曲检查及所有候选指标 |
 
 首次部署的实际验证使用 `runs/lhd_voice_candidates_validation`，具体值另记验证报告。
@@ -91,6 +91,8 @@ bash scripts/run_baseline.sh --run runs/lhd_candidates_example --from 07_stem_se
 
 三个候选仅改变推理随机种子；源人声、目标参考、微调模型、steps 和 F0 设置完全一致。先检查：ECAPA 有限、音高状态 verified、时间对齐 consistent、时长差≤0.25秒、峰值≤1.001、RMS≥0.0001。合格者按 ECAPA 降序选择；完全同分按较小 seed，再按候选 ID 排序。
 
-候选失败会显示失败原因，不冒充成功。没有合格者时 05 停止并保存诊断，不发布推荐结果；可检查日志/参考数据后显式重跑。非推荐候选若无法混音，也会记录 `mix_status: failed`，不会阻止已合格推荐版本的交付。
+候选失败会显示失败原因，不冒充成功。没有合格者时，05 仍发布可读取音频作为默认试听输出，保留拒绝原因，`recommended_id=null`、`selected_id` 指向默认输出；06 继续混音。仅所有候选都没有可读取音频时才按生成失败退出。非推荐候选若无法混音，也会记录 `mix_status: failed`，不会阻止已合格推荐版本的交付。
 
 ECAPA 测的是 05 转换后干声与同一目标参考的余弦相似度，不是整曲混音，也不是身份百分比。参考与推理提示相同，属于运行诊断；不能据此声称独立测试集泛化。混音使用同一伴奏和算法，各候选独立按原人声 RMS 配平并限峰，具体增益写入 `mix.json`；人工仍需判断歌词、发音、自然度和音乐性。
+
+统一验收与持续输出策略见 [评价说明](05-evaluation.md)。

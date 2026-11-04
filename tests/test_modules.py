@@ -10,7 +10,7 @@ from unittest.mock import patch
 from music_cover.engine import Pipeline, DependencyError
 from music_cover.modules import load_modules, active_ids
 from music_cover.pipeline import select_stages
-from music_cover.common.paths import ROOT
+from music_cover.common.paths import ROOT, read_run_state
 
 
 class ModularExecutionTests(unittest.TestCase):
@@ -49,7 +49,7 @@ class ModularExecutionTests(unittest.TestCase):
     def run_stages(self, selected=None, request=None, force=False):
         with self.pipeline(request) as p:
             p.run_all(selected or [m.ID for m in self.modules], force=force)
-            return json.loads(p.state_path.read_text())
+            return read_run_state(self.root / 'run', root=self.root)
 
     def test_complete_stage_contract_and_resume_without_execution(self):
         first = self.run_stages()
@@ -112,7 +112,7 @@ class ModularExecutionTests(unittest.TestCase):
         self.modules[2].run = lambda ctx,out,i,p: {'missing': out / 'missing.wav'}
         with self.assertRaisesRegex(RuntimeError, 'Missing stage artifact'):
             self.run_stages(['02_pitch_adaptation'], force=True)
-        state = json.loads((self.root / 'run/stage_state.json').read_text())
+        state = read_run_state(self.root / 'run', root=self.root)
         failure = Path(state['stages']['02_pitch_adaptation']['attempt'])
         self.assertFalse((failure / 'outputs.json').exists())
         self.assertTrue((failure / 'failure.json').exists())
@@ -151,6 +151,68 @@ class ModularExecutionTests(unittest.TestCase):
         for module in load_modules():
             for dependency in module.requires({'review':True, 'transpose':'auto'}):
                 self.assertLess(ids.index(dependency), ids.index(module.ID))
+
+    def test_saved_inputs_and_stage_paths_are_relative(self):
+        self.run_stages(request={**self.request, 'song': str(self.input)})
+        run = self.root / 'run'
+        self.assertEqual(json.loads((run / 'request.json').read_text())['song'], 'input.txt')
+        saved = json.loads((run / 'stage_state.json').read_text())
+        self.assertEqual(saved['path_base'], 'run')
+        for record in saved['stages'].values():
+            self.assertFalse(Path(record['attempt']).is_absolute())
+            self.assertFalse(Path(record['outputs']['text']['path']).is_absolute())
+
+    def relocate_project(self, legacy=False):
+        self.request['song'] = str(self.input)
+        state = self.run_stages()
+        if legacy:
+            # Recreate the pre-portability format; immutable attempt manifests
+            # and their recorded hashes are left untouched.
+            (self.root / 'run/stage_state.json').write_text(json.dumps(state))
+            (self.root / 'run/request.json').write_text(json.dumps(self.request))
+        markers = {str(p.relative_to(self.root)): p.read_bytes() for p in (self.root / 'run').rglob('outputs.json')}
+        moved = tempfile.TemporaryDirectory()
+        self.addCleanup(moved.cleanup)
+        new_root = Path(moved.name) / 'renamed_checkout'
+        shutil.copytree(self.root, new_root)
+        shutil.rmtree(self.root)
+        self.root = new_root
+        self.input = self.root / 'input.txt'
+        for module in self.modules:
+            module.__file__ = str(self.root / Path(module.__file__).name)
+        self.run_stages(['02_pitch_adaptation'])
+        self.assertEqual(len(self.calls), 3, 'moving the project must reuse verified stages')
+        for name, contents in markers.items():
+            self.assertEqual((self.root / name).read_bytes(), contents)
+        with self.pipeline() as runner:
+            self.assertEqual(Path(runner.request['song']), self.input)
+        return self.root
+
+    def test_portable_project_moves_without_any_old_mount(self):
+        self.relocate_project()
+
+    def test_legacy_project_moves_without_rewriting_hashed_artifacts(self):
+        self.relocate_project(legacy=True)
+
+    def test_shared_run_references_remain_shared_after_move(self):
+        from music_cover.common.paths import RunPaths
+        source = self.run_stages()
+        child = self.root / 'child'
+        child.mkdir()
+        paths = RunPaths(self.root, child)
+        (child / 'stage_state.json').write_text(json.dumps(paths.portable_state(source)))
+        restored = read_run_state(child, root=self.root)
+        self.assertEqual(restored['stages']['00_prepare']['attempt'], source['stages']['00_prepare']['attempt'])
+        self.assertFalse((child / 'stages').exists())
+
+    def test_unrelated_external_input_is_not_guessed(self):
+        from music_cover.common.paths import RunPaths
+        paths = RunPaths(self.root, self.root / 'run')
+        paths.legacy_roots.add(Path('/old/example/project'))
+        external = Path('/different/location/input.txt')
+        self.assertEqual(paths.resolve(external), external)
+        with self.assertRaisesRegex(ValueError, 'escapes'):
+            paths.run_path('../../../outside.wav')
 
     def legacy_alias_cache(self):
         from music_cover.common.io import identity, write_json

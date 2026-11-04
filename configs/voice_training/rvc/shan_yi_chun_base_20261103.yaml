@@ -1,0 +1,28 @@
+voice_id: shan_yi_chun
+version: base_portable_20261103
+gpu: 0
+source_dataset: data/voice_training/shan_yi_chun/manual_20261102/dataset
+dataset_dir: data/voice_datasets/shan_yi_chun/rvc/base_portable_20261103
+export_dir: models/voices/shan_yi_chun/rvc/base_portable_20261103
+training:
+  max_steps: 4000
+  save_every: 1000
+  batch_size: 6
+  learning_rate: 0.0001
+  seed: 42
+  input_crop_frames: 400
+inference:
+  f0_predictor: rmvpe
+  index_rate: 0.5
+  protect: 0.33
+  chunk_seconds: 8.0
+  overlap_seconds: 0.2
+  pad_seconds: 0.5
+validation:
+  cases:
+    - source_run: runs/lhd_lv_zhou_shan_yi_chun_modular_test
+      start: 36
+      duration: 12
+    - source_run: runs/lhd_lv_zhou_shan_yi_chun_modular_test
+      start: 156
+      duration: 12

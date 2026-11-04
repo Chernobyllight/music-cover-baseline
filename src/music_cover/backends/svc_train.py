@@ -5,7 +5,8 @@ import random
 import subprocess
 import time
 from pathlib import Path
-from ..common.paths import ROOT
+from ..common.paths import ROOT, read_run_state
+from ..common.resources import python_for
 from ..common.io import write_json, identity
 from ..audio import sha256, decode
 from ..svc import checked_state
@@ -139,7 +140,7 @@ def validate_model(c,run,out,manifest,requested,split):
         if len(candidates)!=1 or not any(r['evaluation_split']=='validation' and r['selected_checkpoint']==str(candidates[0]) and r['dataset_identity']==manifest['identity'] for r in reports):
             raise ValueError('Test requires one checkpoint previously selected on validation')
     refs=[str(path(c['dataset_dir'])/r['path']) for r in manifest['clips'] if r['split']==split]
-    source_run=path(c['validation']['source_run']);state=json.loads((source_run/'stage_state.json').read_text())
+    source_run=path(c['validation']['source_run']);state=read_run_state(source_run)
     item=state['stages']['04_vocal_separation']['outputs']['vocals']
     if sha256(item['path'])!=item['sha256']:raise ValueError('Source stage audio changed')
     cases=[]
@@ -162,7 +163,7 @@ def validate_model(c,run,out,manifest,requested,split):
                              'checkpoint':str(checkpoint),'case':i})
             del converter;torch.cuda.empty_cache()
     request=out/'metrics_request.json';write_json(request,{'jobs':jobs})
-    command=[str(ROOT/'envs/seed-vc/bin/python'),'-m','music_cover.backends.cli','svc_metrics','--request',str(request),'--output',str(out)]
+    command=[str(python_for(ROOT, 'voice_metrics')),'-m','music_cover.backends.cli','svc_metrics','--request',str(request),'--output',str(out)]
     with (out/'metrics.log').open('w') as log:
         subprocess.run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=3600)
     scored=json.loads((out/'metrics.json').read_text())
@@ -170,9 +171,11 @@ def validate_model(c,run,out,manifest,requested,split):
         row['cases']=[x for x in scored['cases'] if x['checkpoint']==row['checkpoint']]
         row['eligible']=bool(row['cases']) and all(x['eligible'] for x in row['cases'])
         row['mean_ecapa']=sum(x['metrics']['speaker_similarity'] for x in row['cases'])/len(row['cases'])
-    eligible=[r for r in rows if r['eligible']];selected=max(eligible,key=lambda r:r['mean_ecapa']) if eligible else None
+    eligible=[r for r in rows if r['eligible']];selected=max(eligible or rows,key=lambda r:r['mean_ecapa'])
     write_json(out/'validation.json',{'backend':'so_vits_svc','dataset_identity':manifest['identity'],'evaluation_split':split,
         'source_run':str(source_run),'source_vocals_sha256':item['sha256'],'reference_files':refs,'candidates':rows,
-        'selected_checkpoint':selected['checkpoint'] if selected else None,'selection':'highest mean ECAPA among technically eligible checkpoints',
+        'selected_checkpoint':selected['checkpoint'],
+        'recommended_checkpoint':selected['checkpoint'] if eligible else None,
+        'assessment_status':'passed' if eligible else 'review_required', 'blocks_export':False,'selection':'eligible highest mean ECAPA; otherwise highest mean ECAPA for listening review',
         'subjective_quality':'awaiting_human_review','reference_used_for_inference':False})
     print('validation selected: '+str(selected['checkpoint'] if selected else None),flush=True)

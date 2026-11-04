@@ -1,0 +1,15 @@
+modules:
+  05_voice_conversion:
+    backend: rvc
+    mode: finetuned
+    voice_profile: models/voices/shan_yi_chun/rvc/base_portable_20261103/voice.json
+    candidate_count: 1
+    candidate_seeds: [42]
+    svc: {}
+    rvc:
+      f0_predictor: rmvpe
+      index_rate: 0.5
+      protect: 0.33
+      chunk_seconds: 8.0
+      overlap_seconds: 0.2
+      pad_seconds: 0.5

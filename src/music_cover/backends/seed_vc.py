@@ -11,6 +11,7 @@ from ..common.io import write_json
 from ..audio import sha256
 from ..voice import resolve_voice, voice_record
 from ..voice_weights import check_parameter_coverage
+from ..common.voice_paths import runtime_model_config
 
 def convert(args):
     voice = resolve_voice(getattr(args, 'voice_mode', 'zero_shot'), getattr(args, 'voice_profile', None))
@@ -23,6 +24,8 @@ def convert(args):
     os.chdir(project)
     sys.path.insert(0, str(project))
     import inference
+    from .seed_vc_runtime import configure_bigvgan_loader
+    configure_bigvgan_loader()
     import torch
     import random
     import numpy as np
@@ -49,11 +52,12 @@ def convert(args):
         del state, payload
         return original_loader(model, optimizer, path, **kwargs)
     inference.load_checkpoint = checked_loader
+    runtime_config = runtime_model_config(voice['config'], Path(args.output) / 'runtime_model_config.yml')
     options = argparse.Namespace(
         source=args.input, target=args.reference, output=args.output,
         diffusion_steps=args.steps, length_adjust=1.0, inference_cfg_rate=0.7,
         f0_condition=True, auto_f0_adjust=False, semi_tone_shift=0,
-        checkpoint=str(voice['checkpoint']), config=str(voice['config']), fp16=True,
+        checkpoint=str(voice['checkpoint']), config=str(runtime_config), fp16=True,
     )
     inference.main(options)
     outputs = list(Path(args.output).glob("vc_*.wav"))
@@ -62,6 +66,8 @@ def convert(args):
     if outputs[0].name != "converted.wav":
         outputs[0].rename(Path(args.output) / "converted.wav")
     write_json(Path(args.output) / 'conversion.json', {**voice_record(voice),
+        'python': sys.executable, 'prefix': sys.prefix,
+        'runtime_model_config_sha256': sha256(runtime_config),
         'source_sha256': sha256(args.input), 'reference_sha256': sha256(args.reference),
         'steps': args.steps, 'seed': args.seed, 'semitones': 0, 'auto_f0_adjust': False,
         'training_performed': False, 'reference_required': True})

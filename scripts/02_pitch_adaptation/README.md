@@ -2,6 +2,10 @@
 
 结合原曲乐谱与参考音色的音区，确定移调幅度并输出供生成使用的乐谱。
 
+本阶段的 BS-RoFormer 分离和 RMVPE 基频提取均直接调用现有 base：`/opt/conda/bin/python`。
+预检与实际执行使用同一路径，不需要切换或新建解释器。安装依赖见[环境说明](../../docs/03-environment.md)。
+可在本次 attempt 的 `command.json` 中检查两个 `backend_commands[].argv[0]`，应均为 `/opt/conda/bin/python`。
+
 ## 使用示例
 
 以下示例统一使用“孙燕姿参考音色＋秋意浓＋Synthwave / Dance-pop”，运行目录为 `runs/qiu_yi_nong_modular_test`。各模块使用同一个 `--run`，串联同一首歌曲的中间产物。

@@ -31,3 +31,13 @@ PYTHONPATH=src envs/separator/bin/python scripts/verify_review.py \
 人工对比应听原曲、03 换风格结果、04 重混、最终成品以及换声前后干声，覆盖主歌、副歌、高音、气声、齿音、停顿和结尾。分轨小重建误差不代表串音少；MIDI 有文件不代表转谱准确。
 
 历史评估设计另存 [存档](archive/05-evaluation_before_cleanup_20261029.md)；实际已经完成的实验记录见 [VALIDATION](../VALIDATION.md)，日期与数据保留状态分别说明。
+
+## 音频产出与质量验收分离
+
+三条音色路线使用统一有效人声对齐：筛除低活动窗口，检测足够窗口的 RMS 包络一致性；主检查不可靠时按音节起音复核。默认相关性阈值 0.3、延迟跨度 30 ms，长音频要求至少 3 个且至少 70% 有效窗口被接受。未能确认对齐时不自动平移，保留音高统计但标为 unassessable，不能据此断言跑调。训练验证、05 候选、06 混音和 10 音色评价采用同一方法。
+
+05 的 generation_status 与 assessment 独立：passed、failed、unassessable、error 不改变已成功生成音频的保存。仅合格者进入推荐排名；无合格者仍以有限 ECAPA 最高的已生成候选作默认试听输出，缺指标时按 seed/ID 确定。recommended_id 可为 null，selected_id 是默认输出；06 和 11 不再把两者混用。评价组件失败也记录错误并保留音频。权重/音频哈希不匹配、损坏文件或推理没有可读取结果仍是执行错误。
+
+训练后质量未通过允许导出已验证且哈希一致的模型；profile 的 assessment_status=review_required、validation_status=quality_review_required。该行为不改变训练数据、权重或推理参数，也不重新训练。
+
+06 对时长不一致的转换结果保留较长时间轴，较短音轨尾部补静音，不做时间拉伸；对静音结果仍输出混音并记录警告。输出格式、哈希、有限数值等文件完整性检查继续执行。最终结果质量仍需人工试听，程序完成不等同质量合格。

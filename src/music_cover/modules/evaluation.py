@@ -3,9 +3,9 @@ from ..pitch_selection import load_pitch
 from ..pitch_validation import evaluate
 from ..common.io import write_json, artifact_paths
 ID = '10_evaluation'
-CONTRACT_VERSION = 3
+CONTRACT_VERSION = 4
 DEFAULTS = {'timeout_seconds': 10800, 'pitch_check': True, 'voice_check': False}
-CODE = ['audio.py', 'common/validation.py', 'backends/evaluation.py', 'backends/voice_metrics.py', 'backends/analysis.py', 'backends/rmvpe.py', 'pitch.py', 'pitch_selection.py', 'pitch_validation.py']
+CODE = ['audio.py', 'common/validation.py', 'backends/evaluation.py', 'backends/voice_metrics.py', 'voice_alignment.py', 'voice_candidates.py', 'backends/analysis.py', 'backends/rmvpe.py', 'pitch.py', 'pitch_selection.py', 'pitch_validation.py']
 TIMELINE = {'*': 'generated'}
 def backends(r, c): return ['analysis'] + (['rmvpe'] if c['pitch_check'] and str(r['transpose']) != '0' else []) + (['voice_metrics'] if c.get('voice_check') else [])
 def requires(r):

@@ -3,13 +3,16 @@ import json
 import sys
 from pathlib import Path
 import numpy as np
-from ..audio import read_at, inspect_audio, sha256, estimate_alignment, shift_audio
+from ..audio import read_at, inspect_audio, sha256, shift_audio
+from ..voice_alignment import assess_alignment
+from ..voice_candidates import assessment, finite_diagnostics
 from ..common.io import write_json
 from ..common.paths import ROOT
 
 
 class VoiceMetrics:
-    def __init__(self):
+    def __init__(self, *, onset_fallback=None):
+        # Retained keyword for older callers; all backends now share one policy.
         import torch
         from speechbrain.lobes.features import Fbank
         from speechbrain.processing.features import InputNormalization
@@ -71,11 +74,15 @@ class VoiceMetrics:
         from ..pitch_validation import compare_conversion
         out = Path(out); out.mkdir(parents=True, exist_ok=True)
         x, y = read_at(source, 16000), read_at(converted, 16000)
-        alignment = estimate_alignment(x, y, 16000)
+        alignment = assess_alignment(x, y, 16000)
         y = shift_audio(y, alignment['applied_shift_samples'], len(x))
         pitch = compare_conversion(self.pitch(x.mean(axis=1), out / 'source_f0.npz'),
                                    self.pitch(y.mean(axis=1), out / 'converted_f0.npz'))
-        if not alignment['consistent']: pitch['status'] = 'unassessable'
+        pitch['alignment_status'] = alignment['status']
+        if not alignment['consistent']:
+            pitch['unaligned_estimate_status'] = pitch['status']
+            pitch['status'] = 'unassessable'
+            pitch['unassessable_reason'] = 'alignment_uncertain; not evidence of incorrect pitch'
         reference_vectors = [self.embedding(p) for p in references]
         scores = [float(self.embedding(converted) @ v) for v in reference_vectors]
         result = {'speaker_similarity': float(np.mean(scores)), 'speaker_similarity_per_reference': scores,
@@ -85,12 +92,20 @@ class VoiceMetrics:
                   'source_sha256': sha256(source), 'target_reference_sha256': [sha256(p) for p in references],
                   'subjective_quality': 'awaiting_human_review', 'lyrics_accuracy': 'requires_transcript_and_human_review',
                   'note': 'Speech-trained embeddings are diagnostic for singing; scores are not identity percentages.'}
+        result['assessment'] = assessment(result,len(x)/16000)
+        result = finite_diagnostics(result)
         write_json(out / 'metrics.json', result)
         return result
 
 
 def evaluate_voice(request, output):
-    result = VoiceMetrics().compare(request['source'], request['converted'], [request['reference']], Path(output) / 'voice_diagnostics')
+    try:
+        result = VoiceMetrics().compare(request['source'], request['converted'], [request['reference']], Path(output) / 'voice_diagnostics')
+        result['evaluation_status'] = 'succeeded'
+    except Exception as error:
+        result = {'evaluation_status':'failed', 'evaluation_error':f'{type(error).__name__}: {error}',
+                  'assessment':{'status':'error','blocks_delivery':False,'reasons':['evaluation_failed']},
+                  'subjective_quality':'awaiting_human_review'}
     result['reference_independence'] = 'same_inference_prompt; diagnostic_only'
     if request.get('conversion'):
         result['conversion'] = json.loads(Path(request['conversion']).read_text())

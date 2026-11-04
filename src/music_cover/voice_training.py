@@ -14,6 +14,7 @@ from .audio import decode, inspect_audio, sha256
 from .common.io import write_json, identity
 from .common.paths import ROOT
 from .voice import BASE_CHECKPOINT, BASE_CONFIG
+from .common.voice_paths import portable_path, training_output
 
 
 def path(value):
@@ -23,11 +24,14 @@ def path(value):
 def load_config(filename):
     c = yaml.safe_load(path(filename).read_text())
     if not isinstance(c, dict): raise ValueError('Training config must be a mapping')
-    for key in ('voice_id', 'version', 'dataset_dir', 'sources', 'reference', 'training', 'validation'):
+    required = ('voice_id', 'version', 'dataset_dir', 'sources', 'reference')
+    if c.get('purpose') != 'dataset_preparation_only': required += ('training', 'validation')
+    for key in required:
         if key not in c: raise ValueError(f'Missing training config key: {key}')
     if not c['sources']: raise ValueError('Provide target-singer recordings in sources before preparing')
     if not isinstance(c.get('smoke_test', False), bool): raise ValueError('smoke_test must be boolean')
     if not 1 <= float(c.get('segment_seconds', 8)) <= 30: raise ValueError('segment_seconds must be 1..30')
+    if c.get('purpose') == 'dataset_preparation_only': return c
     t = c['training']
     for key in ('max_steps', 'save_every', 'batch_size'):
         if not isinstance(t[key], int) or isinstance(t[key], bool) or t[key] <= 0: raise ValueError(f'{key} must be positive')
@@ -60,7 +64,7 @@ def prepare(c, run, out, args):
         if groups.get(group, split) != split or hashes.get(digest, split) != split:
             raise ValueError('Recording/group leakage between dataset splits')
         groups[group], hashes[digest] = split, split
-        records.append({**item, 'path': str(source), 'sha256': digest})
+        records.append({**item, 'path': portable_path(source, ROOT), 'sha256': digest})
     if 'train' not in groups.values(): raise ValueError('Training recordings are required')
     if not c.get('smoke_test', False):
         if not {'validation', 'test'} <= set(groups.values()):
@@ -72,7 +76,17 @@ def prepare(c, run, out, args):
     key = identity(spec)
     if destination.exists():
         old = dataset_manifest(c)
-        if old['identity'] != key: raise ValueError('Dataset version already exists with different inputs; use a new dataset_dir')
+        # Content, recording order and split/group boundaries define a dataset, not its mount.
+        def content_spec(value):
+            result = {k: value[k] for k in spec}
+            result['recordings'] = [{k: v for k, v in row.items() if k != 'path'}
+                                    for row in value['recordings']]
+            return result
+        if content_spec(old) != content_spec(spec):
+            raise ValueError('Dataset version already exists with different inputs; use a new dataset_dir')
+        # Preserve the existing dataset identity for prior checkpoints. Only the
+        # new preparation audit uses current, project-relative source locations.
+        old = {**old, 'recordings': records, 'recordings_path_base': 'project'}
         write_json(out / 'manifest.json', old)
         return
     temporary = destination.with_name(destination.name + '.preparing')
@@ -81,7 +95,7 @@ def prepare(c, run, out, args):
     clips, rejected = [], []
     for index, row in enumerate(records):
         decoded = temporary / f'decoded_{index}.wav'
-        decode(row['path'], decoded, rate=44100, channels=1)
+        decode(path(row['path']), decoded, rate=44100, channels=1)
         audio, sr = sf.read(decoded, dtype='float32')
         width = round(float(c.get('segment_seconds', 8)) * sr)
         for number, first in enumerate(range(0, len(audio), width)):
@@ -99,7 +113,7 @@ def prepare(c, run, out, args):
         decoded.unlink()
     required = {'train'} if c.get('smoke_test') else {'train', 'validation', 'test'}
     if not required <= {x['split'] for x in clips}: raise ValueError('At least one required split has no usable clips')
-    manifest = {**spec, 'identity': key, 'schema_version': 1, 'clips': clips, 'rejected': rejected,
+    manifest = {**spec, 'identity': key, 'schema_version': 1, 'recordings_path_base': 'project', 'clips': clips, 'rejected': rejected,
                 'assessment': 'integration_only' if c.get('smoke_test') else 'held_out_recordings',
                 'quality_note': 'Duration/finite/RMS/clipping checks; clean solo singing still needs listening review.'}
     write_json(temporary / 'manifest.json', manifest)
@@ -121,14 +135,12 @@ def validate(c, run, out, args):
 
 def export(c, run, out, args):
     m = dataset_manifest(c)
-    state = json.loads((run / 'state.json').read_text())
-    validation_path = Path(state['stages']['02_validate']['output']) / 'validation.json'
+    validation_path = training_output(run, '02_validate') / 'validation.json'
     report = json.loads(validation_path.read_text())
     if report['dataset_identity'] != m['identity']: raise ValueError('Validation dataset differs')
-    checkpoint = path(args.checkpoint[0]) if args.checkpoint else Path(report['selected_checkpoint'])
-    row = next((x for x in report['candidates'] if Path(x['checkpoint']) == checkpoint), None)
+    checkpoint = path(args.checkpoint[0]) if args.checkpoint else path(report['selected_checkpoint'])
+    row = next((x for x in report['candidates'] if path(x['checkpoint']) == checkpoint), None)
     if row is None or row['checkpoint_sha256'] != sha256(checkpoint): raise ValueError('Selected checkpoint was not validated or has changed')
-    if not row['eligible']: raise ValueError('Checkpoint failed technical validation; export refused')
     version = path(c.get('export_dir', f"models/voices/{c['voice_id']}/seed_vc/{c['version']}"))
     if version.exists(): raise ValueError('Exported voice versions are immutable; choose a new version/export_dir')
     temporary = version.with_name(version.name + '.exporting')
@@ -139,16 +151,17 @@ def export(c, run, out, args):
     shutil.copy2(run / 'model_config.yml', temporary / 'config.yml')
     shutil.copy2(validation_path, temporary / 'validation.json')
     profile = {'schema_version': 1, 'backend': 'seed_vc', 'voice_id': c['voice_id'], 'version': c['version'],
-               'validation_status': 'integration_only' if c.get('smoke_test') else 'candidate_requires_listening',
+               'validation_status': ('integration_only' if c.get('smoke_test') else 'candidate_requires_listening') if row['eligible'] else 'quality_review_required',
+               'assessment_status':'passed' if row['eligible'] else 'review_required',
                'subjective_quality': 'awaiting_human_review', 'reference_required': True,
-               'dataset_identity': m['identity'], 'training_run': str(run),
+               'dataset_identity': m['identity'], 'training_run': portable_path(run, ROOT), 'path_base': 'project',
                'validation': {'path': 'validation.json', 'sha256': sha256(temporary / 'validation.json')},
                'base_checkpoint_sha256': sha256(path(c.get('base_checkpoint', BASE_CHECKPOINT))),
                'checkpoint': {'path': 'model.pth', 'sha256': sha256(temporary / 'model.pth')},
                'config': {'path': 'config.yml', 'sha256': sha256(temporary / 'config.yml')}}
     write_json(temporary / 'voice.json', profile)
     temporary.rename(version)
-    write_json(out / 'export.json', {'voice_profile': str(version / 'voice.json'), **profile})
+    write_json(out / 'export.json', {'voice_profile': portable_path(version / 'voice.json', ROOT), **profile})
 
 
 STAGES = {'00_prepare': prepare, '01_train': train, '02_validate': validate, '03_export': export}
@@ -165,6 +178,8 @@ def main():
     parser.add_argument('--evaluation-split', choices=['validation', 'test'], default='validation')
     args = parser.parse_args()
     c = load_config(args.config)
+    if c.get('purpose') == 'dataset_preparation_only' and (args.stage != '00_prepare' or args.max_steps is not None):
+        parser.error('This config is for dataset preparation only; generate a backend training config first')
     if args.max_steps is not None:
         if args.max_steps < 1: parser.error('--max-steps must be positive')
         c['training']['max_steps'] = args.max_steps
@@ -187,8 +202,8 @@ def main():
         out = attempt / 'artifacts'
         out.mkdir(parents=True)
         write_json(attempt / 'config.json', c)
-        write_json(attempt / 'command.json', {'argv': sys.argv, 'cwd': str(Path.cwd())})
-        state['stages'][args.stage] = {'status': 'running', 'output': str(out)}
+        write_json(attempt / 'command.json', {'argv': sys.argv, 'cwd': str(Path.cwd()), 'python': sys.executable, 'prefix': sys.prefix})
+        state['stages'][args.stage] = {'status': 'running', 'output': out.relative_to(run).as_posix()}
         write_json(state_path, state)
         from .engine import Tee
         try:

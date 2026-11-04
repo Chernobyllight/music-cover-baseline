@@ -1,0 +1,361 @@
+{
+  "voice_id": "shan_yi_chun",
+  "version": "base_portable_v001_20261030",
+  "dataset_dir": "data/raw/references/shan_yi_chun/dataset",
+  "smoke_test": false,
+  "segment_seconds": 8,
+  "gpu": 0,
+  "sources": [
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/validation/1698244260_00.wav",
+      "group": "shan_yi_chun:想你時風起",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/validation/1698244260_01.wav",
+      "group": "shan_yi_chun:想你時風起",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/validation/1698244260_02.wav",
+      "group": "shan_yi_chun:想你時風起",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1632874979_00.wav",
+      "group": "shan_yi_chun:星漢燦爛",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1632874979_01.wav",
+      "group": "shan_yi_chun:星漢燦爛",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1632874979_02.wav",
+      "group": "shan_yi_chun:星漢燦爛",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/reference.wav",
+      "group": "shan_yi_chun:續寫",
+      "split": "prompt"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1607512257_00.wav",
+      "group": "shan_yi_chun:熱湯",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1607512257_01.wav",
+      "group": "shan_yi_chun:熱湯",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1698020394_00.wav",
+      "group": "shan_yi_chun:你就不要想起我",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1698020394_01.wav",
+      "group": "shan_yi_chun:你就不要想起我",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1698020394_02.wav",
+      "group": "shan_yi_chun:你就不要想起我",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1843079941_01.wav",
+      "group": "shan_yi_chun:照片",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1843079941_02.wav",
+      "group": "shan_yi_chun:照片",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/test/1843079986_00.wav",
+      "group": "shan_yi_chun:分身",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/test/1843079986_01.wav",
+      "group": "shan_yi_chun:分身",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1843079931_00.wav",
+      "group": "shan_yi_chun:喂",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1843079931_01.wav",
+      "group": "shan_yi_chun:喂",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1864543219_02.wav",
+      "group": "shan_yi_chun:珠玉",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1601948938_00.wav",
+      "group": "shan_yi_chun:人啊",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1601948938_01.wav",
+      "group": "shan_yi_chun:人啊",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1601948938_02.wav",
+      "group": "shan_yi_chun:人啊",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/validation/1842315470_00.wav",
+      "group": "shan_yi_chun:像煙火愛過",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/validation/1842315470_01.wav",
+      "group": "shan_yi_chun:像煙火愛過",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/validation/1842315470_02.wav",
+      "group": "shan_yi_chun:像煙火愛過",
+      "split": "validation"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1682401768_00.wav",
+      "group": "shan_yi_chun:你是倒映的微星",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1682401768_01.wav",
+      "group": "shan_yi_chun:你是倒映的微星",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1682401768_02.wav",
+      "group": "shan_yi_chun:你是倒映的微星",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1717367431_00.wav",
+      "group": "shan_yi_chun:情人",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1717367431_02.wav",
+      "group": "shan_yi_chun:情人",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1828393857_00.wav",
+      "group": "shan_yi_chun:君",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1828393857_01.wav",
+      "group": "shan_yi_chun:君",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1816871080_00.wav",
+      "group": "shan_yi_chun:月上歌",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1816871080_01.wav",
+      "group": "shan_yi_chun:月上歌",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1816871080_02.wav",
+      "group": "shan_yi_chun:月上歌",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1860218751_01.wav",
+      "group": "shan_yi_chun:風無眠",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1860218751_02.wav",
+      "group": "shan_yi_chun:風無眠",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1724135449_00.wav",
+      "group": "shan_yi_chun:再見往事",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1724135449_01.wav",
+      "group": "shan_yi_chun:再見往事",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1623988866_00.wav",
+      "group": "shan_yi_chun:星芒",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1623988866_01.wav",
+      "group": "shan_yi_chun:星芒",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1623988866_02.wav",
+      "group": "shan_yi_chun:星芒",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1864543209_02.wav",
+      "group": "shan_yi_chun:假如我們還愛著",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1637412537_00.wav",
+      "group": "shan_yi_chun:愛的奇幻旅行",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1637412537_01.wav",
+      "group": "shan_yi_chun:愛的奇幻旅行",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1637412537_02.wav",
+      "group": "shan_yi_chun:愛的奇幻旅行",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/6821283086_00.wav",
+      "group": "shan_yi_chun:最難得",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/6821283086_02.wav",
+      "group": "shan_yi_chun:最難得",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1865110632_01.wav",
+      "group": "shan_yi_chun:純寐寐",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/test/1864010428_00.wav",
+      "group": "shan_yi_chun:執",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/test/1864010428_01.wav",
+      "group": "shan_yi_chun:執",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/test/1864010428_02.wav",
+      "group": "shan_yi_chun:執",
+      "split": "test"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1771288303_01.wav",
+      "group": "shan_yi_chun:4everinu",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1771288303_02.wav",
+      "group": "shan_yi_chun:4everinu",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/6804196344_00.wav",
+      "group": "shan_yi_chun:lava",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/6804196344_02.wav",
+      "group": "shan_yi_chun:lava",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1686959781_02.wav",
+      "group": "shan_yi_chun:你的世界",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1862847848_00.wav",
+      "group": "shan_yi_chun:如星",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1862847848_01.wav",
+      "group": "shan_yi_chun:如星",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1862847848_02.wav",
+      "group": "shan_yi_chun:如星",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1707131492_00.wav",
+      "group": "shan_yi_chun:餘味",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1707131492_01.wav",
+      "group": "shan_yi_chun:餘味",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1707131492_02.wav",
+      "group": "shan_yi_chun:餘味",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1888556667_01.wav",
+      "group": "shan_yi_chun:光波",
+      "split": "train"
+    },
+    {
+      "path": "data/raw/references/shan_yi_chun/clips/train/1888556667_02.wav",
+      "group": "shan_yi_chun:光波",
+      "split": "train"
+    }
+  ],
+  "reference": "data/raw/references/shan_yi_chun/reference.wav",
+  "training": {
+    "seed": 42,
+    "learning_rate": 1e-05,
+    "batch_size": 1,
+    "max_steps": 1000,
+    "save_every": 200
+  },
+  "validation": {
+    "source_run": "runs/lhd_lv_zhou_shan_yi_chun_modular_test",
+    "windows": [
+      {
+        "start": 36,
+        "duration": 12
+      },
+      {
+        "start": 156,
+        "duration": 12
+      }
+    ],
+    "steps": 30,
+    "seed": 42,
+    "window_selection_note": "First 12-second non-overlapping window in each song half with at least 9 of 12 seconds source RMS >0.01. Source-only selection; initial 12s window was an instrumental intro and failed assessment."
+  },
+  "export_dir": "models/voices/shan_yi_chun/seed_vc/base_portable_v001_20261030",
+  "dataset_note": "Automated screening of lossy public-preview derived estimated lead vocals. Human listening pending. Pilot corpus; not sufficient evidence of production training quality."
+}

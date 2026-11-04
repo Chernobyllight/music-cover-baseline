@@ -25,11 +25,11 @@ def main():
               "ffmpeg": output(["ffmpeg", "-version"]).splitlines()[0],
               "gpu": output(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version", "--format=csv,noheader"]),
               "environments": {}, "upstream": {}}
-    for name in ["control", "sheetsage2", "yue2", "separator", "seed-vc", "base"]:
+    for name in ["control", "sheetsage2", "separator", "base"]:
         python = "/opt/conda/bin/python" if name == "base" else str(ROOT / "envs" / name / "bin/python")
         code = """import sys,torch,numpy,importlib.metadata as m,json
 packages = {}
-for p in ['torchvision','torchaudio','transformers','huggingface-hub','safetensors','accelerate','soundfile','scipy','librosa','numba','onnxruntime','audio-separator','triton','cuda-bindings','mido','pretty-midi','basic-pitch','demucs','speechbrain','faiss-cpu']:
+for p in ['torchvision','torchaudio','transformers','huggingface-hub','safetensors','accelerate','soundfile','scipy','librosa','numba','onnxruntime','audio-separator','yue2-infer','triton','cuda-bindings','mido','pretty-midi','basic-pitch','demucs','speechbrain','faiss-cpu']:
     try: packages[p] = m.version(p)
     except m.PackageNotFoundError: pass
 for distribution in m.distributions():
@@ -41,6 +41,10 @@ print(json.dumps({'python':sys.version,'torch':torch.__version__,'cuda':torch.ve
         record["environments"][name] = versions
         freeze = output([python, "-m", "pip", "freeze", "--local"])
         (args.output_dir / f"{name}.installed.txt").write_text(freeze + "\n")
+        if name == 'base':
+            (args.output_dir / 'pitch-base.installed.txt').write_text(freeze + "\n")
+            (args.output_dir / 'yue-base.installed.txt').write_text(freeze + "\n")
+            (args.output_dir / 'seed-vc-base.installed.txt').write_text(freeze + "\n")
     for name in ["YuE", "seed-vc", "so-vits-svc", "rvc"]:
         record["upstream"][name] = output(["git", "rev-parse", "HEAD"], cwd=ROOT / "third_party" / name)
     (args.output_dir / "environments.lock.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")

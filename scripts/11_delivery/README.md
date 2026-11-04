@@ -71,7 +71,7 @@ bash scripts/11_delivery/run.sh \
 
 ## 微调三个候选
 
-当 05 采用 finetuned 三候选时，本阶段也保留三个版本；根目录 final 为推荐版本。具体例子：
+当 05 采用 finetuned 三候选时，本阶段也保留三个版本；根目录 final 为默认输出；有合格者时采用推荐，无合格者时标记待复核。具体例子：
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
@@ -79,4 +79,4 @@ export PATH="/opt/conda/bin:$PATH"
 bash scripts/11_delivery/run.sh --run runs/lhd_candidates_example
 ```
 
-需要同一运行的前置模块已完成。读取的候选来自 06 的 candidates.json 及三个候选混音。本模块输出在 `runs/lhd_candidates_example/stages/11_delivery/attempt_001/artifacts/`，查看 `candidates.html`、`candidates.json` 和 `candidates/candidate_001/final.mp3`（002、003 同理）。实际 attempt 由 stage_state.json 决定。分轨与 MIDI 对应推荐版本。完整顺序见[三候选指南](../../docs/15_voice_candidates.md)。
+需要同一运行的前置模块已完成。读取的候选来自 06 的 candidates.json 及三个候选混音。本模块输出在 `runs/lhd_candidates_example/stages/11_delivery/attempt_001/artifacts/`，查看 `candidates.html`、`candidates.json` 和 `candidates/candidate_001/final.mp3`（002、003 同理）。实际 attempt 由 stage_state.json 决定。分轨与 MIDI 对应默认输出；无合格推荐时也可继续交付试听材料。完整顺序见[三候选指南](../../docs/15_voice_candidates.md)。

@@ -5,6 +5,7 @@ import yaml
 from .audio import sha256
 from .common.paths import ROOT
 from .common.voice_profiles import verified_files
+from .common.voice_paths import portable_path
 
 BASE_CHECKPOINT = 'models/Seed-VC/DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth'
 BASE_CONFIG = 'configs/seed_svc.local.yml'
@@ -57,7 +58,9 @@ def resolve_voice(mode='zero_shot', profile=None, root=ROOT, backend='seed_vc'):
 
 def voice_record(resolved):
     result = {k: v for k, v in resolved.items() if not isinstance(v, Path)}
+    if resolved.get('backend') in {'seed_vc', 'rvc'}: result['path_base'] = 'project'
     for key in ('checkpoint', 'config', 'profile', 'validation', 'index', 'index_manifest'):
         if key in resolved:
-            result[key] = {'path': str(resolved[key]), 'sha256': sha256(resolved[key])}
+            result[key] = {'path': portable_path(resolved[key]) if resolved.get('backend') in {'seed_vc', 'rvc'} else str(resolved[key]),
+                           'sha256': sha256(resolved[key])}
     return result

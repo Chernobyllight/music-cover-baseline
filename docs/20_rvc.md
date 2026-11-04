@@ -1,15 +1,55 @@
-# RVC：黄绮珊歌手训练与独立音色转换
+# RVC：歌手训练与独立音色转换
 
 RVC 是 05 的额外后端，`backend=rvc`、`mode=finetuned`。Seed-VC zero-shot、Seed-VC finetuned、so-vits-svc 的入口继续保留。RVC 推理不会启动训练，也不把参考音频当作音色条件；参考音频仍供 02 音区分析和评估使用。
 
-工程根目录 `/data/liuhongda/music-cover-baseline` 与 `/mnt/afs_f/liuhongda/music-cover-baseline` 为同一共享工程。下文命令在根目录执行。RVC 接入已纳入 v1.0 版本，固定上游版本见仓库恢复说明。
+下文以 `/data/liuhongda/music-cover-baseline` 为命令示例。脚本按自身位置定位项目根目录，配置里的相对路径统一按项目根目录解析，不依赖某个挂载前缀或工作目录。RVC 接入已纳入 v1.0 版本，固定上游版本见仓库恢复说明。黄绮珊章节属于历史实验说明，相关 runs 已清理；当前可复现入口见下方单依纯例子。
+
+手动验证的第 2、5、7、14 步已有独立脚本：见[环境检查与配置生成](rvc_config_scripts.md)。所有新配置由命令参数创建，不复用旧任务 YAML。
+
+## 单依纯 + 绿洲：base 环境与可迁移路径
+
+训练配置为 `configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml`，推理配置为 `configs/voice_inference/rvc/shan_yi_chun_base_20261103.yaml`，均为本次独立配置。输入沿用手动流程生成的 `data/voice_training/shan_yi_chun/manual_20261102/dataset`：训练 95 段、约 713.30 秒，validation/test 各 8 段、约 59.95 秒，按歌曲组隔离。原始人声来自单依纯分离素材；数量代表该批次，替换数据后以 manifest 为准。
+
+数据准备、特征提取、训练、索引、验证、导出、整曲推理及候选评估均使用 `/opt/conda/bin/python`。RVC 推理脚本直接调用 base，不再绕经总入口的 control 解释器。base 需要 `faiss-cpu==1.11.0`，缺少时只补这一已锁定依赖；不要整套覆盖上游 requirements。实际解释器可在每阶段 `command.json`、训练 `runtime.json`、验证 `metrics_command.json` 和转换 `conversion.json` 的 runtime 中核对。
+
+本次固定 RVC v2 / 48 kHz / RMVPE，4000 次更新，batch=6、LR=1e-4，index_rate=0.5、protect=0.33。只使用最终 `model_00004000.pth`，不搜索中途权重。验证输入为保留的《绿洲》运行在 36 秒和 156 秒处各 12 秒的人声；整曲生成 1 个候选，seed=42。
+
+```bash
+cd /data/liuhongda/music-cover-baseline
+
+bash scripts/05_voice_conversion/rvc/training/00_prepare/run.sh --config configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml --run runs/voice_training/shan_yi_chun_rvc_base_20261103
+bash scripts/05_voice_conversion/rvc/training/01_features/run.sh --config configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml --run runs/voice_training/shan_yi_chun_rvc_base_20261103
+bash scripts/05_voice_conversion/rvc/training/02_train/run.sh --config configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml --run runs/voice_training/shan_yi_chun_rvc_base_20261103
+bash scripts/05_voice_conversion/rvc/training/03_index/run.sh --config configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml --run runs/voice_training/shan_yi_chun_rvc_base_20261103
+bash scripts/05_voice_conversion/rvc/training/04_validate/run.sh --config configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml --run runs/voice_training/shan_yi_chun_rvc_base_20261103
+bash scripts/05_voice_conversion/rvc/training/05_export/run.sh --config configs/voice_training/rvc/shan_yi_chun_base_20261103.yaml --run runs/voice_training/shan_yi_chun_rvc_base_20261103
+
+bash scripts/05_voice_conversion/fork_run.sh --source-run runs/lhd_lv_zhou_shan_yi_chun_modular_test --run runs/lhd_lv_zhou_shan_yi_chun_rvc_base_20261103
+bash scripts/05_voice_conversion/rvc/run.sh --run runs/lhd_lv_zhou_shan_yi_chun_rvc_base_20261103 --config configs/voice_inference/rvc/shan_yi_chun_base_20261103.yaml --gpu 0
+bash scripts/06_mix/run.sh --run runs/lhd_lv_zhou_shan_yi_chun_rvc_base_20261103 --gpu 0
+```
+
+这组名称若已运行过，不要当作全新实验重复执行。新实验改 version、dataset_dir、export_dir、训练 run 和歌曲 run；模型续训另用显式 `--resume`。新歌曲 run 引用共同 00–04，原运行目录需保留。
+
+| 产物 | 当前示例位置 |
+|---|---|
+| 派生音频与特征 | `data/voice_datasets/shan_yi_chun/rvc/base_portable_20261103/` |
+| 训练 checkpoint | `runs/voice_training/shan_yi_chun_rvc_base_20261103/checkpoints/model_00004000.pth` |
+| 索引与验证 | 同一训练 run 的 `added.index`、`index_manifest.json`、`validation.json` |
+| 导出模型 | `models/voices/shan_yi_chun/rvc/base_portable_20261103/voice.json` 及同目录配套文件 |
+| 整曲干声和指标 | `runs/lhd_lv_zhou_shan_yi_chun_rvc_base_20261103/stages/05_voice_conversion/attempt_*/artifacts/` |
+| 混音 | 同一歌曲 run 的 `stages/06_mix/attempt_*/artifacts/final.wav`、`final.mp3` |
+
+配置、数据来源、验证、索引和导出报告保存项目相对路径；导出 profile 中的 model/config/index 等资产相对 profile 目录；训练 state 的 output 相对训练 run。`train.txt` 保存数据集相对路径，训练前在 attempt 内生成 `runtime_train.txt`，只在这个执行副本中展开绝对路径。旧的绝对训练清单通过其明确的 `train/<clip>.wav` 目录结构恢复数据集根，不猜服务器前缀，不改原文件哈希。命令、runtime 请求和执行日志保留当次绝对路径供审计。
+
+迁移应保持项目内部目录布局，并携带所需数据、公共权重、模型和保留的源 run；明确配置的项目外绝对路径仍需调用者维护。旧已导出 profile 继续按资产相对目录和校验值加载，不修改旧模型文件。
 
 ## 模型与环境
 
 - 上游：[RVC WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI/tree/81eed5e8f68b6bed1789f682fe78cdd324495afc)，固定提交 `81eed5e8f68b6bed1789f682fe78cdd324495afc`。
 - RVC v2：HuBERT/ContentVec 第 12 层 768 维、RMVPE、48 kHz 带 F0 的 NSF 生成器。
 - 训练更新完整生成器和判别器；内容编码器、RMVPE 冻结。使用上游模型、数据整理类及 Mel、KL、对抗、特征匹配四项损失。训练包装器按实际优化步数保存，不用 epoch 冒充 step。
-- 基于现有 `/opt/conda/bin/python`。主控制器不导入 RVC 重型依赖；候选评估使用现有 `envs/seed-vc`。不使用 WebUI、实时变声、VST、fairseq，不安装上游整套 requirements。
+- 基于现有 `/opt/conda/bin/python`。主控制器不导入 RVC 重型依赖；候选评估使用 `/opt/conda/bin/python`。不使用 WebUI、实时变声、VST、fairseq，不安装上游整套 requirements。
 - 本地适配器处理上游 `infer/tools/train` 命名空间隔离；固定关闭 CUDA Graph；固定训练/推理共享音频归一化与 F0 处理。保留原始无声 F0=0，使保护参数和 NSF 清浊音判定使用真实 RMVPE 标记，未沿用该提交的全段 F0 插值。此差异在配置中记录为 `f0_policy=unvoiced_zero`。
 
 权重由 `configs/rvc_assets.lock.json` 固定 URL、revision、大小和 SHA256：
@@ -33,7 +73,7 @@ git submodule update --init third_party/rvc
 
 不需要初始化 RVC 内部的实时 VST 子模块。现有 SVC/RMVPE 文件不会被新权重覆盖。`rvc-base.installed.txt` 是当前环境快照；`requirements-rvc-base.txt` 是已用到的核心依赖清单，不是允许覆盖工作环境的安装指令。
 
-## 数据与训练阶段
+## 数据与训练阶段（黄绮珊历史示例）
 
 数据只来自 `/data/liuhongda/music-cover-baseline/data/raw/references/huang_qi_shan/`。直接读取其中已整理的 `dataset/manifest.json`；训练 52 段 416 秒，验证 8 段 64 秒，测试 5 段 40 秒，另有 20 秒 prompt 被排除。保留歌曲组隔离与文件哈希检查。素材是已筛选的人声估计，含有损来源和可能的分离残留，不等于录音棚纯干声。
 
@@ -74,9 +114,9 @@ bash scripts/05_voice_conversion/rvc/training/05_export/run.sh \
 | 04 | `validation.json`、`stages/04_validate/attempt_*/artifacts/` | 配置最终步数权重的验证参考、转换音频及验收指标 |
 | 05 | `stages/05_export/attempt_*/artifacts/export.json` | 导出目录中的 `voice.json` 供正式 05 使用 |
 
-训练配置为4000次实际更新、LR=1e-4、batch=6（最后一批可更小）、FP32/TF32，4秒输入随机裁剪，上游声码器损失窗口17280样本约0.36秒。**直接使用本次配置的4000步模型，固定index_rate=0.5、protect=0.33，不搜索检查点或推理参数。** 4000是本工程明确配置的训练目标，不声称是RVC上游的通用最佳步数。04在《穿越曙光》两个20秒窗口上验收；其他检查点仅用于记录、恢复。验证失败会明确停止，不静默改用另一个模型。需要验证其他权重时，在04命令中传入 `--checkpoint runs/voice_training/huang_qi_shan_rvc_v001_20261029/checkpoints/model_00002000.pth` 即可；接口不限制只能使用4000步。测试参考不进入训练、索引或候选选择。
+训练配置为4000次实际更新、LR=1e-4、batch=6（最后一批可更小）、FP32/TF32，4秒输入随机裁剪，上游声码器损失窗口17280样本约0.36秒。**直接使用本次配置的4000步模型，固定index_rate=0.5、protect=0.33，不搜索检查点或推理参数。** 4000是本工程明确配置的训练目标，不声称是RVC上游的通用最佳步数。04在《穿越曙光》两个20秒窗口上验收；其他检查点仅用于记录、恢复。质量验收未通过仍保留并允许导出同一请求模型，标记 quality_review_required；不改用另一个模型。模型损坏、来源不匹配等执行错误仍报错。需要验证其他权重时，在04命令中传入 `--checkpoint runs/voice_training/huang_qi_shan_rvc_v001_20261029/checkpoints/model_00002000.pth` 即可；接口不限制只能使用4000步。测试参考不进入训练、索引或候选选择。
 
-## 与现有 Seed-VC 对齐生成
+## 与现有 Seed-VC 对齐生成（历史对照）
 
 三首歌的原有曲风分别为：《穿越曙光》电影配乐式管弦灵魂乐、《Last Dance》复古 Funk/Soul、《绿洲》古巴 Mambo/大乐队爵士。复用原 run 的全部 00–04 产物，保持同一源人声、伴奏、歌词、乐谱和已应用音高；RVC 内部始终偏移0半音。RVC 的48k原生输出会另存，转换到44.1k后的 `converted.wav` 交给现有06。
 
@@ -117,6 +157,10 @@ bash scripts/05_voice_conversion/rvc/run.sh \
 bash scripts/06_mix/run.sh --run runs/my_chuan_yue_shu_guang_rvc --gpu 0
 ```
 
-前置是同 run 的 00–04 已完成；公平对照应先 fork 为新运行。已保留的三个 0.75 运行名含 `rvc_index075_20261029`，目前完成到06，最终 MP3在 `stages/06_mix/attempt_001/artifacts/final.mp3`，不能声称它们已完成11。
+前置是同 run 的 00–04 已完成；公平对照应先 fork 为新运行。历史三个 0.75 运行名含 `rvc_index075_20261029`，当时完成到06，最终 MP3曾位于 `stages/06_mix/attempt_001/artifacts/final.mp3`，这些历史 runs 已清理，不能直接复用；当时也未完成11。
 
 训练模型、数据和检索索引保持不变；增加检索比例不保证音色相似度或自然度单调提高。当前正式检查入口见 [交付指南](21_delivery.md)。
+
+### 完整歌曲的对齐复核
+
+RVC 候选评估与 Seed-VC 一样：当三窗口 RMS 包络检查不一致时，使用已有的音节起音复核。只有足够多有效窗口通过相关性和延迟一致性阈值才接受；真实漂移、静音及不相关音频仍拒绝。诊断保留原始 `original_envelope_check`，不更改原音频或放宽音高阈值。06 混音仍保留独立的包络诊断，必要时人工试听复核。

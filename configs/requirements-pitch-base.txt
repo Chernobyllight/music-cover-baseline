@@ -1,0 +1,13 @@
+# Additions for the existing /opt/conda base. Install with --no-deps.
+# Keep torch, torchaudio, numpy, scipy, transformers and librosa unchanged.
+# audio-separator metadata requires numpy<2; only the BS-RoFormer path is
+# validated here with the existing numpy==2.2.6. This is not a clean-room lock.
+audio-separator==0.30.2
+beartype==0.18.5
+rotary-embedding-torch==0.6.5
+pydub==0.25.1
+onnxruntime==1.23.2
+coloredlogs==15.0.1
+humanfriendly==10.0
+resampy==0.4.3
+samplerate==0.1.0

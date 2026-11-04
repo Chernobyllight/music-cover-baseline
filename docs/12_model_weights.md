@@ -1,6 +1,6 @@
-# v1.0 模型权重清单与准备方法
+# v1.1 模型权重清单与准备方法
 
-本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 按 2026-10-30 的 v1.0 代码与服务器资产核对，覆盖 Seed-VC、SVC、RVC 和 00–11 评审流程。基础模型沿用 v0.2，微调/评估依赖见第 9 节。
+本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 模型资产沿用 v1.0 锁定版本；v1.1 同步当前 base 运行与部署 Skill，覆盖 Seed-VC、SVC、RVC 和 00–11 评审流程。新使用者可先读[可复制的权重部署步骤](../skill/references/weights.md)。基础模型沿用 v0.2，微调/评估依赖见第 9 节。
 
 原有零样本完整流程（`--transpose auto --review`）需要 **13 组模型资产**，包含主模型和附属模型；同一个模型可被多个阶段复用。GitHub 仓库不包含这些大文件。孙燕姿或詹姆斯的音色由参考录音提供，零样本 Seed-VC 路线无需单独下载对应人物的专用权重。新增微调路线可用目标歌手录音训练专用版本，所需附加资产见本文末尾。
 
@@ -132,6 +132,9 @@ envs/control/bin/python scripts/download_models.py
 
 得到 `models/SheetSage2/`、`models/MERT-v2-FullSong/`、`models/YuE2-3B/` 和 `models/YuE2-Vae/`。对应实现是 [scripts/setup/download_models.py](../scripts/setup/download_models.py)。
 
+03 的 YuE2 实际由 base `/opt/conda/bin/python` 运行；模型目录与权重不变，
+不需要 `envs/yue2/bin/python`。包安装、兼容版本与真实运行快照见[环境说明](03-environment.md#yue2-直接使用-base)。
+
 ### 4.3 下载换声与音高模型（5 组）
 
 ```bash
@@ -252,16 +255,16 @@ PY
 | 成品分轨 | [backends/review_stems.py](../src/music_cover/backends/review_stems.py) | `audio-separator==0.30.2` 与 `demucs==4.0.1` |
 | 分轨 MIDI | [backends/midi.py](../src/music_cover/backends/midi.py) | `basic-pitch==0.4.0` + ONNX Runtime |
 
-现有服务器 BS-RoFormer 网络结构的具体文件：
+02/04 在 base 中调用 BS-RoFormer，其网络结构的具体文件：
 
 ```text
-/mnt/afs_f/liuhongda/music-cover-baseline/envs/separator/lib/python3.11/site-packages/audio_separator/separator/uvr_lib_v5/roformer/bs_roformer.py
+/opt/conda/lib/python3.11/site-packages/audio_separator/separator/uvr_lib_v5/roformer/bs_roformer.py
 ```
 
 加载权重与分块推理的包装实现：
 
 ```text
-/mnt/afs_f/liuhongda/music-cover-baseline/envs/separator/lib/python3.11/site-packages/audio_separator/separator/architectures/mdxc_separator.py
+/opt/conda/lib/python3.11/site-packages/audio_separator/separator/architectures/mdxc_separator.py
 ```
 
 这些 `site-packages` 路径取决于 Python 版本和安装环境，不是 GitHub 中本项目的源码目录。修改调用参数或选择权重时查看项目后端；若修改依赖库网络结构，应单独记录修改和版本，避免迁移时丢失。
@@ -304,11 +307,11 @@ PY
 ```bash
 cd /mnt/afs_f/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
-envs/seed-vc/bin/python -m pip install --no-deps \
+/opt/conda/bin/python -m pip install --no-deps \
   -r configs/requirements-voice-adaptation.txt
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope all
 # 只检查，不重新下载。
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
 ```
 
 `--scope training` 只准备 OpenVoice 和向量库；`--scope evaluation` 只准备 ECAPA。独立验证和主流程10的 voice_check 都会核验评估资产。ECAPA 使用原始编码器向量的单位归一化余弦，不使用说话人分类头；hyperparams.yaml 保留用于追溯结构。训练 checkpoint 含优化器等状态，体积显著大于只含网络参数的导出模型，不要将两者混用。
@@ -320,7 +323,7 @@ envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --chec
 ```bash
 cd /data/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation
 ```
 
 按本文件前述环境准备步骤安装评估依赖；该命令准备并校验 `configs/voice_training_assets.lock.json` 中 evaluation 资产。模型位置为 `models/voice_evaluation/ecapa/embedding_model.ckpt` 和 `models/RMVPE/rmvpe.pt`，音色 profile 中列出的 checkpoint/config/validation 三个文件均须保留。
@@ -367,9 +370,9 @@ RVC 固定源码版本、下载地址、revision、字节数与 SHA256 在 `conf
 
 在工程根目录执行 `/opt/conda/bin/python scripts/setup_rvc.py --training --download` 获取缺少的公共资产并校验（服务器必须能访问下载地址）；本地已有资产时省略 `--download`。人物专用模型需按 [RVC 指南](20_rvc.md)训练并导出，不能从公共底模推断任意歌手音色。导出是本工程严格加载的模型包，不宣称直接兼容上游 WebUI 的模型导入格式。
 
-## 当前可用人物模型与保留策略（2026-10-29）
+## 历史人物模型示例与保留策略（2026-10-29）
 
-以下路径相对工程根目录，已导出人物模型需连同同目录的配置、校验记录和索引整体保留：
+以下是当日模型示例，路径可能已随后续清理而变化，不是 Git 附带资产或当前库存保证。已导出人物模型需连同同目录的配置、校验记录和索引整体保留：
 
 | 用途 | profile | 已使用训练步数 |
 |---|---|---:|
@@ -378,6 +381,6 @@ RVC 固定源码版本、下载地址、revision、字节数与 SHA256 在 `conf
 | 杨坤 SVC 推荐 | `models/voices/yang_kun/so_vits_svc/optimized_v002_20261028/voice.json` | 6000（4000＋2000） |
 | 杨坤 Seed-VC | `models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json` | 1000 |
 
-孙燕姿、詹姆斯的既有 Seed-VC，以及杨坤初版 SVC profile 也保留在 `models/voices/`。名称中的日期与步数是模型版本信息，不代表本次又做了完整训练或选模。新人物的模型使用各自训练入口生成，不能只修改 `voice_id` 复用另一人物权重。
+当日孙燕姿、詹姆斯的 Seed-VC 及杨坤初版 SVC 也记录于 `models/voices/`，使用前应确认实际文件。名称中的日期与步数是模型版本信息，不代表本次又做了完整训练或选模。新人物的模型使用各自训练入口生成，不能只修改 `voice_id` 复用另一人物权重。
 
 RVC 默认预设 `configs/voice_inference/rvc/huang_qi_shan.yaml` 使用检索比例 0.5；`huang_qi_shan_index075.yaml` 显式使用 0.75，同一份 4000 步权重和索引。两者不是两个不同训练模型。SVC 优化模型使用 ContentVec 768l12 / RMVPE / 标准 NSF-HiFiGAN，推荐推理未开启扩散或增强器；实验资产不是默认推理的必需项。

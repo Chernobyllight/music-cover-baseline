@@ -1,17 +1,18 @@
-from ..audio import mix_tracks, read_at, fit_length
+from ..audio import read_at, fit_length
+from ..voice_mixing import mix_tracks
 from ..common.io import write_json
 import json
 import shutil
 import subprocess
 from ..audio import sha256
-from ..voice_candidates import contained_file, recommend, render_report
+from ..voice_candidates import contained_file, recommend, select_output, render_report
 import soundfile as sf
 import numpy as np
 
 ID = '06_mix'
-CONTRACT_VERSION = 2
+CONTRACT_VERSION = 3
 DEFAULTS = {'timeout_seconds': 10800, 'mp3_bitrate_kbps': 192}
-CODE = ['audio.py', 'voice_candidates.py']
+CODE = ['audio.py', 'voice_candidates.py', 'voice_alignment.py', 'voice_mixing.py']
 TIMELINE = {'*': 'generated'}
 def backends(r, c): return []
 def requires(r): return ['03_style_generation', '04_vocal_separation', '05_voice_conversion']
@@ -44,11 +45,17 @@ def run(ctx, out, i, p):
 
     if 'candidate_report' in i:
         report = json.loads(i['candidate_report'].read_text())
-        selected = recommend(report['candidates'])
-        if selected is None or selected['id'] != report['recommended_id']:
+        selected = select_output(report['candidates'])
+        recommended = recommend(report['candidates'])
+        if (recommended['id'] if recommended else None) != report.get('recommended_id'):
             raise ValueError('Candidate recommendation does not match eligible metrics')
+        if selected is None or selected['id'] != report.get('selected_id',report.get('recommended_id')):
+            raise ValueError('Default output does not match candidate selection')
+        result['candidate_selection'] = {key:report.get(key) for key in ('selected_id','recommended_id','selection_reason','delivery_requires_review')}
+        result['delivery_requires_review'] = result['delivery_requires_review'] or not selected.get('eligible',False)
+        write_json(out/'mix.json', result)
         if sha256(i['converted']) != selected['audio_sha256']:
-            raise ValueError('Canonical converted audio does not match recommended candidate')
+            raise ValueError('Canonical converted audio does not match selected candidate')
         for row in report['candidates']:
             if not row.get('audio'): continue
             audio = contained_file(i['candidate_report'].parent, row['audio'])

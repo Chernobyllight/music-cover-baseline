@@ -1,0 +1,15 @@
+modules:
+  05_voice_conversion:
+    backend: so_vits_svc
+    mode: finetuned
+    voice_profile: models/voices/shan_yi_chun/so_vits_svc/manual_20261104/voice.json
+    candidate_count: 1
+    candidate_seeds:
+    - 42
+    svc:
+      f0_predictor: rmvpe
+      noise_scale: 0.4
+      chunk_seconds: 20.0
+      overlap_seconds: 0.5
+      pad_seconds: 0.5
+    rvc: {}

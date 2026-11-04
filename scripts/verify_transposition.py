@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare two completed runs; retain measured F0, independent pYIN and A/B clips.
 
-Run with envs/seed-vc/bin/python. This is diagnostic evidence, not a listening test.
+Run with /opt/conda/bin/python. This is diagnostic evidence, not a listening test.
 """
 from __future__ import annotations
 

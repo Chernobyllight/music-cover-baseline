@@ -57,9 +57,9 @@ export PATH="/opt/conda/bin:$PATH"
 cd /data/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
 # 已训练模型推理的候选评估，只需 evaluation 资产。
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation
 # 需要训练时再准备所有资产；已下载时只核验。
-envs/seed-vc/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope all --check-only
 ```
 
 读取 `configs/voice_training_assets.lock.json`；evaluation 输出到 `models/voice_evaluation/ecapa/`，training 输出到 `models/OpenVoiceV2/` 与 `models/Seed-VC/se_db.pt`。训练的 00–03 和主流程 00–11 分开执行，见 [音色手册](../../docs/13_voice_adaptation.md)。

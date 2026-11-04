@@ -1,4 +1,4 @@
-# Additional packages for independent ECAPA evaluation in an existing Seed-VC environment.
+# Additional packages for independent ECAPA evaluation in the existing /opt/conda base environment.
 # Install with --no-deps to preserve the pinned torch/transformers stack.
 speechbrain==1.0.3
 hyperpyyaml==1.2.2

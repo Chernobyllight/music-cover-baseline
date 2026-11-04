@@ -12,7 +12,7 @@ profile=ROOT/'models/voices/yang_kun/seed_vc/catalog_v001_20261027/voice.json';b
 rows=[]
 for c in cases:
  folder=out/'seed_1000/default'/c['id'];folder.mkdir(parents=True,exist_ok=True)
- cmd=[str(ROOT/'envs/seed-vc/bin/python'),'-m','music_cover.backends.cli','convert','--input',c['source'],'--reference',str(ROOT/'data/raw/references/yang_kun/reference.wav'),'--output',str(folder),'--voice-mode','finetuned','--voice-profile',str(profile),'--steps','30','--seed','42']
+ cmd=['/opt/conda/bin/python','-m','music_cover.backends.cli','convert','--input',c['source'],'--reference',str(ROOT/'data/raw/references/yang_kun/reference.wav'),'--output',str(folder),'--voice-mode','finetuned','--voice-profile',str(profile),'--steps','30','--seed','42']
  if not (folder/'conversion.json').exists():
   with (folder/'process.log').open('w') as log:subprocess.run(cmd,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
  if not (folder/'converted.wav').is_file():raise RuntimeError('Seed output missing: '+str(folder))

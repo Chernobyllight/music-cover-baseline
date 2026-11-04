@@ -3,9 +3,9 @@ from ..common.io import write_json
 from ..voice_candidates import candidate_seeds
 from ..voice import resolve_voice
 ID = '05_voice_conversion'
-CONTRACT_VERSION = 3
+CONTRACT_VERSION = 4
 DEFAULTS = {'timeout_seconds': 10800, 'backend': 'seed_vc', 'mode': 'zero_shot', 'voice_profile': None, 'candidate_count': 3, 'candidate_seeds': None, 'svc': {}, 'rvc': {}}
-CODE = ['audio.py', 'voice.py', 'voice_weights.py', 'voice_candidates.py', 'common/voice_profiles.py', 'backends/seed_vc.py', 'backends/voice_candidates.py', 'backends/voice_metrics.py', 'pitch_selection.py', 'pitch_validation.py', 'svc.py', 'backends/so_vits_svc.py', 'backends/svc_contentvec.py', 'rvc.py', 'backends/rvc.py']
+CODE = ['audio.py', 'voice.py', 'voice_weights.py', 'voice_candidates.py', 'common/voice_profiles.py', 'common/voice_paths.py', 'backends/seed_vc.py', 'backends/seed_vc_runtime.py', 'backends/voice_candidates.py', 'backends/voice_metrics.py', 'voice_alignment.py', 'pitch_selection.py', 'pitch_validation.py', 'svc.py', 'backends/so_vits_svc.py', 'backends/svc_contentvec.py', 'rvc.py', 'backends/rvc.py']
 TIMELINE = {'*': 'generated_before_alignment'}
 def backends(r, c): return [c.get('backend', 'seed_vc')] + (['voice_metrics'] if c.get('mode') == 'finetuned' else [])
 def requires(r): return ['00_prepare', '04_vocal_separation']

@@ -5,9 +5,18 @@ import subprocess
 from pathlib import Path
 from ..audio import sha256
 
-ENVIRONMENTS = {'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': 'sheetsage2', 'yue': 'yue2', 'separator': 'separator',
-                'seed_vc': 'seed-vc', 'rmvpe': 'seed-vc', 'review_stems': 'separator',
-                'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': 'seed-vc'}
+ENVIRONMENTS = {'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': 'sheetsage2', 'yue': '/opt/conda', 'separator': '/opt/conda',
+                'seed_vc': '/opt/conda', 'rmvpe': '/opt/conda', 'review_stems': 'separator',
+                'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': '/opt/conda'}
+# Existing stage callers also use these environment names for unrelated operations.
+# Route these operations through the same resolver as preflight.
+EXECUTION_BACKENDS = {'separate': 'separator', 'pitch': 'rmvpe', 'cover': 'yue',
+                      'convert': 'seed_vc', 'convert_candidates': 'voice_metrics',
+                      'evaluate_voice': 'voice_metrics', 'svc_metrics': 'voice_metrics'}
+BASE_LOCKS = {'rvc': 'rvc-base.installed.txt', 'so_vits_svc': 'svc-base.installed.txt',
+              'separator': 'pitch-base.installed.txt', 'rmvpe': 'pitch-base.installed.txt',
+              'yue': 'yue-base.installed.txt', 'seed_vc': 'seed-vc-base.installed.txt',
+              'voice_metrics': 'seed-vc-base.installed.txt'}
 MODEL_GROUPS = {
     'sheetsage': ('generation_models.lock.json', ('SheetSage2', 'MERT-v2-FullSong')),
     'yue': ('generation_models.lock.json', ('YuE2-3B', 'YuE2-Vae')),
@@ -20,6 +29,16 @@ def python_for(root, backend):
     """Resolve one backend interpreter consistently for preflight and execution."""
     environment = Path(ENVIRONMENTS[backend])
     prefix = environment if environment.is_absolute() else Path(root) / 'envs' / environment
+    return prefix / 'bin/python'
+
+
+def execution_python(root, environment, operation):
+    """Keep stage execution and preflight aligned without moving other backends."""
+    if operation in EXECUTION_BACKENDS:
+        return python_for(root, EXECUTION_BACKENDS[operation])
+    prefix = Path(environment)
+    if not prefix.is_absolute():
+        prefix = Path(root) / 'envs' / prefix
     return prefix / 'bin/python'
 
 
@@ -51,7 +70,7 @@ def signature(root, backends):
     result = {}
     for backend in sorted(set(backends)):
         env = ENVIRONMENTS[backend]
-        freeze = root / 'configs' / ('rvc-base.installed.txt' if backend == 'rvc' else 'svc-base.installed.txt' if backend == 'so_vits_svc' else env + '.installed.txt')
+        freeze = root / 'configs' / BASE_LOCKS.get(backend, env + '.installed.txt')
         entry = {'models': resource_data(root, backend), 'environment': env,
                  'installed_lock_sha256': sha256(freeze)}
         if backend == 'seed_vc':
@@ -132,8 +151,10 @@ def preflight(root, backends=(), mp3=False):
 IMPORTS = {
     'rvc': ['torch', 'torchaudio', 'transformers.models.hubert.modeling_hubert', 'librosa', 'soundfile', 'faiss'],
     'so_vits_svc': ['torch', 'torchaudio', 'transformers.models.hubert.modeling_hubert', 'librosa', 'soundfile', 'faiss'],
-    'sheetsage': ['torch', 'transformers'], 'yue': ['yue2'],
-    'separator': ['audio_separator.separator'], 'seed_vc': ['torch', 'librosa', 'yaml'],
+    'sheetsage': ['torch', 'transformers'],
+    'yue': ['yue2.pipeline', 'yue2.modeling_yue2', 'yue2.modeling_vae'],
+    'separator': ['audio_separator.separator'],
+    'seed_vc': ['torch', 'torchaudio', 'librosa', 'yaml', 'munch', 'dac.nn.quantize', 'transformers.models.whisper.modeling_whisper'],
     'rmvpe': ['torch', 'librosa'], 'review_stems': ['demucs.pretrained', 'audio_separator.separator'],
     'midi': ['basic_pitch.inference', 'onnxruntime', 'mido', 'pretty_midi'],
     'analysis': ['librosa'], 'package': ['mido', 'pretty_midi', 'soundfile'],

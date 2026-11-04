@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
-exec bash "${PROJECT_ROOT}/scripts/run_baseline.sh" --stage 06_mix "$@"
+export PATH="/opt/conda/bin:$PATH"
+export PYTHONPATH="${PROJECT_ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+exec /opt/conda/bin/python -m music_cover.pipeline --stage 06_mix "$@"

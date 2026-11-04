@@ -5,7 +5,7 @@ from ..voice_candidates import contained_file, render_report
 from ..common.io import write_json, artifact_paths
 from ..common.delivery import build_delivery
 ID = '11_delivery'
-CONTRACT_VERSION = 3
+CONTRACT_VERSION = 4
 DEFAULTS = {'timeout_seconds': 10800}
 CODE = ['voice_candidates.py', 'audio.py', 'common/delivery.py', 'common/validation.py', 'backends/package.py', 'backends/evaluation.py', 'common/review_audio.py']
 TIMELINE = {'*': 'see source artifact timeline'}
@@ -64,18 +64,18 @@ def run(ctx, out, i, p):
                 if sha256(source) != row[key + '_sha256']: raise ValueError('Mixed candidate checksum mismatch')
                 target = out / row[key]; target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
-                if row['id'] == report['recommended_id'] and sha256(out / key.replace('_', '.')) != sha256(target):
-                    raise ValueError('Delivered final does not match recommended candidate')
+                if row['id'] == report.get('selected_id',report.get('recommended_id')) and sha256(out / key.replace('_', '.')) != sha256(target):
+                    raise ValueError('Delivered final does not match selected candidate')
         write_json(out / 'candidates.json', report)
         render_report(report, out / 'candidates.html', mixed=True)
         page = out / 'listen.html'
-        page.write_text(page.read_text().replace('<h1>', '<p><a href="candidates.html">微调候选：三个版本与定量推荐</a></p><h1>', 1))
+        page.write_text(page.read_text().replace('<h1>', '<p><a href="candidates.html">微调候选：结果与验收报告</a></p><h1>', 1))
         with (out / 'report.md').open('a') as stream:
-            stream.write('\n微调候选对比：candidates.html；推荐：' + report['recommended_id'] + '。指标取自 05 转换后干声；后续分轨、MIDI 对应推荐版本。\n')
+            stream.write('\n微调候选对比：candidates.html；推荐：' + (report.get('recommended_id') or '无合格候选') + '；默认输出：' + (report.get('selected_id',report.get('recommended_id')) or '无') + '。未获推荐的默认输出需要人工确认。指标取自 05 转换后干声；后续分轨、MIDI 对应默认输出版本。\n')
     shutil.copyfile(evaluation['evaluation.json'], out / 'evaluation.json')
     for key in ['vocal_post_gain', 'instrumental_post_gain', 'residual']:
         shutil.copyfile(mixed[key], out / mixed[key].name)
-    write_json(out / 'config.resolved.json', {'request': ctx.request, 'modules': ctx.config})
+    write_json(out / 'config.resolved.json', {'request': ctx.paths.request(ctx.request, portable=True), 'modules': ctx.config})
     request_file = out / 'validation_request.json'
     write_json(request_file, {'directory': str(out), 'review': ctx.request['review']})
     ctx.execute('separator' if ctx.request['review'] else 'control', 'validate_delivery', out, '--request', request_file)

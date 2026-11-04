@@ -1,0 +1,36 @@
+voice_id: shan_yi_chun
+version: manual_20261104
+gpu: 0
+source_dataset: data/voice_training/shan_yi_chun/svc_manual_20261104/dataset
+dataset_dir: data/voice_datasets/shan_yi_chun/so_vits_svc/manual_20261104
+reference: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+export_dir: models/voices/shan_yi_chun/so_vits_svc/manual_20261104
+audio:
+  peak_policy: attenuate_if_needed
+  peak_limit: 0.99
+training:
+  max_steps: 4000
+  save_every: 1000
+  batch_size: 6
+  learning_rate: 0.0001
+  seed: 42
+validation:
+  source_run: runs/lhd_lv_zhou_shan_yi_chun_svc_manual_20261104
+  windows:
+  - start: 36.0
+    duration: 12.0
+  - start: 156.0
+    duration: 12.0
+configuration_generation:
+  tool: music_cover.svc_config
+  source_manifest_sha256: fa2d749329d2e1ecbb43a52d591557fb5f28e004d198bab407c0cdae8cdc1872
+  checked_stage_artifacts:
+    reference:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+      sha256: bad26839b86d0314ca52face539f2c87ac54fe3a5897d656c46a73cea166959e
+    vocals:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/04_vocal_separation/attempt_001/artifacts/vocals.wav
+      sha256: 15c500ce11fe3fc65fd0656109a974c9ea252b8836f01327b5f6ce1b3f74387a
+    instrumental:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/04_vocal_separation/attempt_001/artifacts/instrumental.wav
+      sha256: 326d35309215d4afa499f4cbca55c2f39f1a785a3a6b3d02abe926b126fd5211

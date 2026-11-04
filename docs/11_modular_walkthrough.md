@@ -1,4 +1,4 @@
-# v1.0 分模块实操：孙燕姿音色＋秋意浓＋Bossa Nova / Samba Jazz
+# v1.1 分模块实操：孙燕姿音色＋秋意浓＋Bossa Nova / Samba Jazz
 
 这套零样本命令与当前工作区兼容。`runs/lhd_test_modular` 是示例输出名，其 2026-10-23 旧数据已清理；首次从 00 新建即可，文末历史指标不表示目录仍存在。当前完整实例和四条换声路线见 [USAGE.md](../USAGE.md)；[杨坤＋不败的英雄](17_v03_walkthrough.md)保留为历史复现示例。
 

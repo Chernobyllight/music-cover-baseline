@@ -1,5 +1,25 @@
 # 版本记录
 
+## v1.1 — 2026-11-04
+
+### English release summary
+
+Modular music generation with reproducible voice training, portable configuration and reviewable audio output.
+
+- Add a deployment skill covering model weights, environment setup, singer training and the 00–06 generation workflow.
+- Run pitch/separation, YuE2, voice conversion and singer training in the existing base Python; retain the established SheetSage2/control environment boundaries.
+- Generate fresh dataset, training and inference configurations through dedicated shell entrypoints with project-relative paths and source provenance.
+- Unify Seed-VC, so-vits-svc and RVC alignment/quality assessment. Preserve generated vocals and mixes when quality checks fail, while distinguishing selected output from a qualified recommendation.
+- Keep model, dataset and artifact integrity checks, and exclude local audio, training data and credentials from the source release.
+
+### 本版变更
+
+纳入 v1.0 后已验证的 base 运行适配、Seed-VC/RVC 路径迁移处理、参考主唱分离脚本、三路线配置生成与预检入口，以及统一音色验收修复。SVC 的历史训练 filelist 仍可能含执行时绝对路径；01 仍使用 sheetsage2 环境，未宣称所有解释器或历史训练状态已完全统一。
+
+05 的执行成功与质量验收分开：合格者参与推荐；无合格候选时保留默认输出并允许 06/11 继续，报告待复核。损坏文件、模型身份不符或没有生成可读取音频仍按执行错误处理。更完整的用户部署入口位于 [skill/SKILL.md](skill/SKILL.md)。
+
+发布验证与实际环境限制见 [VALIDATION.md](VALIDATION.md)。本次不重新训练、改变人物模型或重新生成整首歌曲。
+
 ## v1.0 — 2026-10-30
 
 将 Seed-VC 零样本/微调、so-vits-svc、RVC 和工程交付整理统一纳入 `v1.0` 分支；保留 00–11 模块、双向选调、WAV/MP3、分轨/MIDI 和多候选技术推荐。四个上游仓库以子模块固定 commit，模型、输入素材和生成结果仍是服务器资产。

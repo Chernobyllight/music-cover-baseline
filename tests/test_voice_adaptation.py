@@ -113,10 +113,18 @@ class DatasetTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'not validated or has changed'):
             training.export(self.c, self.root, self.out, SimpleNamespace(checkpoint=None))
 
-    def test_export_rejects_failed_pitch_validation(self):
-        self.validated_export(eligible=False)
-        with self.assertRaisesRegex(ValueError, 'failed technical validation'):
-            training.export(self.c, self.root, self.out, SimpleNamespace(checkpoint=None))
+    def test_export_retains_failed_pitch_model_for_listening(self):
+        import torch
+        checkpoint = self.validated_export(eligible=False)
+        torch.save({'net':{'weight':torch.zeros(1)}},checkpoint)
+        report_path=self.root/'validation/validation.json';report=json.loads(report_path.read_text())
+        report['candidates'][0]['checkpoint_sha256']=sha256(checkpoint);write_json(report_path,report)
+        (self.root/'model_config.yml').write_text('{}')
+        self.c['base_checkpoint']=str(checkpoint)
+        training.export(self.c, self.root, self.out, SimpleNamespace(checkpoint=None))
+        profile=json.loads((self.root/'models/voices/example/seed_vc/v1/voice.json').read_text())
+        self.assertEqual(profile['assessment_status'],'review_required')
+        self.assertEqual(profile['validation_status'],'quality_review_required')
 
     def test_export_cannot_overwrite_a_voice_version(self):
         self.validated_export(); self.c['export_dir'] = 'published'
@@ -125,6 +133,25 @@ class DatasetTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'immutable'):
             training.export(self.c, self.root, self.out, SimpleNamespace(checkpoint=None))
         self.assertEqual((self.root / 'published/model.pth').read_bytes(), b'keep this model')
+
+    def test_existing_dataset_can_move_without_redecoding_or_identity_change(self):
+        self.prepare()
+        manifest = self.root / 'dataset/manifest.json'
+        old = json.loads(manifest.read_text())
+        old['recordings'][0]['path'] = '/a/retired/mount/voice.wav'
+        manifest.write_text(json.dumps(old))
+        before = manifest.read_bytes()
+        self.prepare()
+        self.assertEqual(manifest.read_bytes(), before)
+        audit = json.loads((self.out / 'manifest.json').read_text())
+        self.assertEqual(audit['identity'], old['identity'])
+        self.assertEqual(audit['recordings'][0]['path'], 'voice.wav')
+
+    def test_changed_source_rejected_on_reuse(self):
+        self.prepare()
+        self.c['sources'][0]['path'] = 'other.wav'
+        with self.assertRaisesRegex(ValueError, 'different inputs'):
+            self.prepare()
 
 
 class InterfaceTests(unittest.TestCase):

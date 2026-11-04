@@ -1,6 +1,6 @@
 # 03_export
 
-读取 02 的合格检查点选择记录，导出不可覆盖的 SVC 歌手版本。
+读取 02 的检查点选择记录（不合格时仍导出供人工试听并标记），导出不可覆盖的 SVC 歌手版本。
 
 ```bash
 cd /data/liuhongda/music-cover-baseline

@@ -160,6 +160,7 @@ class Converter:
         final=np.pad(final,(0,max(0,len(wave)-len(final))))[:len(wave)]
         sf.write(output,final,44100,subtype='FLOAT')
         return {'settings':p,'segments':segments,'duration_s':len(final)/44100,'wall_seconds':time.monotonic()-start,
+                'runtime':{'python':sys.executable,'prefix':sys.prefix},
                 'peak_cuda_allocated_bytes':torch.cuda.max_memory_allocated(),'pre_limit_peak':peak,'peak_gain':gain,
                 'parameter_loading':self.coverage,'feature_normalization':self.features.normalize,'f0_policy':'unvoiced_zero',
                 'retrieval':{'enabled':p['index_rate']>0,'k':8,'vectors':self.index.ntotal if self.index else 0},'native_sample_rate':48000}

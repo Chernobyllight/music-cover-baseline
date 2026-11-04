@@ -27,10 +27,10 @@ model_params:
     ckpt_path: ./modules/openvoice/checkpoints_v2/converter
   vocoder:
     type: bigvgan
-    name: /data/liuhongda/music-cover-baseline/models/BigVGAN
+    name: models/BigVGAN
   speech_tokenizer:
     type: whisper
-    name: /data/liuhongda/music-cover-baseline/models/Whisper-small
+    name: models/Whisper-small
   style_encoder:
     dim: 192
     campplus_path: campplus_cn_common.bin

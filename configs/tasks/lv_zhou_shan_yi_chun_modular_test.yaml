@@ -1,0 +1,27 @@
+request:
+  name: lhd_lv_zhou_shan_yi_chun_modular_test
+  song: data/raw/songs/lv_zhou_lala_hsu.mp3
+  lyrics: data/raw/lyrics/lv_zhou_lala_hsu.txt
+  reference: data/raw/references/shan_yi_chun/reference.wav
+  reference_start: 0
+  reference_duration: 20
+  transpose: auto
+  style: >-
+    Mandarin Chinese, energetic Afro-Cuban mambo and Latin big-band jazz,
+    syncopated piano montuno, tumbao upright bass, congas, bongos and timbales,
+    punchy brass riffs, lively rhythmic breaks, rich jazz harmony,
+    expressive solo female lead vocal, clear lyrical phrasing,
+    polished live-band production.
+  seed: 42
+  steps: 30
+  gpu: "0"
+  review: true
+
+modules:
+  02_pitch_adaptation:
+    reference_kind: singing
+    auto_min_semitones: -6
+    auto_max_semitones: 6
+  10_evaluation:
+    pitch_check: true
+    voice_check: true

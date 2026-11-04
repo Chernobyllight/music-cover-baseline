@@ -14,7 +14,7 @@ from pathlib import Path
 
 from .audio import sha256, inspect_audio
 from .common.io import identity, write_json, artifact_paths
-from .common.paths import ROOT
+from .common.paths import ROOT, RunPaths
 from .common import resources
 from .modules import load_modules, active_ids
 
@@ -58,6 +58,12 @@ class Pipeline:
             self.state = json.loads(self.state_path.read_text()) if self.state_path.exists() else {'schema_version': SCHEMA_VERSION, 'stages': {}}
             if self.state.get('schema_version') != SCHEMA_VERSION:
                 raise ValueError('This is a legacy v0.1 run. Its files are preserved; choose a new --run directory for modular execution.')
+            self.paths = RunPaths(self.root, self.run, self.state)
+            self.state = self.paths.restore_state()
+            self.request = self.paths.request(request)
+            voice_config = self.config.get('05_voice_conversion', {})
+            if voice_config.get('voice_profile'):
+                voice_config['voice_profile'] = self.paths.project_relative(voice_config['voice_profile'])
         except BaseException:
             self.lock.close()
             raise
@@ -76,6 +82,9 @@ class Pipeline:
     def close(self): self.lock.close()
     def __enter__(self): return self
     def __exit__(self, *exc): self.close()
+
+    def save_state(self):
+        write_json(self.state_path, self.paths.portable_state(self.state))
 
     def output(self, stage, role):
         return self.resolved[stage][role]
@@ -96,8 +105,7 @@ class Pipeline:
         if 'pitch.py' in getattr(module, 'CODE', ()):
             helper = self.root / 'third_party/YuE/skills/yue2-music/scripts/abc_tools.py'
             if helper.is_file(): files.append(helper)
-        # /data and /mnt/afs_f may point at the same checkout. Module imports can
-        # preserve either spelling, but cache identity must use the actual file.
+        # Module imports can preserve mount aliases; identify actual source files.
         files = [p.resolve() for p in files]
         code = {str(p.relative_to(self.root)) if p.is_relative_to(self.root) else str(p): sha256(p) for p in files}
         runtime = dict(self.runtime(module))
@@ -132,7 +140,7 @@ class Pipeline:
                 if identity(previous) != record.get('fingerprint'): return None
                 normalized = {}
                 for key, digest in previous['code'].items():
-                    p = (self.root / key).resolve()
+                    p = self.paths.resolve(key)
                     key = str(p.relative_to(self.root)) if p.is_relative_to(self.root) else str(p)
                     if key in normalized and normalized[key] != digest: return None
                     normalized[key] = digest
@@ -154,13 +162,15 @@ class Pipeline:
     def execute(self, env, operation, output, *arguments):
         output = Path(output).resolve()
         output.mkdir(parents=True, exist_ok=True)
-        command = [str(self.root / 'envs' / env / 'bin/python'), '-m', 'music_cover.backends.cli', operation,
+        interpreter = resources.execution_python(self.root, env, operation)
+        environment = str(interpreter.parent.parent) if operation in resources.EXECUTION_BACKENDS else env
+        command = [str(interpreter), '-m', 'music_cover.backends.cli', operation,
                    '--output', str(output), *map(str, arguments)]
         attempt, log_path, commands, params = self.current
-        commands['backend_commands'].append({'argv': command, 'cwd': str(self.root), 'environment': env,
+        commands['backend_commands'].append({'argv': command, 'cwd': str(self.root), 'environment': environment,
                                              'gpu': self.request.get('gpu', '0'), 'started_at': now()})
         write_json(attempt / 'command.json', commands)
-        print(f'[backend] {operation} ({env}); log: {log_path}', flush=True)
+        print(f'[backend] {operation} ({environment}); log: {log_path}', flush=True)
         with log_path.open('a') as log:
             process = subprocess.run(command, cwd=self.root, env=self.environment, stdout=log,
                                      stderr=subprocess.STDOUT, timeout=params.get('timeout_seconds', 10800))
@@ -195,10 +205,17 @@ class Pipeline:
         record = {'status': 'running', 'stage': name, 'contract_version': getattr(module, 'CONTRACT_VERSION', CONTRACT_VERSION),
                   'fingerprint': fingerprint, 'attempt': str(attempt), 'params': params, 'started_at': now()}
         self.state['stages'][name] = record
-        write_json(self.state_path, self.state)
-        write_json(attempt / 'inputs.json', {'contract_version': getattr(module, 'CONTRACT_VERSION', CONTRACT_VERSION), 'artifacts': input_records})
+        self.save_state()
+        portable_inputs = {key: {**item, 'path': self.paths.project_relative(item['path'])}
+                           for key, item in input_records.items()}
+        for item in portable_inputs.values():
+            if item.get('producer_attempt'):
+                item['producer_attempt'] = self.paths.project_relative(item['producer_attempt'])
+        write_json(attempt / 'inputs.json', {'contract_version': getattr(module, 'CONTRACT_VERSION', CONTRACT_VERSION),
+                   'path_base': 'project', 'artifacts': portable_inputs})
         write_json(attempt / 'config.json', {'stage': name, 'parameters': params, 'provenance': provenance})
-        commands = {'invocation': self.invocation, 'backend_commands': [], 'cwd': str(self.root)}
+        commands = {'invocation': self.invocation, 'backend_commands': [], 'cwd': str(self.root),
+                    'python': sys.executable, 'prefix': sys.prefix}
         write_json(attempt / 'command.json', commands)
         log_path = attempt / 'process.log'
         log_path.touch()
@@ -233,17 +250,19 @@ class Pipeline:
                         'status': 'succeeded', 'fingerprint': fingerprint, 'artifacts': portable})
             record.update(status='succeeded', outputs=records, wall_seconds=time.monotonic() - start, finished_at=now(),
                           outputs_manifest_sha256=sha256(attempt / 'outputs.json'))
-            write_json(attempt / 'result.json', record)
+            portable_record = self.paths.portable_state({'stages': {name: record}})['stages'][name]
+            write_json(attempt / 'result.json', {**portable_record, 'path_base': 'run'})
             self.resolved[name] = {key: Path(item['path']) for key, item in records.items()}
             self.events.append({'stage': name, 'action': 'executed', 'attempt': str(attempt), 'wall_seconds': record['wall_seconds']})
         except BaseException as error:
             record.update(status='failed', error=str(error), wall_seconds=time.monotonic() - start, finished_at=now())
-            write_json(attempt / 'failure.json', record)
+            portable_record = self.paths.portable_state({'stages': {name: record}})['stages'][name]
+            write_json(attempt / 'failure.json', {**portable_record, 'path_base': 'run'})
             write_json(attempt / 'checks.json', {'status': 'failed', 'error': str(error)})
             raise
         finally:
             self.current = None
-            write_json(self.state_path, self.state)
+            self.save_state()
         print(f"[done] {name}: {record['wall_seconds']:.1f}s", flush=True)
         return self.resolved[name]
 
@@ -273,9 +292,10 @@ class Pipeline:
         self.state.pop('error', None)
         self.state['active_stages'] = active_ids(self.request)
         self.state.update(status='running', request=self.request, selected_stages=selected, delivery_status='pending', updated_at=now())
-        write_json(self.run / 'request.json', self.request)
-        write_json(self.run / 'config.resolved.json', {'request': self.request, 'modules': self.config})
-        write_json(self.state_path, self.state)
+        saved_request = self.paths.request(self.request, portable=True)
+        write_json(self.run / 'request.json', saved_request)
+        write_json(self.run / 'config.resolved.json', {'request': saved_request, 'modules': self.config})
+        self.save_state()
         try:
             for name in selected: self.process(name, set(selected), force)
             if '11_delivery' in selected:
@@ -289,9 +309,11 @@ class Pipeline:
             raise
         finally:
             self.state['updated_at'] = now()
-            write_json(self.state_path, self.state)
-            write_json(self.run / 'manifest.json', self.state)
+            self.save_state()
+            saved_state = self.paths.portable_state(self.state)
+            write_json(self.run / 'manifest.json', saved_state)
             write_json(self.run / 'executions' / (dt.datetime.now().strftime('%Y%m%d_%H%M%S') + '_' + uuid.uuid4().hex[:6] + '.json'),
-                       {'status': self.state['status'], 'request': self.request, 'selected': selected, 'events': self.events,
+                       {'status': self.state['status'], 'path_base': 'run', 'request': saved_request,
+                        'selected': selected, 'events': saved_state['last_execution'],
                         'error': self.state.get('error'), 'invocation': self.invocation})
         print(f"RESULTS ({self.state['status']}): {self.run}", flush=True)

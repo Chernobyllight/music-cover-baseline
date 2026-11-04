@@ -20,6 +20,30 @@ from .svc import check_assets, UPSTREAM_COMMIT, check_model_config
 def path(value): return (ROOT/Path(value).expanduser()).resolve()
 
 
+def audio_settings(config):
+    value = {'peak_policy': 'error', 'peak_limit': 0.99, **config.get('audio', {})}
+    if set(value) != {'peak_policy', 'peak_limit'} or value['peak_policy'] not in {'error', 'attenuate_if_needed'}:
+        raise ValueError('Invalid SVC audio peak policy')
+    limit = value['peak_limit']
+    if isinstance(limit, bool) or not isinstance(limit, (int, float)) or not 0 < limit < 1:
+        raise ValueError('SVC audio peak_limit must be in (0, 1)')
+    return value
+
+
+def prepare_audio(audio, sr, settings):
+    """Preserve finite float audio; optionally attenuate before PCM16 conversion."""
+    import numpy as np
+    if sr != 44100 or audio.ndim != 2 or audio.shape[1] != 1 or not len(audio) or not np.isfinite(audio).all():
+        raise ValueError('SVC requires finite 44.1 kHz mono data')
+    peak = float(np.max(np.abs(audio)))
+    gain = 1.0
+    if peak >= 1:
+        if settings['peak_policy'] == 'error':
+            raise ValueError(f'SVC PCM16 conversion needs attenuation: float peak={peak:.6f}; use audio.peak_policy=attenuate_if_needed')
+        gain = settings['peak_limit'] / peak
+    return audio * gain, {'source_peak': peak, 'gain': gain, 'prepared_peak': peak * gain}
+
+
 def load_config(filename):
     c = yaml.safe_load(path(filename).read_text())
     for key in ('voice_id', 'version', 'source_dataset', 'dataset_dir', 'reference', 'training', 'validation'):
@@ -31,6 +55,7 @@ def load_config(filename):
         if type(t[key]) is not int or t[key] < 1: raise ValueError('Invalid '+key)
     t['learning_rate']=float(t.get('learning_rate',1e-4))
     if not 0 < t['learning_rate'] <= 1e-3: raise ValueError('Invalid learning_rate')
+    audio_settings(c)
     return c
 
 
@@ -67,6 +92,8 @@ def prepare(c,run,out,args):
           'voice_id':c['voice_id'],'assets':lock,'format':'44100-mono-PCM16',
           'feature_adapter_sha256':sha256(ROOT/'src/music_cover/backends/svc_contentvec.py'),
           'preparation_code_sha256':sha256(ROOT/'src/music_cover/backends/svc_train.py')}
+    if 'audio' in c:
+        spec['audio_preparation'] = audio_settings(c)
     if destination.exists():
         m=prepared(c)
         if m['identity']!=identity(spec): raise ValueError('Dataset identity changed; use a new dataset_dir')
@@ -75,15 +102,14 @@ def prepare(c,run,out,args):
         temporary.mkdir(parents=True,exist_ok=False)
         clips=[]
         import soundfile as sf
-        import numpy as np
         for index,row in enumerate(original['clips']):
             if row['split']=='prompt': continue
             rel=f"{row['split']}/{c['voice_id']}/{index:04d}.wav"; target=temporary/rel;target.parent.mkdir(parents=True,exist_ok=True)
             audio,sr=sf.read(path(c['source_dataset'])/row['path'],dtype='float32',always_2d=True)
-            if sr!=44100 or audio.shape[1]!=1 or not np.isfinite(audio).all() or np.max(np.abs(audio))>=1:
-                raise ValueError('SVC requires finite unclipped 44.1 kHz mono data')
+            audio, levels = prepare_audio(audio, sr, audio_settings(c))
             sf.write(target,audio,sr,subtype='PCM_16')
-            clips.append({**row,'source_path':row['path'],'path':rel,'sha256':sha256(target),'subtype':'PCM_16'})
+            clips.append({**row,'source_path':row['path'],'source_sha256':row['sha256'],
+                          'path':rel,'sha256':sha256(target),'subtype':'PCM_16','audio_preparation':levels})
         prepare_features(temporary,clips,run/'prepare_runtime')
         for split in ('train','validation','test'):
             (temporary/(split+'.txt')).write_text(''.join(str(destination/x['path'])+'\n' for x in clips if x['split']==split))
@@ -118,8 +144,8 @@ def export(c,run,out,args):
     if report['dataset_identity']!=m['identity'] or report['evaluation_split']!='validation':
         raise ValueError('Export requires validation selection for this dataset')
     selected=next((r for r in report['candidates'] if r['checkpoint']==report['selected_checkpoint']),None)
-    if not selected or not selected['eligible'] or sha256(selected['checkpoint'])!=selected['checkpoint_sha256']:
-        raise ValueError('No unchanged technically eligible checkpoint')
+    if not selected or sha256(selected['checkpoint'])!=selected['checkpoint_sha256']:
+        raise ValueError('No unchanged validated checkpoint')
     payload=torch.load(selected['checkpoint'],map_location='cpu',weights_only=False)
     destination=path(c.get('export_dir',f"models/voices/{c['voice_id']}/so_vits_svc/{c['version']}"))
     if destination.exists(): raise ValueError('Export version already exists; choose a new version')
@@ -129,7 +155,8 @@ def export(c,run,out,args):
     shutil.copy2(run/'model_config.json',temp/'config.json');shutil.copy2(report_path,temp/'validation.json')
     profile={'schema_version':1,'backend':'so_vits_svc','adaptation_scope':'speaker','voice_id':c['voice_id'],
         'version':c['version'],'speaker_name':c['voice_id'],'upstream_commit':UPSTREAM_COMMIT,
-        'validation_status':'candidate_requires_listening','reference_required':False,
+        'validation_status':'candidate_requires_listening' if selected['eligible'] else 'quality_review_required',
+        'assessment_status':'passed' if selected['eligible'] else 'review_required', 'reference_required':False,
         'selected_step':payload['step'],'dataset_identity':m['identity'],'training_run':str(run),
         'subjective_quality':'awaiting_human_review',
         'inference_assets':{a['path']:a['sha256'] for a in lock['assets'] if a.get('scope')!='training'},

@@ -6,7 +6,7 @@
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
-PYTHONPATH=src envs/seed-vc/bin/python scripts/legacy/verify_result_v01.py \
+PYTHONPATH=src /opt/conda/bin/python scripts/legacy/verify_result_v01.py \
   runs/legacy_v01 --skip-asr
 ```
 

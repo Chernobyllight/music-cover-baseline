@@ -3,7 +3,7 @@
 ## 具体示例
 
 ```bash
-cd /mnt/afs_f/liuhongda/music-cover-baseline
+cd /data/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
 bash scripts/05_voice_conversion/finetuned/training/01_train/run.sh \
   --config configs/voice_training/sun_yanzi_seed_vc_smoke.yaml \

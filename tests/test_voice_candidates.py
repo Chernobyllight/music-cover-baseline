@@ -106,7 +106,9 @@ class MixDeliveryTests(unittest.TestCase):
             import shutil
             for key in ['final','final_mp3']:shutil.copy2(mixed[key],out/mixed[key].name)
             (out/'listen.html').write_text('<h1>listen</h1>');(out/'report.md').write_text('report\n')
-        ctx=SimpleNamespace(request={'transpose':'0','review':False},state={'stages':{}},config={},execute=lambda *a:None)
+        from music_cover.common.paths import RunPaths
+        ctx=SimpleNamespace(request={'transpose':'0','review':False},state={'stages':{}},config={},execute=lambda *a:None,
+                            paths=RunPaths(self.root,self.root/'run'))
         with patch.object(delivery,'build_delivery',build):delivery.run(ctx,target,inputs,{})
         self.assertEqual(sha256(target/'final.mp3'),sha256(target/selected['final_mp3']))
         self.assertIn('candidates.html',(target/'listen.html').read_text())

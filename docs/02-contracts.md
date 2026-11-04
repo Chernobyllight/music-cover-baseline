@@ -6,10 +6,10 @@
 
 | 记录 | 实际作用 |
 |---|---|
-| `request.json` | 本次解析后的请求，输入使用绝对路径 |
+| `request.json` | 本次解析后的请求，项目内输入以可迁移的项目相对路径保存 |
 | `config.resolved.json` | 请求与各模块的实际配置 |
 | `stage_state.json` | schema_version=2；各阶段当前状态、attempt、指纹和产物 |
-| `stages/<模块>/attempt_NNN/inputs.json` | 输入绝对路径、SHA256、字节数及生产阶段 |
+| `stages/<模块>/attempt_NNN/inputs.json` | 输入路径、SHA256、字节数及生产阶段；路径基准由运行记录定义 |
 | `config.json` | 实际参数与缓存 provenance |
 | `command.json` / `process.log` | 命令、后端环境、日志与返回状态 |
 | `checks.json` / `outputs.json` | 阶段检查与成功产物清单 |
@@ -22,7 +22,7 @@
 
 - 00 原曲与原曲转谱属于 original 时间线；参考片段独立。
 - 02 调整谱面；03 生成后可能改变时长和演唱细节。
-- 04–11 使用 generated 时间线。05 保持源人声总长度和 F0；06 验证对齐并统一输出。
+- 04–11 使用 generated 时间线。05 以保持源人声音高和时长为目标并独立记录验收；06 对可读取音频进行对齐与混音，验收不通过时保留输出并标记待复核。
 - 最终 WAV 为 48 kHz、立体声、24-bit；MP3 为 192 kbps。评审分轨为同长 48 kHz 立体声浮点音频。
 - RVC 保存原生 48 kHz 人声，另输出 44.1 kHz converted.wav 交给 06。
 
