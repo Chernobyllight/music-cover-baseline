@@ -13,6 +13,7 @@ OPERATIONS = {
     'svc_metrics': ('svc_metrics', 'evaluate', True),
     'convert_svc': ('so_vits_svc', 'convert', True),
     'convert_rvc': ('rvc', 'convert', True),
+    'convert_fish': ('fish_diffusion', 'convert', True),
     'convert': ('seed_vc', 'convert', False),
     'convert_candidates': ('voice_candidates', 'generate', True),
     'pitch': ('rmvpe', 'pitch', False),

@@ -80,7 +80,7 @@ def main():
         parser.add_argument('--' + name, type=float)
     parser.add_argument('--review', action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument('--preflight', action='store_true', help='只检查选中模块的依赖')
-    parser.add_argument('--voice-backend', choices=['seed_vc', 'so_vits_svc', 'rvc'])
+    parser.add_argument('--voice-backend', choices=['seed_vc', 'so_vits_svc', 'rvc', 'fish_diffusion'])
     parser.add_argument('--voice-mode', choices=['zero_shot', 'finetuned'])
     parser.add_argument('--voice-profile', help='已导出的音色版本 voice.json，须与所选后端一致')
     parser.add_argument('--voice-candidates', type=int, help='微调推理候选数，默认 3')

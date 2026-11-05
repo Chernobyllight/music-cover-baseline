@@ -1,0 +1,171 @@
+--- a/fish_diffusion/modules/feature_extractors/__init__.py
++++ b/fish_diffusion/modules/feature_extractors/__init__.py
+@@ -1,21 +1,2 @@
+-from .bert_tokenizer import BertTokenizer
+ from .builder import FEATURE_EXTRACTORS
+-from .chinese_hubert import ChineseHubertSoft
+ from .content_vec import ContentVec
+-from .encodec import Encodec
+-from .hubert_soft import HubertSoft
+-from .llama_tokenizer import LlamaTokenizer
+-from .opencpop_transcription import OpenCpopTranscriptionToPhonemesDuration
+-from .whisper import AlignedWhisper
+-
+-__all__ = [
+-    "FEATURE_EXTRACTORS",
+-    "ChineseHubertSoft",
+-    "HubertSoft",
+-    "OpenCpopTranscriptionToPhonemesDuration",
+-    "AlignedWhisper",
+-    "ContentVec",
+-    "BertTokenizer",
+-    "LlamaTokenizer",
+-    "Encodec",
+-]
+--- a/fish_diffusion/modules/pitch_extractors/__init__.py
++++ b/fish_diffusion/modules/pitch_extractors/__init__.py
+@@ -1,16 +1,2 @@
+ from .builder import PITCH_EXTRACTORS
+-from .crepe import CrepePitchExtractor
+ from .parsel_mouth import ParselMouthPitchExtractor
+-from .pyin import PyinPitchExtractor
+-from .rmvpe import RMVPitchExtractor
+-from .world import DioPitchExtractor, HarvestPitchExtractor
+-
+-__all__ = [
+-    "PITCH_EXTRACTORS",
+-    "CrepePitchExtractor",
+-    "HarvestPitchExtractor",
+-    "DioPitchExtractor",
+-    "ParselMouthPitchExtractor",
+-    "PyinPitchExtractor",
+-    "RMVPitchExtractor",
+-]
+--- a/fish_diffusion/modules/vocoders/__init__.py
++++ b/fish_diffusion/modules/vocoders/__init__.py
+@@ -1,7 +1,2 @@
+-from .adamos import ADaMoSHiFiGANV1
+ from .builder import VOCODERS
+-from .istft_net.istft_net import ISTFTNet
+ from .nsf_hifigan import NsfHifiGAN
+-from .refinegan import RefineGAN
+-
+-__all__ = ["VOCODERS", "NsfHifiGAN", "ISTFTNet", "RefineGAN", "ADaMoSHiFiGANV1"]
+--- a/fish_diffusion/modules/encoders/__init__.py
++++ b/fish_diffusion/modules/encoders/__init__.py
+@@ -1,19 +1,2 @@
+-from .bert import BertEncoder
+ from .builder import ENCODERS
+-from .fast_speech import FastSpeech2Encoder
+-from .identity import IdentityEncoder
+ from .naive_projection import NaiveProjectionEncoder
+-from .pitch_quant import QuantizedPitchEncoder
+-from .similar_cluster import SimilarClusterEncoder
+-from .transformer import TransformerEncoder
+-
+-__all__ = [
+-    "ENCODERS",
+-    "NaiveProjectionEncoder",
+-    "FastSpeech2Encoder",
+-    "IdentityEncoder",
+-    "SimilarClusterEncoder",
+-    "QuantizedPitchEncoder",
+-    "BertEncoder",
+-    "TransformerEncoder",
+-]
+--- a/fish_diffusion/archs/diffsinger/diffusions/builder.py
++++ b/fish_diffusion/archs/diffsinger/diffusions/builder.py
+@@ -1,15 +1,5 @@
+ from mmengine import Registry
+-
+-from fish_diffusion.modules.convnext import ConvNext, TransformerDecoderDenoiser
+-from fish_diffusion.modules.llama import LlamaDenoiser
+ from fish_diffusion.modules.wavenet import WaveNet
+-
+ DIFFUSIONS = Registry("diffusions")
+ DENOISERS = Registry("denoisers")
+-
+ DENOISERS.register_module(name="WaveNetDenoiser", module=WaveNet)
+-DENOISERS.register_module(name="ConvNextDenoiser", module=ConvNext)
+-DENOISERS.register_module(
+-    name="TransformerDecoderDenoiser", module=TransformerDecoderDenoiser
+-)
+-DENOISERS.register_module(name="LlamaDenoiser", module=LlamaDenoiser)
+--- a/fish_diffusion/utils/audio.py
++++ b/fish_diffusion/utils/audio.py
+@@ -4,7 +4,6 @@
+ import librosa
+ import numpy as np
+ import torch
+-from fish_audio_preprocess.utils import loudness_norm, separate_audio
+ from torchaudio.transforms import MelSpectrogram
+ 
+ 
+@@ -173,6 +172,8 @@
+     device: Union[str, torch.device] = "cpu",
+     separate_model: torch.nn.Module = None,
+ ):
++    from fish_audio_preprocess.utils import loudness_norm, separate_audio
++
+     if separate_model is not None:
+         model = separate_model.to(device)
+     else:
+--- a/fish_diffusion/utils/viz.py
++++ b/fish_diffusion/utils/viz.py
+@@ -3,7 +3,6 @@
+ import matplotlib
+ import numpy as np
+ import torch
+-from fish_audio_preprocess.utils.loudness_norm import loudness_norm
+ from matplotlib import pyplot as plt
+ 
+ matplotlib.use("Agg")
+@@ -38,6 +37,8 @@
+     vocoder,
+     return_image=False,
+ ):
++    from fish_audio_preprocess.utils.loudness_norm import loudness_norm
++
+     predict_mel_len = predict_mel_len.item()
+     gt_mel_len = gt_mel_len.item()
+ 
+--- a/fish_diffusion/archs/diffsinger/diffsinger.py
++++ b/fish_diffusion/archs/diffsinger/diffsinger.py
+@@ -4,7 +4,6 @@
+ import torch
+ import torch.nn as nn
+ import wandb
+-from mmengine.optim import OPTIMIZERS
+ from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+ 
+ from fish_diffusion.modules.encoders import ENCODERS
+@@ -237,6 +236,7 @@
+                 self.build_lora(child)
+ 
+     def configure_optimizers(self):
++        from mmengine.optim import OPTIMIZERS
+         optimizer = OPTIMIZERS.build(
+             {
+                 "params": self.parameters(),
+--- a/fish_diffusion/modules/vocoders/nsf_hifigan/nsf_hifigan.py
++++ b/fish_diffusion/modules/vocoders/nsf_hifigan/nsf_hifigan.py
+@@ -35,7 +35,7 @@
+         self.model = Generator(self.h)
+         self.use_natural_log = use_natural_log
+ 
+-        cp_dict = torch.load(checkpoint_path, map_location="cpu")
++        cp_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+ 
+         if "state_dict" not in cp_dict:
+             self.model.load_state_dict(cp_dict["generator"])
+--- a/fish_diffusion/modules/pitch_extractors/builder.py
++++ b/fish_diffusion/modules/pitch_extractors/builder.py
+@@ -47,7 +47,7 @@
+             return f0
+ 
+         # Remove zero frequencies and linearly interpolate
+-        nzindex = torch.nonzero(f0).squeeze()
++        nzindex = torch.nonzero(f0).flatten()
+         f0 = torch.index_select(f0, dim=0, index=nzindex)
+         time_org = self.hop_length / sampling_rate * nzindex
+         time_frame = (

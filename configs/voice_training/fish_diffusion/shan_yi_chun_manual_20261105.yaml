@@ -1,0 +1,239 @@
+backend: fish_diffusion
+voice_id: shan_yi_chun
+version: manual_20261105
+gpu: 0
+dataset_dir: data/voice_datasets/shan_yi_chun/fish_diffusion/manual_20261105
+export_dir: models/voices/shan_yi_chun/fish_diffusion/manual_20261105
+reference: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+model:
+  architecture: diff_svc_v2
+  sample_rate: 44100
+  hop_length: 512
+  mel_channels: 128
+  content_dim: 256
+  content_layer: 9
+  content_projection: true
+  f0_predictor: parselmouth
+  f0_min: 40.0
+  f0_max: 2000.0
+  keep_zeros: false
+  timesteps: 1000
+  speaker_count: 1
+  pitch_encoding: log
+  vocoder_log: base10
+segment_seconds: 8.0
+training:
+  max_steps: 5000
+  save_every: 1000
+  batch_size: 4
+  crop_frames: 384
+  warmup_steps: 1000
+  decay_steps: 5000
+  learning_rate: 0.0004
+  start_learning_rate: 1.0e-05
+  final_learning_rate: 2.0e-05
+  seed: 42
+  precision: bfloat16
+augmentation:
+  pitch_shift_probability: 1.5
+  key_shifts:
+  - -5.0
+  - 5.0
+inference:
+  sampler_interval: 10
+  noise_predictor: plms
+  chunk_seconds: 8.0
+  overlap_seconds: 0.2
+  pad_seconds: 0.5
+validation:
+  source_run: runs/lhd_lv_zhou_shan_yi_chun_fish_manual_20261105
+  windows:
+  - start: 36.0
+    duration: 12.0
+  - start: 156.0
+    duration: 12.0
+  seed: 42
+  source_files:
+    reference:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+      sha256: bad26839b86d0314ca52face539f2c87ac54fe3a5897d656c46a73cea166959e
+    vocals:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/04_vocal_separation/attempt_001/artifacts/vocals.wav
+      sha256: 15c500ce11fe3fc65fd0656109a974c9ea252b8836f01327b5f6ce1b3f74387a
+    instrumental:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/04_vocal_separation/attempt_001/artifacts/instrumental.wav
+      sha256: 326d35309215d4afa499f4cbca55c2f39f1a785a3a6b3d02abe926b126fd5211
+recordings_dir: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings
+sources:
+- id: '1601948938'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1601948938/lead.wav
+  sha256: e49890f24885b5d892530eaf85e8260784b6b546c9de1d8a46a8513a7bc7dba1
+  source_sha256: 8fd4242689c3ef16518e047d362293403bf3f40b17cf8c0fe1115929e43436f7
+  duration_s: 29.975510204081633
+  split: train
+- id: '1607512257'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1607512257/lead.wav
+  sha256: 1e894b739841efa5d5078894a7bda67a3782164ed31e3284c4ef13b382a596f1
+  source_sha256: 143743f647b76babf9f90d22df311b98b95d85c262c8ca0d3aa743213a931510
+  duration_s: 29.92907029478458
+  split: train
+- id: '1623988866'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1623988866/lead.wav
+  sha256: e684b8ecbb047a8fc91c337c1bf9e0827d49070d7cc36d3f8dbb58cd20942c6a
+  source_sha256: 2765df0bff31a7f07c72439261891c3132c0ddc86328e12a07011f670297258d
+  duration_s: 29.92907029478458
+  split: train
+- id: '1632874979'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1632874979/lead.wav
+  sha256: 5881c9ba91b75d33738f890fbed93c24accf0d56ef7787467ed39ec7560fc54f
+  source_sha256: 4d5709ac832aed03cc8c28237127b2c49e83db234b555001a7a22dbf2535332a
+  duration_s: 29.975510204081633
+  split: train
+- id: '1637412537'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1637412537/lead.wav
+  sha256: 3ebcd4918cd4db168a78be0f9cf9ca1898e40dd6a00994944f74b3956ff3b4a9
+  source_sha256: d41857cbd43428d47c7d7b1b74c09c2c68419f25c2517c1e8fe09db4c1a392dd
+  duration_s: 29.975510204081633
+  split: train
+- id: '1682401768'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1682401768/lead.wav
+  sha256: d09e780a4a832d052421c34b0e78936b8683a9d3c7805f484df6a84fd1727877
+  source_sha256: b6e996d850886bd59eb976d5893cfe37bf799421592f6fc869ea8434fc47aa4c
+  duration_s: 29.975510204081633
+  split: train
+- id: '1686959781'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1686959781/lead.wav
+  sha256: d0c8cc6f278cb97447dcede63abdd1c3fcb35dd228ddaef2307e69436cd1fd8e
+  source_sha256: de63bcb0a8315c9e5e0f5eb918ff3c78771867d725eee2e59c80cba67c5d7eb3
+  duration_s: 29.92907029478458
+  split: train
+- id: '1698020394'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1698020394/lead.wav
+  sha256: 0ac828ae188204d844324ec026a0f677f48447c25d8b235af23d2da0b4584d2e
+  source_sha256: 3506e8dfbf0be87a4f926eb5f1225c10e0d2257ec2e039c747906fcd42683da2
+  duration_s: 29.975510204081633
+  split: train
+- id: '1698244260'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1698244260/lead.wav
+  sha256: 02d9f86f89f9272e963ca24a463975e585313605b4dba0b16408b5757789893c
+  source_sha256: de604fdffe35aedbbb257d0985ae43cd1ffacec09df60fb6c309c979eaaa3d6a
+  duration_s: 29.975510204081633
+  split: validation
+- id: '1707131492'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1707131492/lead.wav
+  sha256: bf3a282b967ae82a8cfc29e7d575e6cf6592753c977a3f37f50f5b2b648af3ea
+  source_sha256: 731f73606f9f1cf678b2a2049824b5d7e7668b5c7f7482b49dfcc1dacbbb599e
+  duration_s: 29.975510204081633
+  split: train
+- id: '1717367431'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1717367431/lead.wav
+  sha256: 8d0b21f04e7a1d6e806a872d03aefb08e7c41bae4f0a7e9143ae4d2ac230172a
+  source_sha256: dec7c194c28e40825a5f43ca29c0156682f6b5c4a944d170a91d676a9d3b3e5e
+  duration_s: 29.975510204081633
+  split: train
+- id: '1724135449'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1724135449/lead.wav
+  sha256: f760308193d3c49c22b95f566615458c3f8d8fadc91697098ae01084a0f4b1c8
+  source_sha256: b349383035177ed08fdb103a93aa5fc2b697fefcb27551bb8ed480077048af7e
+  duration_s: 29.975510204081633
+  split: train
+- id: '1771288303'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1771288303/lead.wav
+  sha256: 45f4a42f2ebadaccdb5cb50670e1bb2280925ba7679fa3cdf24ab8fd149bbb5c
+  source_sha256: aaff96f5d910d5d0d81fad5047e3f2c545c898bc62d5b4aaa61c82dd4dc329ad
+  duration_s: 29.975510204081633
+  split: train
+- id: '1816871080'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1816871080/lead.wav
+  sha256: c38649487e2e8bea855ae690ebee5320c6756eb26ba88782086db8f6058d9bd8
+  source_sha256: ea4ecec5917aa435c5ec713fbb630ea597a5459ffd7007ba9fde729846bb500f
+  duration_s: 29.975510204081633
+  split: train
+- id: '1828393857'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1828393857/lead.wav
+  sha256: 09eb47c7b53a8e8011655e91136b6382b2e64659f7e027da13b280a7e1949baa
+  source_sha256: cd769301de643f85d9f2f2a7dabe2e0549ffa7bc358405f31ec47b0e8dd64f09
+  duration_s: 29.975510204081633
+  split: train
+- id: '1842315470'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1842315470/lead.wav
+  sha256: 88eefca867a7a45cf08ed0e7afc6b572db351371072c92d6a414ace400a38307
+  source_sha256: 653de9668931d03d932f0b51abb2642c506c745d8d9e67cebdb6c4150fd11313
+  duration_s: 29.975510204081633
+  split: validation
+- id: '1843079931'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1843079931/lead.wav
+  sha256: 94d1fc1964d48d107546641123b58ec606ae03b692b6643c2e938c57373a9f0e
+  source_sha256: 51248030a741ae4a6c5ac79ebf5755584db9cad7a1aa073e18c716dc9e9e2233
+  duration_s: 29.975510204081633
+  split: train
+- id: '1843079941'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1843079941/lead.wav
+  sha256: 011b42cddae79efe9f33e466a966a3c47ee14f849b17b8da1253437056c4f7b4
+  source_sha256: 7e58294866f7413ddc9edf7262bc72d2c346fca9dfbcc9b145096fb740cdd04c
+  duration_s: 29.975510204081633
+  split: train
+- id: '1843079986'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1843079986/lead.wav
+  sha256: 7e867c62f4962f43dbb66f519261b0bb90de63e55af7065dc011884b90470c48
+  source_sha256: 237823f976ff39d26dc4e11f01d438dfb43a7592525101b404a037c071b61849
+  duration_s: 29.975510204081633
+  split: test
+- id: '1860218751'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1860218751/lead.wav
+  sha256: fbd38a313eab916dc1dad94003591a892de2b97713d53e19cfd03ed55109a373
+  source_sha256: 7c1fbd91e0ee56f9e071a127813203070dc41d417533d903f43f0586db9b3ea9
+  duration_s: 29.975510204081633
+  split: train
+- id: '1862847848'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1862847848/lead.wav
+  sha256: 06557f5ed5a63a3257667b1183659b6b229aac0c0816e4e0002be6aaa98c9190
+  source_sha256: f9d7f37a7b1ed127892e6c5ff6062a4223905a0e203fae996ae75565d6b086d2
+  duration_s: 29.975510204081633
+  split: train
+- id: '1864010428'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1864010428/lead.wav
+  sha256: 458eefbfc23fbab2763b1bdaab3a845210dac71dc7a637c7a05e99dcd0e758ce
+  source_sha256: 5eebd8d37cfe0a73218b060c4724bf9971381d779d9b8ac75b8225acccc6dde4
+  duration_s: 29.975510204081633
+  split: test
+- id: '1864543209'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1864543209/lead.wav
+  sha256: 99181f668f9beefdd6032bdb8330d55f65411e99e9a6927a3e967f710cc94cd2
+  source_sha256: f9a13ba36402a865d5d4f472ed6244eea56b28eecf08752d7874ab3e09cd1d8f
+  duration_s: 29.975510204081633
+  split: train
+- id: '1864543219'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1864543219/lead.wav
+  sha256: 5fb09e9a4450f77be5fe721e31d26826d35f12e174469757084fc8bccfe176c1
+  source_sha256: 6637c176b9b612ba49a98aa87170ddde7602ba6b482d46b300e9b16f68bfa00e
+  duration_s: 29.975510204081633
+  split: train
+- id: '1865110632'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1865110632/lead.wav
+  sha256: cfe20881f01a294e7af5254723209b7c18c35019165ba12e91c37b0ac7764655
+  source_sha256: 1939a542a2850dea8e0ccb575b3147feba0d30d0d3ddeda8b84c70d11de8db04
+  duration_s: 29.975510204081633
+  split: train
+- id: '1888556667'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/1888556667/lead.wav
+  sha256: 81d8d5444ae6ae502b2dd9286a74aa10967f868a8028acaae391d3e130c8d153
+  source_sha256: 944d2ddffd7d072d5bbaed6ee5a77a4ae967d1b7e5c66e5a38e4e93bafd3f858
+  duration_s: 29.975510204081633
+  split: train
+- id: '6804196344'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/6804196344/lead.wav
+  sha256: db0c0bd58f6cd9e05afc0a23393239ef71d53ccbfce26c472ff398bd512149ba
+  source_sha256: 24ddefcef080246b5ba9e58d6955af07c75878d0c7d3122969ebe780decf3d7a
+  duration_s: 29.975510204081633
+  split: train
+- id: '6821283086'
+  path: data/voice_training/shan_yi_chun/fish_manual_20261105/recordings/6821283086/lead.wav
+  sha256: b5d782fe86a2c96bb028447cfd92436266219cc13d3b2124fe69e4e857327527
+  source_sha256: 48cf872fef6d61f9685e480f2b55ff6064210395fa0df52b19418366e3e1acb1
+  duration_s: 29.975510204081633
+  split: train
+excluded_recordings:
+- '1787247852'
+- '6779157198'
+source_manifest_sha256: 9f0dfa5dd3da3709f949485fcf868befea8fda2bfb6299409ff363c2880b5980

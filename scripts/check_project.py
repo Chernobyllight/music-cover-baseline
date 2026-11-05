@@ -12,7 +12,7 @@ from urllib.parse import unquote, urlsplit
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-TREES = ('src', 'scripts', 'tests', 'configs', 'docs', 'skill')
+TREES = ('src', 'scripts', 'tests', 'configs', 'docs', 'skill', 'patches')
 
 
 def source_files(root):

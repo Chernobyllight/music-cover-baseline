@@ -25,7 +25,7 @@ def generate(request, output):
               'settings': {'steps': request['steps'], 'seeds': seeds, 'semitones': 0, 'auto_f0_adjust': False},
               'candidates': [], 'recommended_id': None, 'selected_id': None,
               'selection_rule': 'eligible highest ECAPA; otherwise generated highest finite ECAPA for review, then lower seed and ID; quality never blocks delivery',
-              'reference_independence': ('same_inference_reference; diagnostic_only' if backend == 'seed_vc' else ('not_inference_condition; independence_requires_dataset_check' if backend == 'rvc' else 'held_out_reference; not_inference_condition')),
+              'reference_independence': ('same_inference_reference; diagnostic_only' if backend == 'seed_vc' else ('not_inference_condition; independence_requires_dataset_check' if backend in {'rvc', 'fish_diffusion'} else 'held_out_reference; not_inference_condition')),
               'backend': backend,
               'training_performed': False, 'subjective_quality': 'awaiting_human_review', 'lyrics_accuracy': 'not_evaluated'}
     for index, seed in enumerate(seeds, 1):
@@ -34,10 +34,10 @@ def generate(request, output):
         command = [sys.executable, '-m', 'music_cover.backends.cli', 'convert', '--input', str(source),
                    '--reference', str(reference), '--output', str(folder), '--steps', str(request['steps']),
                    '--seed', str(seed), '--voice-mode', 'finetuned', '--voice-profile', str(voice['profile'])]
-        if backend in {'so_vits_svc', 'rvc'}:
+        if backend in {'so_vits_svc', 'rvc', 'fish_diffusion'}:
             write_json(folder/'request.json', {**request, 'seed': seed})
             command = [str(python_for(ROOT, backend)), '-m', 'music_cover.backends.cli',
-                       'convert_rvc' if backend == 'rvc' else 'convert_svc', '--request', str(folder/'request.json'), '--output', str(folder)]
+                       {'rvc':'convert_rvc', 'so_vits_svc':'convert_svc', 'fish_diffusion':'convert_fish'}[backend], '--request', str(folder/'request.json'), '--output', str(folder)]
         write_json(folder/'command.json', {'argv': command})
         try:
             with (folder/'inference.log').open('w') as log:

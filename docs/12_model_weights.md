@@ -1,8 +1,8 @@
-# v1.1 模型权重清单与准备方法
+# 模型权重清单（v1.2）
 
-本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 模型资产沿用 v1.0 锁定版本；v1.1 同步当前 base 运行与部署 Skill，覆盖 Seed-VC、SVC、RVC 和 00–11 评审流程。新使用者可先读[可复制的权重部署步骤](../skill/references/weights.md)。基础模型沿用 v0.2，微调/评估依赖见第 9 节。
+本文集中说明：**每个模块需要什么模型、从哪里获取、放在哪里、怎样检查，以及对应代码在哪里。** 原有模型资产保留锁定版本；v1.2 增加 Fish 公共权重、源码锁与兼容补丁，覆盖 Seed-VC、SVC、RVC、Fish 和 00–11 评审流程。部署前核对所选路线的源码、资产锁和人物模型。新使用者可先读[可复制的权重部署步骤](../skill/references/weights.md)。基础模型沿用 v0.2，微调/评估依赖见第 9 节。
 
-原有零样本完整流程（`--transpose auto --review`）需要 **13 组模型资产**，包含主模型和附属模型；同一个模型可被多个阶段复用。GitHub 仓库不包含这些大文件。孙燕姿或詹姆斯的音色由参考录音提供，零样本 Seed-VC 路线无需单独下载对应人物的专用权重。新增微调路线可用目标歌手录音训练专用版本，所需附加资产见本文末尾。
+原有 Seed-VC 零样本完整流程（`--transpose auto --review`）需要 **13 组模型资产**，包含主模型和附属模型；同一个模型可被多个阶段复用。GitHub 仓库不包含这些大文件。孙燕姿或詹姆斯的音色由参考录音提供，零样本 Seed-VC 路线无需单独下载对应人物的专用权重。新增微调路线可用目标歌手录音训练专用版本，所需附加资产见本文末尾。
 
 本机项目根目录：
 
@@ -21,7 +21,7 @@
 | `02_pitch_adaptation` | BS-RoFormer + RMVPE | 分离原曲人声、提取原曲与参考的音高，推荐升调或降调；`--transpose 0` 时跳过这些模型调用 |
 | `03_style_generation` | YuE2-3B + YuE2-Vae | 根据乐谱、歌词和风格生成音乐，并解码为音频 |
 | `04_vocal_separation` | BS-RoFormer | 新生成音乐拆成人声和伴奏 |
-| `05_voice_conversion` | Seed-VC + Whisper-small + CAMPPlus + RMVPE + BigVGAN | 提取内容、参考音色和音高，换声并合成波形 |
+| `05_voice_conversion` | 按路线选择：Seed-VC＋Whisper-small/CAMPPlus/RMVPE/BigVGAN；SVC＋ContentVec/RMVPE；RVC＋HuBERT/RMVPE/索引；Fish＋ContentVec/Parselmouth/NSF-HiFiGAN | 统一输出转换人声；后三种需要人物模型，Fish 的 F0 算法不另需权重，RMVPE仍用于评估 |
 | `06_mix` | 无新增模型权重 | 对齐、增益处理和混音 |
 | `07_stem_separation` | Mel-Band RoFormer Karaoke + Demucs `htdemucs_6s` | 估计主唱/背景人声，以及鼓、贝斯、吉他、钢琴等分轨 |
 | `08_final_score` | 复用 SheetSage2 + MERT-v2-FullSong | 对最终混音重新转谱 |
@@ -102,7 +102,7 @@ Hugging Face 下载脚本固定以下 revision，不以最新 `main` 替代。�
 
 ## 4. 在服务器准备模型：按顺序执行
 
-**现有 7830 服务器已经具备这些权重，正常运行无需重新下载；可以直接执行第 5 节检查。** 以下命令适用于恢复模型的情况，前提是项目的 `envs/control`、`envs/separator` 等环境已配置。它们不是从空白机器安装全部 Python/CUDA 依赖的一键脚本。
+**现有 7830 服务器已经具备这些权重，正常运行无需重新下载；可以直接执行第 5 节检查。** 以下命令适用于恢复模型的情况，前提是已有匹配的 base、control/转谱环境；07–11 另需 separator 评审环境。只做 00–06 按 [部署 Skill](../skill/SKILL.md)选需，不把训练素材分离与 07–09 的全套评审模型混为一谈。它们不是从空白机器安装全部 Python/CUDA 依赖的一键脚本。
 
 ### 4.1 初始化路径，保留恢复前的版本记录
 
@@ -318,7 +318,7 @@ export PATH="/opt/conda/bin:$PATH"
 
 ## 微调候选评估需要的权重
 
-05 的 Seed-VC / RVC `finetuned` 模式默认产生三个候选并自动评估，SVC 当前使用一个候选；即使只有一个候选，也需要冻结的 ECAPA-TDNN 和 RMVPE。零样本 05 仍不需要 ECAPA；10 的可选 voice_check 启用时才需要。加载已导出的通用音色模型进行推理，不需要 OpenVoiceV2 或训练向量库。
+05 的 Seed-VC / RVC `finetuned` 模式默认产生三个候选并自动评估，SVC/Fish 当前使用一个候选；即使只有一个候选，也需要冻结的 ECAPA-TDNN 和 RMVPE。零样本 05 仍不需要 ECAPA；10 的可选 voice_check 启用时才需要。加载已导出的通用音色模型进行推理，不需要 OpenVoiceV2 或训练向量库。
 
 ```bash
 cd /data/liuhongda/music-cover-baseline
@@ -384,3 +384,26 @@ RVC 固定源码版本、下载地址、revision、字节数与 SHA256 在 `conf
 当日孙燕姿、詹姆斯的 Seed-VC 及杨坤初版 SVC 也记录于 `models/voices/`，使用前应确认实际文件。名称中的日期与步数是模型版本信息，不代表本次又做了完整训练或选模。新人物的模型使用各自训练入口生成，不能只修改 `voice_id` 复用另一人物权重。
 
 RVC 默认预设 `configs/voice_inference/rvc/huang_qi_shan.yaml` 使用检索比例 0.5；`huang_qi_shan_index075.yaml` 显式使用 0.75，同一份 4000 步权重和索引。两者不是两个不同训练模型。SVC 优化模型使用 ContentVec 768l12 / RMVPE / 标准 NSF-HiFiGAN，推荐推理未开启扩散或增强器；实验资产不是默认推理的必需项。
+
+## Fish Diffusion 公共权重与歌手模型（工作树扩展）
+
+下表路径相对本文服务器根目录 `/mnt/afs_f/liuhongda/music-cover-baseline`；新机器以自己的根目录解析。
+
+| 组件 | 项目内路径 | 下载链接/生成方式 |
+|---|---|---|
+| 公共扩散底模 | `models/FishDiffusion/content-vec-pretrained-v1.ckpt` | [v2.0.0 权重](https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/content-vec-pretrained-v1.ckpt) |
+| ContentVec 256l9 | `models/FishDiffusion/contentvec/pytorch_model.bin`、`config.json` | [权重](https://huggingface.co/lengyue233/content-vec-best/resolve/main/pytorch_model.bin)、[配置](https://huggingface.co/lengyue233/content-vec-best/resolve/main/config.json)；main URL 内容以锁内 SHA256 固定 |
+| NSF-HiFiGAN | `models/FishDiffusion/nsf_hifigan/model`、`config.json` 及完整包 | [下载包](https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip) |
+| F0 提取 | 无模型权重 | base 的 `praat-parselmouth` 算法 |
+| 定量评估 | `models/voice_evaluation/ecapa/embedding_model.ckpt`、`models/RMVPE/rmvpe.pt` | 复用第 9 节与公共 RMVPE |
+| 人物导出包 | `models/voices/<voice_id>/fish_diffusion/<version>/` | 训练导出 voice.json、model.ckpt、config.json、validation.json，无人物公共下载链接 |
+
+```bash
+bash scripts/05_voice_conversion/fish_diffusion/download_assets/run.sh
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+bash scripts/05_voice_conversion/fish_diffusion/preflight/run.sh --scope training --model-load --gpu 0
+```
+
+环境前提见 [Fish 部署说明](22_fish_diffusion.md)；上述下载器不安装包。资产哈希在 [fish_diffusion_assets.lock.json](../configs/fish_diffusion_assets.lock.json)，部署保留锁内 ONNX/LICENSE 等附属文件。当前 model-load 预检会试载公共底模；已有歌手包的普通 inference 预检可省略 model-load。
+
+公共底模不含可供任意歌手零样本推理的 speaker embedding，不能代替人物训练包。手动实例 `models/voices/shan_yi_chun/fish_diffusion/manual_20261105/` 已验证 5000 步，但不随 Git 分发；新用户按 [手动实操](24_fish_diffusion_manual.md)或 [通用训练](../skill/references/training.md)生成自己的版本。

@@ -1,5 +1,26 @@
 # 版本记录
 
+## v1.2 — 2026-11-05
+
+### English release summary
+
+Modular music restyling and voice conversion with reproducible singer training and a new Fish Diffusion backend.
+
+- Add an independent Fish Diffusion pipeline for asset setup, configuration generation, dataset preparation, feature extraction, training, validation, export, and stage-05 inference.
+- Run Fish training and inference in the existing base Python, using a pinned upstream revision, verified compatibility patches, ContentVec, Parselmouth, and NSF-HiFiGAN.
+- Include the validated 5,000-step training recipe: update the acoustic backbone and speaker embedding, apply training-only pitch augmentation, and use PLMS inference with chunked audio.
+- Preserve Seed-VC zero-shot and fine-tuned conversion, so-vits-svc, RVC, and the modular 00–11 workflow. Fish is a trained singer-model route, not reference-audio zero-shot conversion.
+- Refresh the deployment skill, model download instructions, and step-by-step examples with explicit inputs, output paths, and optional full-song comparison.
+- Retain generated audio for review when quality checks fail. Keep model weights, recordings, training datasets, and generated media outside Git.
+
+### 本版变更与验证范围
+
+新增 Fish 训练五阶段和独立推理/验证脚本，统一接入已有 05 候选及 06 混音。配置由用户通过脚本显式创建，路径按项目根目录解析；不要求改动主流程 00。优化方案与早期 1000 步实验分别记录，5000 步是本项目验证过的示例，不是对任意歌手的质量保证。
+
+真实验证使用单依纯原始录音重新分离所得的 96 段训练人声（719.273 秒），完成 5000 步训练及《绿洲》05→06；模型训练与推理使用 `/opt/conda/bin/python`。最终音频 257.3986875 秒，同参考 ECAPA 为 0.7619887590，音高误差不超过一半音的比例为 98.1959%。这些是自动诊断，未声称人工听感验收或 Fish 07–11 新一轮整流程验证。
+
+发布前回归、当前服务器依赖状态和实际验证证据见 [VALIDATION.md](VALIDATION.md)。新用户从 [部署 Skill](skill/SKILL.md) 开始，Fish 逐步操作见 [手动实操](docs/24_fish_diffusion_manual.md)。
+
 ## v1.1 — 2026-11-04
 
 ### English release summary

@@ -15,14 +15,17 @@ def merge_voice_config(current, overrides):
     """Keep resume settings, but never inherit another backend's private preset."""
     merged = dict(current)
     if overrides.get('backend', current.get('backend')) != current.get('backend'):
-        merged.update(voice_profile=None, svc={}, rvc={}, candidate_seeds=None,
-                      candidate_count=1 if overrides['backend'] == 'so_vits_svc' else 3)
+        merged.update(voice_profile=None, svc={}, rvc={}, fish={}, candidate_seeds=None,
+                      candidate_count=1 if overrides['backend'] in {'so_vits_svc', 'fish_diffusion'} else 3)
     merged.update(overrides)
     return merged
 
 
 def resolve_voice(mode='zero_shot', profile=None, root=ROOT, backend='seed_vc'):
     root = Path(root)
+    if backend == 'fish_diffusion':
+        from .fish import resolve_fish_voice
+        return resolve_fish_voice(mode, profile, root)
     if backend == 'rvc':
         from .rvc import resolve_rvc_voice
         return resolve_rvc_voice(mode, profile, root)
@@ -58,9 +61,9 @@ def resolve_voice(mode='zero_shot', profile=None, root=ROOT, backend='seed_vc'):
 
 def voice_record(resolved):
     result = {k: v for k, v in resolved.items() if not isinstance(v, Path)}
-    if resolved.get('backend') in {'seed_vc', 'rvc'}: result['path_base'] = 'project'
+    if resolved.get('backend') in {'seed_vc', 'rvc', 'fish_diffusion'}: result['path_base'] = 'project'
     for key in ('checkpoint', 'config', 'profile', 'validation', 'index', 'index_manifest'):
         if key in resolved:
-            result[key] = {'path': portable_path(resolved[key]) if resolved.get('backend') in {'seed_vc', 'rvc'} else str(resolved[key]),
+            result[key] = {'path': portable_path(resolved[key]) if resolved.get('backend') in {'seed_vc', 'rvc', 'fish_diffusion'} else str(resolved[key]),
                            'sha256': sha256(resolved[key])}
     return result

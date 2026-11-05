@@ -1,6 +1,6 @@
 # 交付、验证与数据保留
 
-本指南对应 v1.1，包含 Seed-VC 零样本/微调、SVC、RVC 和 00–11 模块流程。源码版本由 `VERSION` 和 Git commit 标识；验收记录见 VALIDATION.md，模型/数据仍在服务器。
+本指南对应 v1.2，包含 Seed-VC 零样本/微调、SVC、RVC、Fish 和 00–11 模块流程。源码版本由 `VERSION` 和 Git commit 标识；验收记录见 VALIDATION.md，模型/数据仍在服务器。
 
 ## 可执行入口
 
@@ -9,7 +9,8 @@
 | 完整流程或指定模块 | `bash scripts/run_baseline.sh`、`scripts/00_prepare` 至 `11_delivery` |
 | Seed-VC 零样本 / 微调 | `scripts/05_voice_conversion/zero_shot/run.sh`、`finetuned/run.sh` |
 | SVC / RVC | `scripts/05_voice_conversion/so_vits_svc/run.sh`、`rvc/run.sh` |
-| 独立训练 | 各后端的 `training/`；Seed/SVC 四阶段，RVC 六阶段 |
+| Fish Diffusion | `scripts/05_voice_conversion/fish_diffusion/run.sh`；[手动操作](24_fish_diffusion_manual.md) |
+| 独立训练 | 各后端的 `training/`；Seed/SVC 四阶段，RVC 六阶段，Fish 五阶段；均先创建本次配置 |
 | 复用编曲 | `bash scripts/05_voice_conversion/fork_run.sh` |
 | 新用户部署 00–06 | [部署 Skill](../skill/SKILL.md) |
 | 源码与文档检查 | `scripts/check_project.py` |
@@ -31,7 +32,7 @@ bash scripts/05_voice_conversion/so_vits_svc/run.sh \
   --config configs/voice_inference/so_vits_svc/yang_kun_optimized.yaml --preflight
 ```
 
-预检仅确认所需资源与导入。真实验收还需一次完整 00–11、各音色路线的实际音频生成、训练入口与权重完整性检查，并执行：
+预检仅确认所需资源与导入。验收按交付范围区分：只交付 00–06 音乐生成时，检查所选路线的真实训练/推理及 06 WAV/MP3；不强制执行 07–11 或跨模型对比。交付完整分轨/MIDI 包时，才需完整 00–11 并执行下方检查。Fish 当前新增真实验证范围为训练五阶段及主流程 05→06，不能据此声称新跑了 Fish 07–11：
 
 ```bash
 PYTHONPATH=src envs/separator/bin/python scripts/verify_review.py \
@@ -61,6 +62,6 @@ PYTHONPATH=src envs/separator/bin/python scripts/verify_review.py \
 
 ## 源码、运行资产与迁移
 
-源码交付应包含 src/scripts/tests/configs/docs/skill、顶层说明、四个子模块 commit、检查报告与 SHA256。权重、歌曲、训练集、环境及生成音频不装入源码包；其路径、来源与校验方法见 [权重指南](12_model_weights.md) 和 [仓库说明](08-repository.md)。
+源码交付应包含 src/scripts/tests/configs/docs/skill、顶层说明、四个子模块 commit、Fish 固定源码资产锁及 `patches/fish_diffusion/`、检查报告与 SHA256。权重、歌曲、训练集、环境及生成音频不装入源码包；其路径、来源与校验方法见 [权重指南](12_model_weights.md) 和 [仓库说明](08-repository.md)。
 
 现有服务器验收通过不等于任意新机器可直接运行。尚未在空白机器独立验证全量安装；迁移必须重建各环境，处理模型配置中的绝对路径，恢复数据后再做短推理和完整验收。

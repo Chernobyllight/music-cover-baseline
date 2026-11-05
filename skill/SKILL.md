@@ -1,13 +1,13 @@
 ---
 name: music-cover-deploy
-description: 在 music-cover-baseline 仓库部署固定版本的模型权重与运行依赖，准备用户自己的歌曲、歌词和目标音色，使用已有 Shell 脚本运行 00 准备及 01–06 音乐生成流程；支持 Seed-VC 零样本、Seed-VC 微调、so-vits-svc 和 RVC，并定位各阶段产物与部署故障。
+description: 在 music-cover-baseline 仓库部署固定版本的模型权重与运行依赖，准备用户自己的歌曲、歌词和目标音色，使用已有 Shell 脚本运行 00 准备及 01–06 音乐生成流程；支持 Seed-VC 零样本、Seed-VC 微调、so-vits-svc、RVC 和 Fish Diffusion 歌手微调，并定位各阶段产物与部署故障。
 ---
 
 # Music Cover 部署与音乐生成
 
 让使用者从本仓库和自己的素材出发，得到可以试听的曲风、音色转换结果 `final.wav` / `final.mp3`。采用仓库现有脚本，不另写一套推理流程。主范围是 01–06；首次任务必须先做 00。07–11 的分轨、MIDI 和交付打包不是本 Skill 的默认任务。
 
-本 Skill 与所在工作树配套，接口核对日期为 2026-11-04。仓库外单独复制本文件不能代替仓库代码、子模块、模型权重和素材。
+本 Skill 与 v1.2 源码配套，接口核对日期为 2026-11-05；包含 Fish 独立训练和 05→06 推理。仓库外单独复制本文件不能代替仓库代码、子模块、模型权重和素材。
 
 ## 先确定工作位置和路线
 
@@ -21,14 +21,15 @@ description: 在 music-cover-baseline 仓库部署固定版本的模型权重与
 | Seed-VC finetuned | 人物专用模型 + 参考人声 | 本项目导出的 `voice.json` 及完整目录，或独立完成训练 |
 | so-vits-svc | 人物专用 SVC 模型 | SVC 导出目录和公共编码器/F0 权重 |
 | RVC | 人物专用 RVC 模型 + 检索索引 | RVC 导出目录、索引和公共编码器/F0 权重 |
+| Fish Diffusion | 人物专用扩散声学模型 | Fish 导出目录、ContentVec、NSF-HiFiGAN；无参考音频零样本接口 |
 
-SVC/RVC 不用参考片段作为推理音色提示，但主流程仍需要该人物的参考人声用于 02 音区分析及质量评估。`voice.json` 是模型档案，不是训练 YAML；不要用一个裸 `.pth` 代替整个导出包。
+SVC/RVC/Fish 不用参考片段作为推理音色提示，但主流程仍需要该人物的参考人声用于 02 音区分析及质量评估。`voice.json` 是模型档案，不是训练 YAML；不要用一个裸 `.pth` 代替整个导出包。
 
 ## 部署顺序
 
 1. 新机器先读 [运行环境与迁移](references/deployment.md)，检查 GPU、解释器、子模块、FFmpeg，再准备依赖。当前代码 **02–06 模型后端使用 `/opt/conda/bin/python`，01 使用 `envs/sheetsage2/bin/python`，部分 Shell 入口还经过 `envs/control/bin/python`**。不要声称所有节点已经只用 base，也不要为 02–06 另建解释器。
 2. 按 [模型权重与下载命令](references/weights.md) 下载所选路线需要的资源，保留固定 revision 和校验记录。原始歌曲、歌手参考及人物微调模型不随 Git 发布。
-3. 要从录音新训练人物模型时，读 [人物模型训练与导出](references/training.md)，从本次素材生成全新配置和数据，再训练、验证、导出。不要复用作者的历史实验 YAML、切片或 checkpoint。
+3. 要从录音新训练人物模型时，读 [人物模型训练与导出](references/training.md)，从本次素材生成全新配置和数据，再训练、验证、导出。不要复用作者的历史实验 YAML、切片或 checkpoint。Fish 的独立入口和参数见该参考的 Fish 小节；有完整数据布局、每步输入输出需求时再读 [Fish 手动实操](../docs/24_fish_diffusion_manual.md)，将其中服务器素材编号替换为用户真实录音编号。
 4. 完成下面的输入准备、00–06 和结果检查。只读预检通过不等于真实推理通过；最终交付要有实际音频和当前运行证据。
 
 ## 输入准备：使用自己的三个文件
@@ -93,7 +94,7 @@ bash scripts/02_pitch_adaptation/run.sh --run runs/my_cover_v001 --gpu 0
 bash scripts/03_style_generation/run.sh --run runs/my_cover_v001 --gpu 0
 bash scripts/04_vocal_separation/run.sh --run runs/my_cover_v001 --gpu 0
 
-# 本例选择零样本；若选微调、SVC 或 RVC，替换本条，见下一节。
+# 本例选择零样本；若选微调、SVC、RVC 或 Fish，替换本条，见下一节。
 bash scripts/05_voice_conversion/zero_shot/run.sh --run runs/my_cover_v001 --gpu 0
 bash scripts/06_mix/run.sh --run runs/my_cover_v001 --gpu 0
 ```
@@ -108,9 +109,9 @@ bash scripts/run_baseline.sh --config configs/tasks/my_cover_v001.yaml --run run
 
 上条配置是 zero_shot；微调的一次执行方式须在任务配置中写好对应 `backend`、`mode: finetuned` 和 `voice_profile`，不要在已切换后端的 run 上重新传入零样本配置。
 
-## 05 的替代命令：四选一
+## 05 的使用路线：含零样本共五条，按需选择
 
-以下 profile 必须已经部署/训练导出，不能靠配置生成命令凭空得到。每条路线先在相同命令末尾加 `--preflight` 检查，再正式运行。完成任一路线后再执行 06。
+以下 profile 必须已经部署/训练导出，不能靠配置生成命令凭空得到。每条路线先在实际 05 推理 `run.sh` 命令末尾加 `--preflight` 检查，再正式运行；配置生成入口不接受该参数。完成任一路线后再执行 06。
 
 **Seed-VC 微调**：`my_voice/v001` 是使用者本次导出的版本；默认生成 3 个候选，明确指定种子：
 
@@ -145,6 +146,23 @@ bash scripts/05_voice_conversion/rvc/run.sh \
   --run runs/my_cover_v001 \
   --config configs/voice_inference/rvc/my_voice_v001.yaml --gpu 0
 ```
+
+**Fish Diffusion**：先有歌手导出包，再创建新推理 YAML；参考只用于评估，05 不额外移调。参数采用已验证的 PLMS 方案：
+
+```bash
+bash scripts/05_voice_conversion/fish_diffusion/create_inference_config/run.sh \
+  --voice-profile models/voices/my_voice/fish_diffusion/v001/voice.json \
+  --output configs/voice_inference/fish_diffusion/my_voice_v001.yaml \
+  --sampler-interval 10 --noise-predictor plms \
+  --chunk-seconds 8 --overlap-seconds 0.2 --pad-seconds 0.5 --seed 42
+bash scripts/05_voice_conversion/fish_diffusion/run.sh \
+  --run runs/my_cover_v001 \
+  --config configs/voice_inference/fish_diffusion/my_voice_v001.yaml --gpu 0
+bash scripts/06_mix/run.sh --run runs/my_cover_v001 \
+  --config configs/voice_inference/fish_diffusion/my_voice_v001.yaml --gpu 0
+```
+
+Fish 公共预训练模型不是可直接按任意歌手 ID 推理的零样本人物库。`validate/run.sh` 的整曲对比为可选报告，05→06 已产生最终歌曲；不为了生成 MP3 强制用户比较其他模型。
 
 对比多条路线时，在 00–04 成功后用 `bash scripts/05_voice_conversion/fork_run.sh --source-run runs/my_cover_v001 --run runs/my_cover_rvc_v001` 建立新 run，再对该新 run 执行 05、06。fork 引用源 run 的文件，必须保留源 run；不要复制残缺状态或删掉源 run。
 

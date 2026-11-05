@@ -1,6 +1,6 @@
 # 参考人声素材分离
 
-输入原始录音，输出估计总人声、主唱和对应剩余音轨。此入口独立于歌曲主流程 00–11，不训练音色模型，也不创建训练 YAML、数据集切片或修改已有主流程状态。Seed-VC、SVC、RVC 的训练数据准备都可使用这些音轨，但各自的数据准备入口仍需另行执行。
+输入原始录音，输出估计总人声、主唱和对应剩余音轨。此入口独立于歌曲主流程 00–11，不训练音色模型，也不创建训练 YAML、数据集切片或修改已有主流程状态。Seed-VC、SVC、RVC、Fish 的训练数据准备都可使用这些音轨，但各自的数据准备入口仍需另行执行。
 
 ## 4．从原始音频重新分离单依纯人声
 
@@ -87,3 +87,5 @@ bash /data/liuhongda/music-cover-baseline/scripts/voice_data/separate/run.sh \
 ## 公共数据配置入口
 
 为 RVC 等路线准备全新数据集，可在分离成功后使用[公共数据配置生成脚本](../create_config/README.md)。它不要求 Seed-VC 权重，只生成供现有数据准备 00 使用的 YAML；后续另行生成 RVC 训练配置。
+
+Fish 可直接以本脚本的新 `recordings/manifest.json` 和 `lead.wav` 作为 `training/create_config --recordings-dir` 输入，无需先运行 Seed-VC 的数据配置或准备入口。分离完成后仍须显式生成 Fish 训练 YAML，见 [Fish 手动步骤](../../../docs/24_fish_diffusion_manual.md)。

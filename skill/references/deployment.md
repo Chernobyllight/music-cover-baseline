@@ -4,12 +4,12 @@
 
 ## 1. 获取与 Skill 匹配的代码
 
-从 [项目仓库](https://github.com/Chernobyllight/music-cover-baseline) 获取包含本 Skill 和当前脚本的发布分支/commit。先确认发布版本，不假定 `main` 或历史 `v1.0` 已包含服务器后来新增的工具。代码包也必须附带四个上游子模块的准确版本。
+从 [项目仓库](https://github.com/Chernobyllight/music-cover-baseline) 获取包含本 Skill 和当前脚本的发布分支/commit。先确认发布版本，不假定 `main` 或历史 `v1.0` 已包含服务器后来新增的工具。代码包也必须附带四个上游子模块的准确版本。Fish 不是第五个 gitlink 子模块，由独立下载脚本按 `configs/fish_diffusion_assets.lock.json` 获取固定 checkout 并应用校验过的兼容补丁；需要一并交付 `patches/fish_diffusion/`。
 
 ```bash
-git clone https://github.com/Chernobyllight/music-cover-baseline.git
+git clone --branch v1.2 https://github.com/Chernobyllight/music-cover-baseline.git
 cd music-cover-baseline
-# 如维护者指定了发布分支或 commit，在此切换到指定版本。
+# 本 Skill 对应 v1.2；若使用其他 commit，应同步核对接口。
 git submodule update --init third_party/YuE third_party/seed-vc third_party/so-vits-svc third_party/rvc
 git rev-parse HEAD
 git submodule status
@@ -24,6 +24,8 @@ test -f skill/SKILL.md
 test -f scripts/05_voice_conversion/so_vits_svc/create_inference_config/run.sh
 test -f scripts/05_voice_conversion/rvc/training/create_config/run.sh
 test -f src/music_cover/voice_mixing.py
+test -f scripts/05_voice_conversion/fish_diffusion/training/create_config/run.sh
+test -f configs/fish_diffusion_assets.lock.json
 ```
 
 ## 2. 当前代码实际需要的运行环境
@@ -32,7 +34,7 @@ test -f src/music_cover/voice_mixing.py
 |---|---|---|
 | 00–04 的 Shell 控制入口、总入口 | `envs/control/bin/python` | 入口导入项目并调度子进程，不是所有模型都由它加载 |
 | 01 转谱后端 | `envs/sheetsage2/bin/python` | 旧版 Transformers 与谱面模型配套 |
-| 02 分离/F0、03 YuE2、04 分离、05 四路线、06 独立入口 | `/opt/conda/bin/python` | 使用 base；所有人物模型训练入口同样使用 base |
+| 02 分离/F0、03 YuE2、04 分离、05 五条路线、06 独立入口 | `/opt/conda/bin/python` | 使用 base；所有人物模型训练入口同样使用 base |
 
 项目根目录可以变化；**base 安装前缀在当前代码中仍是 `/opt/conda`**。仅设置 `PATH` 或 `PYTHON` 不能改变硬编码的 base 路径。若目标机器没有该前缀，应使用满足此布局的 Linux 部署环境；需要支持其它前缀属于另一个代码适配任务，不能假称已经支持。
 
@@ -105,6 +107,19 @@ envs/sheetsage2/bin/python -m pip install --no-deps \
 
 下载 SheetSage2 后核对其 `requirements.txt` 与实际加载；绘图/浏览器渲染依赖不是 01 旋律提取的默认部署目标。环境目录不要从另一台机器原样复制，虚拟环境可能引用原基础 Python。
 
+### Fish 路线的附加依赖
+
+只在使用 Fish 时检查 [requirements-fish-diffusion.txt](../../configs/requirements-fish-diffusion.txt)。保留当前可工作的 base 包版本，再补缺项，不照装上游整套旧依赖：
+
+```bash
+mkdir -p cache/fish_setup
+/opt/conda/bin/python -m pip list --format=freeze > cache/fish_setup/base-before.txt
+/opt/conda/bin/python -m pip install -c cache/fish_setup/base-before.txt \
+  -r configs/requirements-fish-diffusion.txt
+```
+
+依赖冲突时核对具体约束，不解除约束去升级其他路线的底层包。`configs/fish-diffusion-base.installed.txt` 是原机器快照，不是空白机器一键安装清单。内容编码器本地加载；预检需要公共 ECAPA/RMVPE 评估依赖。安装包和准备权重是两个独立步骤。
+
 ## 4. 模型下载后分层验证
 
 先按 [weights.md](weights.md) 准备模型，再从仓库根目录执行：
@@ -118,7 +133,7 @@ bash scripts/05_voice_conversion/zero_shot/run.sh --preflight
 bash scripts/06_mix/run.sh --preflight
 ```
 
-02 必须带 `--transpose auto` 才能覆盖分离与 F0 依赖；原调 0 的预检可能跳过它们。微调/SVC/RVC 还需按主文件中带 profile 的实际 05 命令预检。检查成功后再执行有真实输入的 00–06；不要把预检的退出码当成音质验收。
+02 必须带 `--transpose auto` 才能覆盖分离与 F0 依赖；原调 0 的预检可能跳过它们。微调/SVC/RVC/Fish 还需按主文件中带 profile 的实际 05 命令预检。检查成功后再执行有真实输入的 00–06；不要把预检的退出码当成音质验收。
 
 部署成功后记录本机包版本、GPU、代码/submodule commit 和模型校验值。`scripts/setup/capture_environment.py` 会枚举范围外的历史环境；只部署 00–06 的机器不要直接照搬运行它而假定所有环境都存在。保存选定解释器的 `pip freeze` 到新 `cache/` 记录即可，不覆盖运行锁来伪造一致性。
 
@@ -128,7 +143,9 @@ bash scripts/06_mix/run.sh --preflight
 |---|---|
 | `ffmpeg is not available` | PATH 中提供 FFmpeg 和 FFprobe，确认 `libmp3lame` |
 | `No module named music_cover` | 用本仓库 `bash scripts/.../run.sh`，它会设置 PYTHONPATH；不要从任意目录直接裸跑 `python -m music_cover.pipeline` |
-| `/mnt/afs_f/...` 文件不存在 | 不复制作者的旧 run；用自己的素材、相对路径和新配置重新从 00 开始。旧导出模型的内嵌路径另行核对 |
+| `/mnt/afs_f/...` 文件不存在 | 先确认项目根目录解析和文件是否存在；该挂载路径可能只是 `/data/...` 的真实路径。配置缺失时先创建配置，不因看到挂载名就重跑全部上游。迁移时使用用户自己的相对路径；旧 profile 内嵌路径另行核对 |
+| Fish 训练 `00_prepare` 报训练 YAML 不存在 | 先执行 `fish_diffusion/training/create_config/run.sh`，看到 `Created ...yaml`；`--plan` 不创建文件。已有分离结果无需重做 |
+| Fish 配置或导出目标已存在 | 使用新 version/输出位置；不要覆盖已成功版本。`dataset-dir` 与 `export-dir` 也由后续阶段创建，不提前建空目录 |
 | 01 读模型时 Transformers 报错 | 核查 `envs/sheetsage2`，不要把该节点静默改成 base，也不要降级整个 base |
 | 03 导入 `yue2` 失败 | 检查固定 YuE 子模块是否以 `--no-deps -e` 安装到 base |
 | 03 CUDA/注意力扩展或 OOM | 看当前 `command.json`、GPU、Torch/CUDA 与实际日志；对照固定 YuE 源码，不盲装最新 vLLM/FlashAttention |

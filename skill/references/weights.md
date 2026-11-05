@@ -34,12 +34,12 @@ cp configs/generation_models.lock.json configs/voice_models.lock.json configs/se
 /opt/conda/bin/python scripts/setup/download_separator_model.py
 /opt/conda/bin/python scripts/setup/download_voice_models.py
 
-# 选择任意微调/SVC/RVC 路线时还需要评估资产；零样本 05 本身不要求 ECAPA。
+# 选择任意微调/SVC/RVC/Fish 路线时还需要评估资产；零样本 05 本身不要求 ECAPA。
 /opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation
 /opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation --check-only
 ```
 
-`download_voice_models.py` 会一次准备五组 Seed-VC/F0 资产；仅用 SVC/RVC 时其中部分不是推理必需，但 02 和质量评估仍需 `models/RMVPE/rmvpe.pt`。按需精简时以 `common/resources.py` 的 requirements 为准，不能删除复用资源。
+`download_voice_models.py` 会一次准备五组 Seed-VC/F0 资产；仅用 SVC/RVC/Fish 时其中部分不是推理必需，但 02 和质量评估仍需 `models/RMVPE/rmvpe.pt`。按需精简时以 `common/resources.py` 的 requirements 为准，不能删除复用资源。
 
 HF revision 是快照版本，并非每个文件的 SHA256。BS-RoFormer 下载器会写入本次哈希，必须与备份的 `separation_model.lock.json` 比对；不能仅因新锁写出就声称原始哈希校验通过。其 YAML URL 未固定 commit，下载内容若与仓库记录不同应调查，不静默接受漂移。
 
@@ -68,6 +68,26 @@ SVC 的 RMVPE 与 RVC/Seed-VC 的 RMVPE 文件格式、大小不同，不能因�
 ```
 
 这两个脚本根据 `configs/so_vits_svc_assets.lock.json` / `configs/rvc_assets.lock.json` 验证大小和 SHA256，不负责安装 Python 包，也不会训练人物模型。默认 SVC 路线为 ContentVec 768l12 + RMVPE + 标准 NSF-HiFiGAN，未使用浅层扩散或增强器；标准声码器在生成器模型内，不需要另下扩散权重。
+
+## Fish Diffusion 公共资产
+
+| 组件 | 项目内路径 | 锁定来源 |
+|---|---|---|
+| 公共扩散底模，仅训练初始化 | `models/FishDiffusion/content-vec-pretrained-v1.ckpt` | [v2.0.0 权重](https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/content-vec-pretrained-v1.ckpt) |
+| ContentVec 256l9 | `models/FishDiffusion/contentvec/pytorch_model.bin`、`config.json` | [权重](https://huggingface.co/lengyue233/content-vec-best/resolve/main/pytorch_model.bin)、[配置](https://huggingface.co/lengyue233/content-vec-best/resolve/main/config.json)；URL 为 main，字节数和 SHA256 由资产锁固定 |
+| NSF-HiFiGAN | `models/FishDiffusion/nsf_hifigan/model`、`config.json` 及包内附属文件 | [v2.0.0 压缩包](https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip) |
+| F0 | 无神经网络权重 | `praat-parselmouth` 算法；公共 RMVPE 仍用于评估 |
+
+```bash
+bash scripts/05_voice_conversion/fish_diffusion/download_assets/run.sh
+/opt/conda/bin/python scripts/setup/setup_voice_training.py --scope evaluation
+bash scripts/05_voice_conversion/fish_diffusion/preflight/run.sh \
+  --scope training --model-load --gpu 0
+```
+
+下载脚本不安装 Python 包，不训练人物模型；它获取固定源码 `8e8f8cd849717f2db561e6c194df1a320c910e62`、应用项目兼容补丁并校验所有资产。已有匹配文件直接复用；离线资产缓存可用 `--cache-dir`，源码仍须已存在或可联网获取。锁文件为 [fish_diffusion_assets.lock.json](../../configs/fish_diffusion_assets.lock.json)。虽然推理使用 PyTorch 声码器，当前完整性检查也检查锁内 ONNX/LICENSE 等附属文件，保留整个部署目录。
+
+已有歌手包时，普通预检可用 `--scope inference`；当前 `--model-load` 会加载公共底模，因此使用它仍须保留公共训练权重。它不等于人物模型推理验证。Fish 公共底模已去掉歌手 embedding，不能当成 Seed-VC 式零样本模型；新歌手需训练并导出。
 
 ## 新训练人物音色时的附加资产
 
@@ -102,5 +122,6 @@ SVC 的 RMVPE 与 RVC/Seed-VC 的 RMVPE 文件格式、大小不同，不能因�
 | Seed-VC | `models/voices/my_voice/seed_vc/v001/` | `voice.json`、`model.pth`、`config.yml`、`validation.json` |
 | SVC | `models/voices/my_voice/so_vits_svc/v001/` | `voice.json` 及其登记的模型、结构配置、验证报告 |
 | RVC | `models/voices/my_voice/rvc/v001/` | `voice.json` 及其登记的模型、结构配置、检索索引、索引清单和验证报告 |
+| Fish Diffusion | `models/voices/my_voice/fish_diffusion/v001/` | `voice.json`、`model.ckpt`、`config.json`、`validation.json` |
 
 以 `voice.json` 记录的实际文件名和哈希为准。迁移时保留完整目录，不手改已签名模型文件；旧档案内嵌路径需要与当前解析器核对。训练和导出命令见 [training.md](training.md)。主流程的 `--voice-profile` 指向 `voice.json`。

@@ -1,6 +1,6 @@
 # 人物模型训练、导出与主流程衔接
 
-仅在需要新训练 Seed-VC/SVC/RVC 人物模型时阅读。已有完整导出包可直接按 [主文件](../SKILL.md) 运行 05。训练独立于歌曲主流程，不会在执行 05 时隐式开始。
+仅在需要新训练 Seed-VC/SVC/RVC/Fish 人物模型时阅读。已有完整导出包可直接按 [主文件](../SKILL.md) 运行 05。训练独立于歌曲主流程，不会在执行 05 时隐式开始。
 
 所有命令从项目根目录执行，训练脚本使用 `/opt/conda/bin/python`。`my_voice`、`v001` 是示例人物和新版本标识；每次实验使用新配置、数据目录、训练 run 和导出目录。公共权重可复用，不把别人已生成的实验文件当成自己的生成步骤。
 
@@ -155,9 +155,57 @@ bash scripts/05_voice_conversion/rvc/training/05_export/run.sh \
   --config configs/voice_training/rvc/my_voice_v001.yaml --run runs/voice_training/my_voice_rvc_v001
 ```
 
-RVC 采用当前 v2/F0/48k 路线。默认验证配置最终步数的 `checkpoints/model_00004000.pth`，可以显式传入自己需要的 `--checkpoint`；不是硬性限制只能用 4000 步。检索索引只由训练集内容特征建立。
+RVC 采用当前 v2/F0/48k 路线。默认验证配置最终步数的 `checkpoints/step_00004000.pth`，可以显式传入自己需要的 `--checkpoint`；不是硬性限制只能用 4000 步。检索索引只由训练集内容特征建立。
 
 输出数据在 `data/voice_datasets/my_voice/rvc/v001/`；训练 run 下有检查点、`added.index`、`index_manifest.json` 和验证报告；导出在 `models/voices/my_voice/rvc/v001/`。4000 是当前示例预算，不承诺最佳听感。
+
+## 3C. Fish Diffusion：从本次分离录音直接训练
+
+本路线可直接读第 2 节的 `recordings_v001`，不经过 SVC/RVC 的公共切片步骤，也不使用旧人物模型。先按 [weights.md](weights.md) 部署 Fish 及评估资产。选择 Fish 时，请在第 2 节分离之前另外准备 `validation_02/original.wav`、`test_02/original.wav` 并一并分离；两组以上留出录音支持跨录音重建探针。编号与窗口需替换为用户实际数据。
+
+```bash
+bash scripts/05_voice_conversion/fish_diffusion/training/create_config/run.sh \
+  --voice-id my_voice --version v001 \
+  --recordings-dir data/voice_training/my_voice/recordings_v001 \
+  --source-run runs/my_cover_v001 \
+  --validation-ids validation_01 validation_02 --test-ids test_01 test_02 \
+  --validation-windows 36:12 156:12 \
+  --output configs/voice_training/fish_diffusion/my_voice_v001.yaml \
+  --dataset-dir data/voice_datasets/my_voice/fish_diffusion/v001 \
+  --export-dir models/voices/my_voice/fish_diffusion/v001 \
+  --segment-seconds 8 --max-steps 5000 --save-every 1000 \
+  --batch-size 4 --crop-frames 384 --warmup-steps 1000 --decay-steps 5000 \
+  --learning-rate 0.0004 --start-learning-rate 0.00001 --final-learning-rate 0.00002 \
+  --pitch-shift-probability 1.5 --precision bfloat16 --seed 42 --gpu 0
+
+bash scripts/05_voice_conversion/fish_diffusion/training/00_prepare/run.sh \
+  --config configs/voice_training/fish_diffusion/my_voice_v001.yaml --run runs/voice_training/my_voice_fish_v001
+bash scripts/05_voice_conversion/fish_diffusion/training/01_features/run.sh \
+  --config configs/voice_training/fish_diffusion/my_voice_v001.yaml --run runs/voice_training/my_voice_fish_v001
+bash scripts/05_voice_conversion/fish_diffusion/training/02_train/run.sh \
+  --config configs/voice_training/fish_diffusion/my_voice_v001.yaml --run runs/voice_training/my_voice_fish_v001
+bash scripts/05_voice_conversion/fish_diffusion/training/03_validate/run.sh \
+  --config configs/voice_training/fish_diffusion/my_voice_v001.yaml --run runs/voice_training/my_voice_fish_v001 \
+  --checkpoint runs/voice_training/my_voice_fish_v001/checkpoints/step_00005000.ckpt
+bash scripts/05_voice_conversion/fish_diffusion/training/04_export/run.sh \
+  --config configs/voice_training/fish_diffusion/my_voice_v001.yaml --run runs/voice_training/my_voice_fish_v001
+```
+
+`create_config` 必须先成功创建 YAML，再运行训练 00；`--plan` 不会写文件。`recordings-dir` 与 `source-run` 是已存在输入，`output` 是本步创建的新 YAML，`dataset-dir` 与 `export-dir` 由后续阶段创建。不要提前创建目标空目录。训练 `--run` 与歌曲 `--source-run` 是两个独立目录。
+
+| 阶段 | 输出与用途 |
+|---|---|
+| 00_prepare | dataset-dir 下 `manifest.json`、train/validation/test 44.1 kHz 单声道 WAV |
+| 01_features | dataset-dir 下 `features/`；当前 attempt 的 `features.json`，仅训练集增强 |
+| 02_train | 训练 run 下 `checkpoints/step_00005000.ckpt`；当前 attempt 的 `training.json`、`losses.csv` |
+| 03_validate | 当前 attempt 的 `validation.json`、`metrics.csv`、`listening.html`、探针 WAV |
+| 04_export | export-dir 下完整歌手模型包；质量未通过仍可导出并标记待试听 |
+
+5000 是当前单依纯实验选出的示例预算，不是官方统一要求或所有歌手的最佳值。更新全部扩散声学参数和新歌手 embedding，冻结 ContentVec/NSF-HiFiGAN；Parselmouth 是固定算法。1000 步预热后继续衰减到 5000，避免把仅完成预热的运行当作质量训练。中断训练用原训练命令追加 `--resume`，延长预算可追加 `--max-steps N`；数据/模型身份改变应使用新 run。
+
+验证默认读最终训练报告，也允许显式 checkpoint；目前 03_validate 使用至多两个留出录音探针和配置的歌曲窗口，不是全测试集遍历。`--evaluation-split test` 可生成同类独立探针报告，但导出必须读取 validation 报告。测试执行也更新 03_validate 状态；若先做 test，需随后重新跑 validation 再导出，不能把 test 报告当选模依据。
+
+生成推理 YAML 和执行 05、06 见 [Skill 中的 Fish 命令](../SKILL.md)。整曲对比 `fish_diffusion/validate/run.sh` 可选；其 05/06 子调用会复用有效缓存，已有目标 run 时省略 `--source-run`。详细服务器实例、路径解释及缺失 YAML 定位见 [手动实操](../../docs/24_fish_diffusion_manual.md)。
 
 ## 4. 回到歌曲主流程 05、06
 

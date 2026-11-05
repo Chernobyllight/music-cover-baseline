@@ -1,6 +1,6 @@
-# 使用说明（v1.1）
+# 使用说明（v1.1 基线＋Fish Diffusion 工作树扩展）
 
-新使用者优先按[部署 Skill](skill/SKILL.md)准备自己的数据和全新配置；包含可复制的 00–06 命令、权重下载与三种训练路线。
+新使用者优先按[部署 Skill](skill/SKILL.md)准备自己的数据和全新配置；包含可复制的 00–06 命令、权重下载与四种模型的训练路线。Fish 新增功能尚未单独发布，需使用包含相应脚本的代码版本。
 
 以下历史素材示例在已配置服务器执行，需要先确认对应媒体和人物模型仍存在。工程根目录为 `/data/liuhongda/music-cover-baseline`，与 `/mnt/afs_f/liuhongda/music-cover-baseline` 指向同一工程。新机器先按[环境说明](docs/03-environment.md)和[模型权重指南](docs/12_model_weights.md)恢复依赖。
 
@@ -92,7 +92,7 @@ bash scripts/run_baseline.sh --run runs/my_chuan_yue_shu_guang_seedvc --status
 
 如果新任务不需要分轨和 MIDI，可在首次完整命令加 `--no-review`；仍执行 10–11，并交付 WAV/MP3。当前工程没有自动歌词检测、歌词门禁或静音修复。
 
-## 四条音色入口
+## 四种模型、五条音色入口
 
 | 路线 | 独立入口（位于 scripts/05_voice_conversion） | 使用条件 |
 |---|---|---|
@@ -100,10 +100,11 @@ bash scripts/run_baseline.sh --run runs/my_chuan_yue_shu_guang_seedvc --status
 | Seed-VC 微调 | `finetuned/run.sh` | 已导出 Seed-VC voice.json + 参考片段，默认 3 候选 |
 | so-vits-svc | `so_vits_svc/run.sh` | 已导出 SVC voice.json，1 候选 |
 | RVC | `rvc/run.sh` | 已导出 RVC voice.json 与训练集索引，默认 3 候选 |
+| Fish Diffusion | `fish_diffusion/run.sh` | 已导出 Fish voice.json，当前 1 候选；不支持参考音频零样本 |
 
-SVC/RVC 推理不把参考人声作为音色条件；主流程仍需要参考文件供 02 音区分析和评估。训练是单独操作，不会由 05 隐式启动。
+SVC/RVC/Fish 推理不把参考人声作为音色条件；主流程仍需要参考文件供 02 音区分析和评估。训练是单独操作，不会由 05 隐式启动。
 
-公平比较时先引用同一份已完成的 00–04。下面源运行在本服务器保留；克隆源码后需要自行生成上游。
+公平比较时先引用同一份已完成的 00–04。下面源运行是历史示例，运行前须检查是否仍存在；克隆源码后需要自行生成上游。当前单依纯＋绿洲实例见 [Fish 手动实操](docs/24_fish_diffusion_manual.md)。
 
 ```bash
 bash scripts/05_voice_conversion/fork_run.sh \
@@ -143,7 +144,7 @@ fork 引用原来的文件并校验哈希，必须保留源 run。切换后端�
 
 ## 训练和选调
 
-训练路径与中间产物详见 [Seed-VC 手册](docs/13_voice_adaptation.md)、[SVC 手册](docs/18_so_vits_svc.md)、[RVC 手册](docs/20_rvc.md)。模型版本、训练 run 和派生数据目录分别命名，已有导出版本不可覆盖。训练步数与 Seed-VC 的推理 `--steps` 无关；SVC/RVC 不使用扩散推理步数。
+训练路径与中间产物详见 [Seed-VC 手册](docs/13_voice_adaptation.md)、[SVC 手册](docs/18_so_vits_svc.md)、[RVC 手册](docs/20_rvc.md)、[Fish 手动实操](docs/24_fish_diffusion_manual.md)。模型版本、训练 run 和派生数据目录分别命名，已有导出版本不可覆盖。训练步数与 Seed-VC 的推理 `--steps` 无关；SVC/RVC 当前标准路线不使用扩散推理步数；Fish 使用其推理 YAML 中的 `sampler_interval`/`noise_predictor`，不读取 Seed-VC 的 `steps` 作为扩散参数。
 
 `--transpose auto` 默认搜索 -6～+6 半音，只有 `reference_kind: singing` 等条件满足才自动采用非零建议；未知/讲话参考可能推荐非零但实际保持 0。`--transpose -2` 明确降两半音。02 调整乐谱，03 据此生成，05 保留新歌 F0，不重复移调。详见 [双向选调说明](docs/10_bidirectional_pitch.md)。
 
@@ -165,3 +166,9 @@ PYTHONPATH=src envs/separator/bin/python scripts/verify_review.py \
 ```
 
 该命令检查成品与所有阶段文件的哈希、音频、MIDI、打包和链接。不要把检查报告写进已发布的 artifacts。完整交付清单与数据保留规则见 [交付指南](docs/21_delivery.md)。
+
+## Fish Diffusion 独立换声路线
+
+先读 [部署与模型说明](docs/22_fish_diffusion.md)，再按 [13 步手动实操](docs/24_fish_diffusion_manual.md)从原始录音生成全新配置、数据、特征和模型。第 4 步 `create_config` 创建 YAML；第 5 步训练 `00_prepare` 只读取它，不能跳过第 4 步。每个参数路径是否必须已有、在哪一步创建，均在手册表中列明。
+
+完成 05、06 就得到歌曲 run 的 `stages/06_mix/attempt_*/artifacts/final.wav` / `final.mp3`。第 13 步跨模型对比是可选的，不影响前面的训练、导出和混音。训练状态看训练 run 的 `state.json`，歌曲状态看 `stage_state.json`；fork 引用的原 00–04 目录必须保留。

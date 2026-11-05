@@ -1,3 +1,48 @@
+# v1.2 发布前复核（2026-11-05）
+
+本版纳入 Fish Diffusion 独立训练/推理、优化方案及部署文档，保留原有 Seed-VC、SVC、RVC 和 00–11 主流程。发布前对当前源码重新执行以下检查；真实歌曲证据另列在下节。
+
+| 检查 | 本次结果 |
+|---|---|
+| 自动测试 | 既有 `envs/separator/bin/python` 执行 255 项回归，全部通过；该解释器用于测试，Fish 训练和推理仍是 base |
+| 源码与文档 | Python/Shell 语法、配置解析、模块入口、本地文档链接及 Git whitespace 检查通过 |
+| 源码锁 | 同步 201 个项目 Python/Shell 文件的 SHA256；发布文件清单扫描媒体、权重和常见凭据格式 |
+| 部署 Skill | 格式检查通过；本轮文档复核另有 101 段 Bash 语法、44 条 Fish 命令参数和两个配置 `--plan` 检查 |
+| Fish 训练预检 | 既有 base 实际加载公共声学底模和配套组件；193 个非歌手张量全部匹配，新歌手 embedding 初始化，55,061,632 个可训练参数 |
+| Fish 推理预检 | `manual_20261105` 人物 profile 的正式 05 入口预检通过 |
+| 其他路线预检 | 当前单依纯 SVC、RVC 配置预检通过 |
+| 当前服务器限制 | 7830 的 base 仍缺少 `munch`，Seed-VC 预检失败；这是已记录的环境缺项，不能宣称当前机器所有路线均可立即推理 |
+| 发布范围 | 4 个原有 gitlink commit 不变；Fish 使用锁定 checkout 和随仓库提供的补丁；模型、音频、数据集、runs、环境和凭据不提交 |
+
+本轮发布复核没有重新训练歌手模型或生成整首歌。Fish 五阶段训练与 05→06 的真实成功证据为下面的手动版本；新机器全量安装、Fish 07–11 和主观听感不属于此次复核。
+
+发布检查保存在服务器 `cache/publish_v1_2_20261105/`，含 tests.log、source_check.json、runtime_checks.json、source_audit.json 与 release_files.json。部署依赖及权重见 [Skill](skill/SKILL.md)，完整手动步骤见 [Fish 实操](docs/24_fish_diffusion_manual.md)。
+
+---
+
+# Fish Diffusion 手动训练与 05→06 验证（2026-11-05，v1.2）
+
+用户从单依纯原始录音重新分离、创建配置、准备数据/特征、训练 5000 步、验证和导出，随后完成《绿洲》的 05 换声与 06 混音。本文是对已完成运行的只读核验，不表示本轮文档更新重新跑了训练。
+
+| 项目 | 运行记录 |
+|---|---|
+| 数据 | 96 段训练 / 719.273 秒 / 24 录音组；validation/test 各 8 段 / 59.951 秒 / 2 组 |
+| 训练 run | `runs/voice_training/shan_yi_chun_fish_manual_20261105`，五阶段均 succeeded |
+| 底模加载 | 193 个非歌手张量匹配，初始化 speaker embedding；55,061,632 个声学参数更新 |
+| 训练/推理 Python | `/opt/conda/bin/python`，Torch 2.8.0+cu128 |
+| 人物档案 | `models/voices/shan_yi_chun/fish_diffusion/manual_20261105/voice.json`，selected_step=5000 |
+| 歌曲 run | `runs/lhd_lv_zhou_shan_yi_chun_fish_manual_20261105`，05/06 均 attempt_001 succeeded |
+| 05 同参考 ECAPA | 0.7619887590；音高误差 ≤1 半音占比 98.1959% |
+| 最终音频 | `stages/06_mix/attempt_001/artifacts/final.wav` / `final.mp3`，257.3986875 秒、48 kHz 双声道 |
+
+训练 checkpoint SHA256：`6a36aa898efa1e03fcc9596596c66372a2d1f7aaff1eddabcb1a3e1826c9e403`；导出 model.ckpt SHA256：`5f5c9f7bc8e12ac74fdb54b7029b01796483eef20150be91c86835bf37d88816`；最终 MP3 SHA256：`5e199ae0943e827dd4df7bac2cafe9db6690f7600ef48c1dc12451332a496699`。检查点含优化器等状态，不能与导出模型混用。
+
+训练证据在训练 run 的 state.json、stages/02_train/attempt_001/artifacts/training.json、03_validate 验证报告及 04_export 记录；整曲指标来自歌曲 05 的 candidates/candidate_001/diagnostics/metrics.json。没有声称已运行可选整曲对比、所有独立 test 片段或 Fish 07–11。技术通过不等于主观听感验收。
+
+手动流程和输入输出见 [实操手册](docs/24_fish_diffusion_manual.md)。之前优化实验使用 95 段数据，计数/指标见 [优化报告](docs/23_fish_diffusion_optimization.md)，与本次从原录音重新生成的数据分开记录。
+
+---
+
 # v1.1 发布前复核（2026-11-04）
 
 本版纳入 v1.0 之后的 base 运行适配、配置生成与路径迁移、统一音色验收、以及 `skill/` 部署指南。模型、素材、训练数据和生成音频不随 Git 发布。

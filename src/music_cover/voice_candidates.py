@@ -108,6 +108,8 @@ def render_report(report, destination, *, mixed=False):
     text += '<p>同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。合格候选按 ECAPA 推荐；没有合格候选仍保留可读取音频及混音，标记待人工确认。ECAPA 不是身份百分比，人工听感与歌词准确性仍需确认。</p>'
     if report.get('backend') == 'so_vits_svc':
         text = text.replace('同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。', 'so-vits-svc 歌手模型转换；参考音频仅用于评估，不参与推理。当前接入提供一个候选。')
+    if report.get('backend') == 'fish_diffusion':
+        text = text.replace('同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。', 'Fish Diffusion 歌手模型转换；参考音频仅用于评估，不参与推理。独立验证集指标见模型验证报告。')
     if report.get('backend') == 'rvc':
         text = text.replace('同一源人声、参考音频和微调模型，使用不同随机种子；未重新训练。', 'RVC 歌手模型转换；同一模型、索引和源人声，显式控制随机种子。参考音频仅用于评估，不参与推理；独立测试集指标另行报告。')
     text += '<p>验收推荐：<strong>'+html.escape(recommended or '无合格候选')+'</strong>；默认输出：'+html.escape(selected or '无')+'。'+('入口 final.wav / final.mp3 对应默认输出。' if mixed and selected else '')+(' 需要人工确认，未宣称质量合格。' if selected and not recommended else '')+'</p>'

@@ -4,8 +4,8 @@ from ..voice_candidates import candidate_seeds
 from ..voice import resolve_voice
 ID = '05_voice_conversion'
 CONTRACT_VERSION = 4
-DEFAULTS = {'timeout_seconds': 10800, 'backend': 'seed_vc', 'mode': 'zero_shot', 'voice_profile': None, 'candidate_count': 3, 'candidate_seeds': None, 'svc': {}, 'rvc': {}}
-CODE = ['audio.py', 'voice.py', 'voice_weights.py', 'voice_candidates.py', 'common/voice_profiles.py', 'common/voice_paths.py', 'backends/seed_vc.py', 'backends/seed_vc_runtime.py', 'backends/voice_candidates.py', 'backends/voice_metrics.py', 'voice_alignment.py', 'pitch_selection.py', 'pitch_validation.py', 'svc.py', 'backends/so_vits_svc.py', 'backends/svc_contentvec.py', 'rvc.py', 'backends/rvc.py']
+DEFAULTS = {'timeout_seconds': 10800, 'backend': 'seed_vc', 'mode': 'zero_shot', 'voice_profile': None, 'candidate_count': 3, 'candidate_seeds': None, 'svc': {}, 'rvc': {}, 'fish': {}}
+CODE = ['audio.py', 'voice.py', 'voice_weights.py', 'voice_candidates.py', 'common/voice_profiles.py', 'common/voice_paths.py', 'backends/seed_vc.py', 'backends/seed_vc_runtime.py', 'backends/voice_candidates.py', 'backends/voice_metrics.py', 'voice_alignment.py', 'pitch_selection.py', 'pitch_validation.py', 'svc.py', 'backends/so_vits_svc.py', 'backends/svc_contentvec.py', 'rvc.py', 'backends/rvc.py', 'fish.py', 'backends/fish_diffusion.py']
 TIMELINE = {'*': 'generated_before_alignment'}
 def backends(r, c): return [c.get('backend', 'seed_vc')] + (['voice_metrics'] if c.get('mode') == 'finetuned' else [])
 def requires(r): return ['00_prepare', '04_vocal_separation']
@@ -21,7 +21,13 @@ def inputs(ctx):
 
 def params(r, c):
     c = {**DEFAULTS, **c}
-    if c['backend'] not in {'seed_vc', 'so_vits_svc', 'rvc'}: raise ValueError('Unsupported voice backend')
+    if c['backend'] not in {'seed_vc', 'so_vits_svc', 'rvc', 'fish_diffusion'}: raise ValueError('Unsupported voice backend')
+    if c['backend'] == 'fish_diffusion':
+        from ..fish import validate_settings
+        if c['mode'] != 'finetuned': raise ValueError('fish_diffusion requires finetuned mode')
+        c['fish'] = validate_settings(c['fish'])
+    elif c['fish']:
+        raise ValueError('fish settings require the fish_diffusion backend')
     if c['backend'] == 'rvc':
         from ..rvc import validate_settings
         if c['mode'] != 'finetuned': raise ValueError('rvc requires finetuned mode')

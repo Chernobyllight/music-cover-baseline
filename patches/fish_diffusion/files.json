@@ -1,0 +1,42 @@
+{
+  "fish_diffusion/modules/feature_extractors/__init__.py": {
+    "original_sha256": "e182e26b2c06654136e24d929e69684d06afab1f2c43d0e4c1e2aa0c77471b81",
+    "patched_sha256": "fd8c907c56562e72ddcecb055af0f90ab86dde1fb0a1eb8ce94f284686c80fa3"
+  },
+  "fish_diffusion/modules/pitch_extractors/__init__.py": {
+    "original_sha256": "afba45c3656ee91495f0a0265b9c34514ea55a3ff3921f68b76217e00a0c47ed",
+    "patched_sha256": "530338713b04814279756df205019fda20e2f53bda5ac33df21749170aad17c3"
+  },
+  "fish_diffusion/modules/vocoders/__init__.py": {
+    "original_sha256": "3f1b10b513489334f8cbd364266c1b63919095b80a0d40e0350b4f157a78461e",
+    "patched_sha256": "3baa068d30f7ab68e40b694cb2d6a54772fa90e3f4e455999d1b7e6c620fa04f"
+  },
+  "fish_diffusion/modules/encoders/__init__.py": {
+    "original_sha256": "ba1de30bdb2bf96712caa4e7966b4da9e3a6d3a3b7344b27dfc77b537aafca24",
+    "patched_sha256": "412fe3c416cd23b1af636e83963088e5fda19fa6223b80a1b4c89b7fc2d57efe"
+  },
+  "fish_diffusion/archs/diffsinger/diffusions/builder.py": {
+    "original_sha256": "a78a8af20d8839d03ddbe83a29d254bf87f18496b7137886bdd32b3ec15409ca",
+    "patched_sha256": "bc29afec4ba021df219462a5af423de0a17770f050f995af179a2558dfee19eb"
+  },
+  "fish_diffusion/utils/audio.py": {
+    "original_sha256": "56a05dd6652713d4d3e14ace0ecef97ed04ab465da892d1ee12d82de0a72bce1",
+    "patched_sha256": "c1a8f8ac9e0d477ebc905c12ecc16445fc5096c793944f8c1c3e70e3af1f1bad"
+  },
+  "fish_diffusion/utils/viz.py": {
+    "original_sha256": "a38f8bd57d26713697d51dc278e8ee0a9d8b724a233010980699e2424075a313",
+    "patched_sha256": "a39c40d1ad6d989785169bc0f59da3de64819ad53561e440eff863b04854d744"
+  },
+  "fish_diffusion/archs/diffsinger/diffsinger.py": {
+    "original_sha256": "450d07fda8f416f0630fbe73f57d8e9d314e90243e91a1f503d75701639be017",
+    "patched_sha256": "ab798ca9706b737a1e20cf802e4c6d991248a105e463e4385122e92722fb1be9"
+  },
+  "fish_diffusion/modules/vocoders/nsf_hifigan/nsf_hifigan.py": {
+    "original_sha256": "b5a5149ce749447993a546183cb3022f607430b860d947f9052e9138de6c9849",
+    "patched_sha256": "5cbcea4f13bd00e278bafd3322d599e010fc08f9160698d47146f530d54612b7"
+  },
+  "fish_diffusion/modules/pitch_extractors/builder.py": {
+    "original_sha256": "69fc81111dc4d8962e7811ca74c7f89245242ddfd549947d5006c8d5f74123ef",
+    "patched_sha256": "9e8b00276fead52aef3d1bfb3dfee541ab906e31ce15749c90f7a4693869a040"
+  }
+}

@@ -10,7 +10,7 @@
 | `envs/control/bin/python` | 总入口主控制器、音频准备；06 独立脚本使用 base |
 | `envs/sheetsage2/bin/python` | 01/08 转谱 |
 | `envs/separator/bin/python` | 07 成品分轨、09 MIDI、评审打包与单元测试 |
-| `/opt/conda/bin/python` | 06 独立脚本的混音、03 YuE2 曲风生成、02/04 的 BS-RoFormer 分离、02/10 的独立 RMVPE 提取，以及 Seed-VC、SVC、RVC 训练/推理和 ECAPA 评估；不另建环境 |
+| `/opt/conda/bin/python` | 06 独立脚本的混音、03 YuE2 曲风生成、02/04 的 BS-RoFormer 分离、02/10 的独立 RMVPE 提取，以及 Seed-VC、SVC、RVC、Fish Diffusion 训练/推理和 ECAPA 评估；不另建环境 |
 
 当前在 Linux、Python 3.11、NVIDIA H200 上验证。不同环境的 Torch/NumPy 版本并不相同；使用对应环境快照，不在工作环境中安装上游整套 requirements。YuE2 配置的显存预算为 80 GiB，不能宣称已验证 24 GB GPU。
 
@@ -129,3 +129,7 @@ Seed-VC 适配层为旧版 BigVGAN 本地加载器补齐 Hub 1.x 不再传递的
 `configs/*.installed.txt` 中的旧局部 freeze 记录不等于完整安装配方，其中可能有原服务器 wheel 路径。此轮快照用于核对现有机器，并未声称已在全新机器从零安装通过。迁移需重建环境、恢复锁定权重和素材，再执行预检、短推理与完整任务验收。步骤见 [仓库说明](08-repository.md)。
 
 最初环境设想另存 [历史环境文档](archive/03-environment_before_cleanup_20261029.md)，其中“尚未安装”等描述只反映当时状态。
+
+## Fish Diffusion base 适配
+
+必要新增包见 `configs/requirements-fish-diffusion.txt`；实际环境快照见 `configs/fish-diffusion-base.installed.txt`。使用现有 `/opt/conda/bin/python`，按安装前包版本施加约束，不照装上游旧 requirements。固定源码的兼容补丁仅在 `third_party/fish-diffusion` 生效。部署和模型加载预检见 [Fish 指南](22_fish_diffusion.md)。新用户的完整逐步训练、推理和中间路径见 [手动实操](24_fish_diffusion_manual.md)。共享目录不共享 base 包；本服务器 Fish 成功不代表其他机器或 Seed-VC 所有依赖也齐全。

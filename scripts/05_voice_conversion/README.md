@@ -1,6 +1,6 @@
 # 05_voice_conversion · 转换目标音色
 
-Seed-VC 推理、微调训练及候选评估直接使用已有 base：`/opt/conda/bin/python`，不调用 `envs/seed-vc`。
+Seed-VC、SVC、RVC、Fish 的推理、微调训练及候选评估直接使用已有 base：`/opt/conda/bin/python`，不调用 `envs/seed-vc`。
 依赖与环境快照见[环境说明](../../docs/03-environment.md)；不要安装上游整套 requirements 或改动其它模型的基础依赖。
 
 默认及本页原有命令为 Seed-VC；新增 SVC 歌手模型路线见文末及 [独立入口](so_vits_svc/README.md)。
@@ -67,9 +67,9 @@ bash scripts/run_baseline.sh --run runs/qiu_yi_nong_modular_test --from 05_voice
 
 另一个完整实例：[孙燕姿＋秋意浓＋Bossa Nova / Samba Jazz，输出 runs/lhd_test_modular](../../docs/11_modular_walkthrough.md)。该手册包含从 00 到 11 的每条命令、上下游路径和评估解读。
 
-## 微调推理的三个候选
+## Seed-VC / RVC 的微调候选
 
-微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，优先使用推荐版本；无合格者时默认试听输出仍进入混音和后续交付，保留未通过的验收结论。零样本入口仍为单次推理。
+Seed-VC / RVC 微调入口默认生成三个完整候选（seed=42 时为 42、43、44），使用同一目标音色模型、源人声、参考片段和推理参数。05 保存干声与逐项指标，06 分别混音，11 交付三个 WAV/MP3。仅技术检查合格的候选参与 ECAPA 排名，优先使用推荐版本；无合格者时默认试听输出仍进入混音和后续交付，保留未通过的验收结论。零样本入口仍为单次推理；SVC/Fish 当前各一个候选。
 
 具体命令与中间文件路径见[三个候选与推荐结果使用说明](../../docs/15_voice_candidates.md)。
 
@@ -90,3 +90,7 @@ bash scripts/05_voice_conversion/rvc/run.sh \
 ```
 
 新 run 应先运行 00–04 或按 [RVC 指南](../../docs/20_rvc.md)从现有 Seed-VC run 创建独立副本。模型训练入口位于 `rvc/training/00_prepare` 至 `05_export`，固定使用训练配置的最终步数模型，不要求用户比较检查点。
+
+## Fish Diffusion 歌手模型
+
+独立入口：[fish_diffusion](fish_diffusion/README.md)，独立训练阶段为 00_prepare→01_features→02_train→03_validate→04_export；不改变主流程 00–04。训练、推理、权重部署及完整对照命令见 [Fish 指南](../../docs/22_fish_diffusion.md)。所有 Fish 阶段使用 base Python。从原始录音亲手生成配置、模型与混音见 [13 步手册](../../docs/24_fish_diffusion_manual.md)；训练前先 create_config，最终对比报告可跳过，不影响 06 成品。

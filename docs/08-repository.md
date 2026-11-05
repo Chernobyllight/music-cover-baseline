@@ -1,10 +1,10 @@
-当前版本：`v1.1`，版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。当前操作见 [USAGE.md](../USAGE.md)，交付验收见 [交付说明](21_delivery.md)。
+当前版本：`v1.2`，包含 Fish Diffusion 接入与部署文档；版本标识见根目录 `VERSION`，变更见 [CHANGELOG.md](../CHANGELOG.md)。当前操作见 [USAGE.md](../USAGE.md)，交付验收见 [交付说明](21_delivery.md)。
 
 模型资产的集中清单、固定版本、下载命令与校验方法见[模型权重指南](12_model_weights.md)。
 
 本仓库用于保存音乐换曲风与参考音色转换 baseline 的代码、文档及版本记录。原始工作目录为 `/data/liuhongda/music-cover-baseline`；现有模型和音频产物继续保留在该目录，不随 Git 提交上传。
 
-v1.1 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
+v1.2 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模型和环境目录继续复用；旧运行只读保留，新的模块化执行创建新运行目录。
 
 | 内容 | Git 管理方式 |
 | --- | --- |
@@ -13,16 +13,20 @@ v1.1 分支的模块化布局见 [模块化文档](09_modular_pipeline.md)。模
 | `configs/` | 提交模型 revision、校验值、环境快照和当前配置 |
 | `data/demo_sources.json` | 提交内置演示素材的来源和哈希，不包含音频或歌词正文 |
 | `third_party/YuE`、`third_party/seed-vc`、`third_party/so-vits-svc`、`third_party/rvc` | 作为 Git 子模块固定上游代码 commit |
+| `patches/fish_diffusion/`、Fish 资产锁/脚本 | 随扩展源码交付固定版本及兼容补丁 |
+| `third_party/fish-diffusion` | 下载器获取的固定 checkout，不是第五个 gitlink；按锁与补丁恢复 |
 | `models/`、`envs/`、`cache/`、`checkpoints/` | 本地资源，不提交 |
 | `data/raw/`、`data/prepared/`、`data/voice_training/`、`data/voice_datasets/`、`runs/` | 本地输入、中间结果和交付音频，不提交 |
 
-在新目录获取 v1.1 代码，并仅初始化本项目需要的四个直接子模块：
+在新目录获取 v1.2 代码，并仅初始化本项目需要的四个直接子模块：
 
 ```bash
-git clone --branch v1.1 https://github.com/Chernobyllight/music-cover-baseline.git
+git clone --branch v1.2 https://github.com/Chernobyllight/music-cover-baseline.git
 cd music-cover-baseline
 git submodule update --init third_party/YuE third_party/seed-vc third_party/so-vits-svc third_party/rvc
 ```
+
+v1.2 包含 `scripts/05_voice_conversion/fish_diffusion/`、`src/music_cover/fish*.py`、资产锁和兼容补丁。Fish 上游代码和公共权重仍需按 [Fish 指南](22_fish_diffusion.md)执行独立下载器恢复；克隆源码不会下载模型或歌手数据。
 
 如果已经普通克隆，在仓库内执行：
 
@@ -119,9 +123,9 @@ bash scripts/run_baseline.sh --config configs/tasks/bu_bai_de_ying_xiong_celtic_
 
 最后一条要求已经恢复该任务指定的杨坤 profile；其他歌手请换自己的任务配置。旧歌手录音、导出权重及训练状态均不随仓库发布；本版不包含单曲伪标签方案、歌词审核模型或歌词检查接口。
 
-## v1.1 交付边界
+## v1.2 交付边界
 
-v1.1 保留四条音色入口和 00–11 流程，加入部署 Skill、配置生成、base 适配和统一验收。代码包不包含媒体、人物权重和 Python 环境。`.gitmodules` 记录四个上游仓库；固定 commit 见上表、Git gitlink 和 `configs/environments.lock.json`。2026-10-29 的独立源码归档另携带 `UPSTREAM.json`；不能把上游最新版本当成已验证版本。
+v1.2 提供四种音色后端、五条使用路线和 00–11 流程，包含部署 Skill、配置生成、base 适配、统一验收及 Fish 独立训练/推理。代码包不包含媒体、人物权重和 Python 环境。`.gitmodules` 记录四个上游仓库；固定 commit 见上表、Git gitlink 和 `configs/environments.lock.json`。2026-10-29 的独立源码归档另携带 `UPSTREAM.json`；不能把上游最新版本当成已验证版本。
 
 老版主说明及技术记录位于 [历史文档目录](archive/README.md)。`scripts/verify_result.py` 只兼容非模块化 v0.1 运行；现有 00–11 运行使用 `scripts/verify_review.py`，检查报告写到 `cache/`，避免修改已发布产物的哈希。
 

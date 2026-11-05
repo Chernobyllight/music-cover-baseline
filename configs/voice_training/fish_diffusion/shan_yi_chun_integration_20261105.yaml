@@ -1,0 +1,67 @@
+backend: fish_diffusion
+voice_id: shan_yi_chun
+version: integration_20261105
+gpu: 0
+dataset_dir: data/voice_datasets/shan_yi_chun/fish_diffusion/integration_20261105
+export_dir: models/voices/shan_yi_chun/fish_diffusion/integration_20261105
+reference: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+model:
+  architecture: diff_svc_v2
+  sample_rate: 44100
+  hop_length: 512
+  mel_channels: 128
+  content_dim: 256
+  content_layer: 9
+  content_projection: true
+  f0_predictor: parselmouth
+  f0_min: 40.0
+  f0_max: 2000.0
+  keep_zeros: false
+  timesteps: 1000
+  speaker_count: 1
+  pitch_encoding: log
+  vocoder_log: base10
+segment_seconds: 8
+training:
+  max_steps: 1000
+  save_every: 500
+  batch_size: 4
+  crop_frames: 384
+  warmup_steps: 1000
+  decay_steps: 5000
+  learning_rate: 0.0004
+  start_learning_rate: 1.0e-05
+  final_learning_rate: 2.0e-05
+  seed: 42
+  precision: bfloat16
+augmentation:
+  pitch_shift_probability: 1.5
+  key_shifts:
+  - -5.0
+  - 5.0
+inference:
+  sampler_interval: 10
+  noise_predictor: plms
+  chunk_seconds: 8.0
+  overlap_seconds: 0.2
+  pad_seconds: 0.5
+validation:
+  source_run: runs/lhd_lv_zhou_shan_yi_chun_modular_test
+  windows:
+  - start: 36.0
+    duration: 12.0
+  - start: 156.0
+    duration: 12.0
+  seed: 42
+  source_files:
+    reference:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/00_prepare/attempt_001/artifacts/reference.wav
+      sha256: bad26839b86d0314ca52face539f2c87ac54fe3a5897d656c46a73cea166959e
+    vocals:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/04_vocal_separation/attempt_001/artifacts/vocals.wav
+      sha256: 15c500ce11fe3fc65fd0656109a974c9ea252b8836f01327b5f6ce1b3f74387a
+    instrumental:
+      path: runs/lhd_lv_zhou_shan_yi_chun_modular_test/stages/04_vocal_separation/attempt_001/artifacts/instrumental.wav
+      sha256: 326d35309215d4afa499f4cbca55c2f39f1a785a3a6b3d02abe926b126fd5211
+source_dataset: data/voice_training/shan_yi_chun/svc_manual_20261104/dataset
+source_manifest_sha256: fa2d749329d2e1ecbb43a52d591557fb5f28e004d198bab407c0cdae8cdc1872

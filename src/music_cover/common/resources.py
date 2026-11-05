@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from ..audio import sha256
 
-ENVIRONMENTS = {'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': 'sheetsage2', 'yue': '/opt/conda', 'separator': '/opt/conda',
+ENVIRONMENTS = {'fish_diffusion': '/opt/conda', 'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': 'sheetsage2', 'yue': '/opt/conda', 'separator': '/opt/conda',
                 'seed_vc': '/opt/conda', 'rmvpe': '/opt/conda', 'review_stems': 'separator',
                 'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': '/opt/conda'}
 # Existing stage callers also use these environment names for unrelated operations.
@@ -13,7 +13,7 @@ ENVIRONMENTS = {'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': '
 EXECUTION_BACKENDS = {'separate': 'separator', 'pitch': 'rmvpe', 'cover': 'yue',
                       'convert': 'seed_vc', 'convert_candidates': 'voice_metrics',
                       'evaluate_voice': 'voice_metrics', 'svc_metrics': 'voice_metrics'}
-BASE_LOCKS = {'rvc': 'rvc-base.installed.txt', 'so_vits_svc': 'svc-base.installed.txt',
+BASE_LOCKS = {'fish_diffusion': 'fish-diffusion-base.installed.txt', 'rvc': 'rvc-base.installed.txt', 'so_vits_svc': 'svc-base.installed.txt',
               'separator': 'pitch-base.installed.txt', 'rmvpe': 'pitch-base.installed.txt',
               'yue': 'yue-base.installed.txt', 'seed_vc': 'seed-vc-base.installed.txt',
               'voice_metrics': 'seed-vc-base.installed.txt'}
@@ -45,6 +45,8 @@ def execution_python(root, environment, operation):
 def resource_data(root, backend):
     """Only the selected model entries; editing another model's lock does not invalidate this stage."""
     root = Path(root)
+    if backend == 'fish_diffusion':
+        return json.loads((root / 'configs/fish_diffusion_assets.lock.json').read_text())
     if backend == 'rvc':
         return json.loads((root / 'configs/rvc_assets.lock.json').read_text())
     if backend == 'so_vits_svc':
@@ -78,7 +80,7 @@ def signature(root, backends):
         if backend == 'voice_metrics':
             entry['additional_requirements_sha256'] = sha256(root / 'configs/requirements-voice-adaptation.txt')
         # Small local model implementation files are executable dependencies, too.
-        prefixes = {'rvc': ('third_party/rvc/infer', 'third_party/rvc/tools', 'third_party/rvc/train'), 'so_vits_svc': ('third_party/so-vits-svc',), 'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
+        prefixes = {'fish_diffusion': ('third_party/fish-diffusion/fish_diffusion',), 'rvc': ('third_party/rvc/infer', 'third_party/rvc/tools', 'third_party/rvc/train'), 'so_vits_svc': ('third_party/so-vits-svc',), 'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
                     'yue': ('models/YuE2-3B', 'models/YuE2-Vae', 'third_party/YuE'),
                     'seed_vc': ('third_party/seed-vc',), 'rmvpe': ('third_party/seed-vc/modules',),
                     'voice_metrics': ('third_party/seed-vc/modules',)}.get(backend, ())
@@ -92,6 +94,9 @@ def signature(root, backends):
 def requirements(root, backend):
     root = Path(root)
     required = [python_for(root, backend)]
+    if backend == 'fish_diffusion':
+        required += [root / a['path'] for a in resource_data(root, backend)['assets'] if a.get('scope') != 'training']
+        required += [root / 'third_party/fish-diffusion/fish_diffusion/archs/diffsinger/diffsinger.py']
     if backend == 'rvc':
         required += [root / a['path'] for a in resource_data(root, backend)['assets'] if a.get('scope') != 'training']
         required += [root / 'third_party/rvc/infer/module/models.py']
@@ -135,6 +140,9 @@ def preflight(root, backends=(), mp3=False):
         result = subprocess.run(command, capture_output=True, text=True, timeout=90)
         if result.returncode:
             raise RuntimeError(f'{backend} environment imports failed:\n{result.stderr[-2000:]}')
+    if 'fish_diffusion' in backends:
+        from ..fish import check_assets as check_fish_assets
+        check_fish_assets(root)
     if 'so_vits_svc' in backends:
         from ..svc import check_assets
         check_assets(root)
@@ -149,6 +157,7 @@ def preflight(root, backends=(), mp3=False):
 
 
 IMPORTS = {
+    'fish_diffusion': ['torch', 'torchaudio', 'pytorch_lightning', 'mmengine', 'parselmouth', 'loralib', 'wandb', 'transformers.models.hubert.modeling_hubert'],
     'rvc': ['torch', 'torchaudio', 'transformers.models.hubert.modeling_hubert', 'librosa', 'soundfile', 'faiss'],
     'so_vits_svc': ['torch', 'torchaudio', 'transformers.models.hubert.modeling_hubert', 'librosa', 'soundfile', 'faiss'],
     'sheetsage': ['torch', 'transformers'],

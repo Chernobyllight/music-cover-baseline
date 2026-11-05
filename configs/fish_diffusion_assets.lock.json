@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "upstream_url": "https://github.com/fishaudio/fish-diffusion.git",
+  "upstream_commit": "8e8f8cd849717f2db561e6c194df1a320c910e62",
+  "compatibility_patch": "patches/fish_diffusion/base.patch",
+  "assets": [
+    {
+      "path": "models/FishDiffusion/content-vec-pretrained-v1.ckpt",
+      "url": "https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/content-vec-pretrained-v1.ckpt",
+      "bytes": 717992725,
+      "sha256": "ce07abbdd8c1dce26124e8ae867aebe342f05956d513f3a7f236ed3128faf334",
+      "scope": "training"
+    },
+    {
+      "path": "models/FishDiffusion/contentvec/config.json",
+      "url": "https://huggingface.co/lengyue233/content-vec-best/resolve/main/config.json",
+      "bytes": 1388,
+      "sha256": "2ddde063b795d38d9051a7215a092fecf4cfe148b54251e38de51d88d356898b",
+      "scope": "inference"
+    },
+    {
+      "path": "models/FishDiffusion/contentvec/pytorch_model.bin",
+      "url": "https://huggingface.co/lengyue233/content-vec-best/resolve/main/pytorch_model.bin",
+      "bytes": 378342945,
+      "sha256": "d8dd400e054ddf4e6be75dab5a2549db748cc99e756a097c496c099f65a4854e",
+      "scope": "inference"
+    },
+    {
+      "path": "models/FishDiffusion/nsf_hifigan/LICENSE",
+      "url": "https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip",
+      "archive_member": "nsf_hifigan/LICENSE",
+      "bytes": 20176,
+      "sha256": "cd041d7f9f52936e8824ac3f754e9c67410763205fc8a7020ba74fc8b6edc088",
+      "scope": "inference"
+    },
+    {
+      "path": "models/FishDiffusion/nsf_hifigan/nsf_hifigan.onnx",
+      "url": "https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip",
+      "archive_member": "nsf_hifigan/nsf_hifigan.onnx",
+      "bytes": 56989369,
+      "sha256": "5fe50930cf8ffb78a23d75a80a74628e9b74ec91bc7ad8702dc95f2c51bdc207",
+      "scope": "inference"
+    },
+    {
+      "path": "models/FishDiffusion/nsf_hifigan/config.json",
+      "url": "https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip",
+      "archive_member": "nsf_hifigan/config.json",
+      "bytes": 929,
+      "sha256": "9cac12462a871666cd52125924133de0adde81d5dc7f829ca61bf6aa3799be32",
+      "scope": "inference"
+    },
+    {
+      "path": "models/FishDiffusion/nsf_hifigan/model",
+      "url": "https://github.com/fishaudio/fish-diffusion/releases/download/v2.0.0/nsf_hifigan-stable-v1.zip",
+      "archive_member": "nsf_hifigan/model",
+      "bytes": 56898625,
+      "sha256": "929efc5210fa0699e94bd398d67c1f6d04475a980e87d34799c05efae1d3273e",
+      "scope": "inference"
+    }
+  ]
+}
