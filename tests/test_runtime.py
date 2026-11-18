@@ -69,6 +69,17 @@ class RuntimeTests(unittest.TestCase):
         apply_request_overrides(request, {'device': 'mps', 'memory_budget_gib': 12})
         self.assertEqual(request, {'device': 'mps', 'gpu': None, 'memory_budget_gib': 12})
 
+    def test_explicit_cuda_keeps_compatible_task_options(self):
+        from music_cover.pipeline import DEFAULT_REQUEST, apply_request_overrides
+        for cli_options, expected_gpu in (({}, '2'), ({'gpu': '1'}, '1')):
+            with self.subTest(cli_options=cli_options):
+                request = DEFAULT_REQUEST.copy()
+                apply_request_overrides(request, {'gpu': '2', 'memory_budget_gib': 24})
+                apply_request_overrides(request, {'device': 'cuda', **cli_options})
+                self.assertEqual(request['device'], 'cuda')
+                self.assertEqual(request['gpu'], expected_gpu)
+                self.assertEqual(request['memory_budget_gib'], 24)
+
     def test_optimized_checkout_preserves_project_relative_inputs(self):
         from music_cover.common.paths import RunPaths
         with tempfile.TemporaryDirectory() as tmp:

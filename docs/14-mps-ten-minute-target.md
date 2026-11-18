@@ -69,7 +69,7 @@
 
 两路均为 44.1 kHz、90,112 个样本，峰值 0.9969135。30 步源 mel 的最大绝对误差和相对 RMS 误差全部为零。两路解码 PCM 与此前获认可片段逐样本相同，135 帧共同有声，F0 最大差 0 音分。这项验证覆盖同一真实乐句，整曲跨块与热降频尚待实测。
 
-[已试听配置的本轮复现](../runs/probes/mps-performance/18_seed-combo/fp16-baseline.wav) · [本轮组合](../runs/probes/mps-performance/18_seed-combo/fp16-candidate.wav) · [此前获认可的 FP16 片段](../runs/probes/mps-performance/13_seed-phrase/fp16.wav)
+历史实验的本地试听文件位于 `runs/probes/mps-performance/`。本轮对照和组合分别是 `18_seed-combo/fp16-baseline.wav` 和 `18_seed-combo/fp16-candidate.wav`，此前试听的 FP16 片段是 `13_seed-phrase/fp16.wav`。
 
 ## YuE2 真实 AR 回放
 
@@ -88,9 +88,9 @@ Torch 2.15 BF16。两路共享原生 GQA 预填充的真实 KV，每段回放 8 
 
 控制环境 33 项通过、7 项因缺少 YuE 依赖跳过；该 7 项在独立 YuE2 候选环境的 CPU 上全部通过。CUDA 实机回归未执行。原始局部结果、内存、脚本及依赖标识、全部 30 步质量比较见[机器可读结果](../configs/macos/optimization-round4.json)。
 
-## 复现
+## 复现旧 main 实验
 
-从仓库根目录执行。诊断入口为新模式选择对应的 Torch 2.15 环境。以下变量指向保留的成功运行及唯一的累计账本。
+从仓库根目录执行。命令需要旧 `main` 的原始成功运行快照，以及原始 `runs/probes/mps-performance/budget.json` 账本。两项均为本地实验产物。探针使用旧阶段名和产物路径，适用于该历史快照。日常 v1.2 生成和预检见 [Mac 使用说明](09-macos.md)。Round 4 使用对应的 Torch 2.15 环境。
 
 ```bash
 run=runs/20261117_165850_tonight_awake_folk_f9176f

@@ -25,7 +25,16 @@ bash "$runner" --demo --device mps --until 06_mix --preflight
 bash "$runner" --demo --device mps --memory-budget-gib 16 --until 06_mix --run runs/mac-demo
 ```
 
-用自己的素材时以 `--song`、`--lyrics`、`--reference` 和 `--style` 替换 `--demo`，或传入 v1.2 的任务 YAML。默认原调，`--transpose 2` 指定升两个半音，`--transpose auto` 执行 v1.2 的音域判定。自动模式会在参考录音或音域证据不足时保留原调。换声使用 30 步、YuE2 声学合成使用 32 步。
+用自己的素材时以 `--song`、`--lyrics`、`--reference` 和 `--style` 替换 `--demo`，也可以用 `--config` 传入任务 YAML。Mac 路线要求任务的素材路径在本机可用，且 `modules.05_voice_conversion` 省略或使用以下配置。
+
+```yaml
+modules:
+  05_voice_conversion:
+    backend: seed_vc
+    mode: zero_shot
+```
+
+默认原调，`--transpose 2` 指定升两个半音，`--transpose auto` 执行 v1.2 的音域判定。自动模式会在参考录音或音域证据不足时保留原调。换声使用 30 步、YuE2 声学合成使用 32 步。
 
 `06_mix` 的成功 attempt 中有 `artifacts/final.wav` 与 `artifacts/final.mp3`。可从 `stage_state.json` 的 `stages.06_mix.outputs` 获取本次输出路径。执行到 06 时整体状态为 `partial`，每个已完成模块的状态为 `succeeded`。07–11 属于后续评审与交付流程。
 

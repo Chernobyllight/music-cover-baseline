@@ -32,7 +32,9 @@ DiT 和声码器一次共享加载及设备准备共 2.314 秒。两路均使用
 
 要从 NAR 省 1 或 2 分钟，每次 velocity 需实省约 0.94 或 1.88 秒。已测整块 attention 路径将首次真实 velocity 从 3.435 降到 3.180 秒，线性外推约 16 秒，输出相对 RMS 差 1.20%。现有记录没有能解释两分钟净收益的单项改动。只凭 MLP 的 MAC 或拼接字节数都无法推导实际秒数。没有启动新的 NAR 探针。
 
-## 复现与试听
+## 复现与试听旧 main 实验
+
+诊断命令需要旧 `main` 的原始运行快照和本地实验账本。
 
 在仓库根目录运行，先查看原账本的剩余额度。GPU 命令记录实际实验调用，累计余额不足时入口会拒绝。两组至少冷却 300 秒。
 
@@ -45,7 +47,7 @@ envs/seed-vc-torch215/bin/python scripts/diagnostics/profile_seed_phrase.py comp
 envs/control/bin/python scripts/diagnostics/profile_mps.py yue-head --run "$run" --output "$ledger" --deadline 11
 ```
 
-[FP32 乐句](../runs/probes/mps-performance/13_seed-phrase/fp32.wav) · [FP16 乐句](../runs/probes/mps-performance/13_seed-phrase/fp16.wav) · [源人声](../runs/probes/mps-performance/seed-phrase-source.wav)。诊断只在独立子进程中选择候选精度及投影，正常推理使用原配置，无需撤回上游补丁。
+历史实验的本地试听文件位于 `runs/probes/mps-performance/`，包括 `13_seed-phrase/fp32.wav`、`13_seed-phrase/fp16.wav` 和 `seed-phrase-source.wav`。诊断只在独立子进程中选择候选精度及投影，正常推理使用原配置，无需撤回上游补丁。
 
 ## YuE2 语义阶段与取舍
 

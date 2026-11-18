@@ -57,7 +57,7 @@ git -C third_party/YuE apply --reverse ../../patches/candidates/yue2-native-ar-g
 git -C third_party/seed-vc apply --reverse ../../patches/candidates/seed-vc-soundfile.patch
 ```
 
-诊断选择解释器只使用 profile_mps.py --python，不新增正式推理参数。仍使用原累计账本：
+这些局部诊断使用旧 `main` 的原始运行快照和原累计账本。用 `profile_mps.py --python` 选择诊断解释器。
 
 ```bash
 envs/control/bin/python scripts/diagnostics/profile_mps.py upgrade-yue --python envs/yue2-torch215/bin/python --run runs/20261117_165850_tonight_awake_folk_f9176f --output runs/probes/mps-performance

@@ -25,7 +25,10 @@ REQUEST_KEYS = set(DEFAULT_REQUEST) | {'song', 'lyrics', 'reference', 'style'}
 
 
 def apply_request_overrides(request, overrides):
-    if 'device' in overrides and overrides['device'] != request['device']:
+    current_device = request['device']
+    target_device = overrides.get('device', current_device)
+    # An explicit CUDA choice can use the options already supplied for auto.
+    if target_device != current_device and (current_device, target_device) != ('auto', 'cuda'):
         request.update(gpu=None, memory_budget_gib=None)
     request.update(overrides)
 

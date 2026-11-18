@@ -55,7 +55,9 @@ GPU 采样分布处理的两次调用约 18–38 毫秒；CPU 处理约 2–3 �
 
 新补丁改变源码缓存身份，之后正式 `--resume` 会按现有缓存规则重新计算失效阶段；本轮不要用 `--resume` 查看旧结果，直接打开既有交付文件即可。
 
-## 复现局部诊断
+## 复现旧 main 的局部诊断
+
+命令使用旧 `main` 的原始运行快照和本地实验账本。当前流水线见 [Mac 使用说明](09-macos.md)。
 
 ```bash
 envs/control/bin/python scripts/diagnostics/profile_mps.py nar --run runs/20261117_165850_tonight_awake_folk_f9176f --output runs/probes/mps-performance

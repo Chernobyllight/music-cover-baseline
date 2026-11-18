@@ -23,7 +23,7 @@ YuE2 中 AR 为 211.02 秒、32 步 midpoint 声学合成为 259.08 秒、VAE �
 
 交付 WAV 为 48 kHz、双声道、24 bit PCM，共 9,828,416 帧。成品与中间音轨数值有限；按 1 秒窗口统计，成品没有低于 −80 dBFS RMS 的窗口。估算真峰值 −1.10 dBTP。首、中、末三个窗口均测得 10 ms 人声延迟，混音已校正 480 个样本，换声原始时长差 −5.125 ms。MP3 经 FFmpeg 完整解码，采样率、声道和帧数均与 WAV 一致。旧成品 WAV 哈希复核通过。用户已试听本次新版整曲，反馈听感没有问题。
 
-[新 MP3](../runs/m5-full-candidate/runs/20261118_133412_tonight_awake_folk_optimized_56881f/deliverables/final.mp3) · [新 WAV](../runs/m5-full-candidate/runs/20261118_133412_tonight_awake_folk_optimized_56881f/deliverables/final.wav) · [旧 MP3](../runs/20261117_165850_tonight_awake_folk_f9176f/deliverables/final.mp3) · [分轨试听页](../runs/m5-full-candidate/runs/20261118_133412_tonight_awake_folk_optimized_56881f/deliverables/listen.html) · [机器可读核验](../configs/macos/optimized-full-song.json)
+新 MP3、WAV 和分轨试听页分别保存在本地 `runs/m5-full-candidate/runs/20261118_133412_tonight_awake_folk_optimized_56881f/deliverables/` 下的 `final.mp3`、`final.wav` 与 `listen.html`。旧 MP3 位于本地 `runs/20261117_165850_tonight_awake_folk_f9176f/deliverables/final.mp3`。[机器可读核验](../configs/macos/optimized-full-song.json)
 
 ## 以后运行
 
