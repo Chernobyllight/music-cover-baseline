@@ -16,6 +16,7 @@ import time
 import uuid
 from pathlib import Path
 
+from .runtime import memory_budget, source_identity
 from .audio import decode, inspect_audio, mix_tracks, sha256
 from .pitch import ABC_HELPER, choose_transposition, transpose_abc
 
@@ -78,7 +79,7 @@ class Pipeline:
         write_json(self.state_path, self.state)
         self.environment = os.environ.copy()
         self.environment.update({
-            "CUDA_VISIBLE_DEVICES": str(request["gpu"]), "OMP_NUM_THREADS": "4",
+            "OMP_NUM_THREADS": "4",
             "MKL_NUM_THREADS": "4", "OPENBLAS_NUM_THREADS": "4",
             "HF_HOME": str(ROOT / "cache/huggingface"),
             "HF_HUB_DOWNLOAD_TIMEOUT": "180", "HF_HUB_ETAG_TIMEOUT": "60",
@@ -87,20 +88,32 @@ class Pipeline:
             "TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD": "1",
         })
 
+        if request.get("device", "cuda") == "cuda":
+            self.environment["CUDA_VISIBLE_DEVICES"] = str(request.get("gpu") or "0")
+        else:
+            self.environment.pop("CUDA_VISIBLE_DEVICES", None)
+            self.environment["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
+
     def execute(self, env, stage, output, *arguments):
         command = [str(ROOT / f"envs/{env}/bin/python"), str(STAGE_SCRIPT), stage,
-                   "--output", str(output), *map(str, arguments)]
+                   "--output", str(output), "--device", self.request.get("device", "cuda"),
+                   "--memory-budget-gib", str(self.request.get("memory_budget_gib", 80)), *map(str, arguments)]
         write_json(output / "command.json", {"argv": command, "gpu": self.request["gpu"], "cwd": str(ROOT)})
         with (output / "process.log").open("w") as log:
             process = subprocess.run(command, cwd=ROOT, env=self.environment,
-                                     stdout=log, stderr=subprocess.STDOUT, timeout=10800)
+                                     stdout=log, stderr=subprocess.STDOUT,
+                                     timeout=86400 if self.request.get("device") == "mps" else 10800)
         if process.returncode:
             tail = (output / "process.log").read_text(errors="replace")[-4500:]
             raise RuntimeError(f"{stage} failed ({process.returncode}); log: {output / 'process.log'}\n{tail}")
 
     def stage(self, name, inputs, params, action):
         fingerprint = identity({"inputs": {key: sha256(value) for key, value in inputs.items()},
-                                "params": params, "adapter_sha256": sha256(STAGE_SCRIPT),
+                                "params": params, "runtime": self.request.get("runtime"),
+                                "device": self.request.get("device", "cuda"),
+                                "memory_budget_gib": self.request.get("memory_budget_gib", 80),
+                                "runtime_sha256": sha256(Path(__file__).with_name("runtime.py")),
+                                "adapter_sha256": sha256(STAGE_SCRIPT),
                                 "audio_sha256": sha256(Path(__file__).with_name("audio.py")),
                                 "pipeline_sha256": sha256(Path(__file__)),
                                 "pitch_sha256": sha256(Path(__file__).with_name("pitch.py")),
@@ -135,6 +148,8 @@ class Pipeline:
                     item["audio"] = inspect_audio(path)
                 output_records[role] = item
             record.update(status="succeeded", outputs=output_records, wall_seconds=time.monotonic() - start)
+            if (directory / "runtime.json").exists():
+                record["runtime"] = json.loads((directory / "runtime.json").read_text())
         except BaseException as error:
             record.update(status="failed", error=str(error), wall_seconds=time.monotonic() - start)
             self.state["status"] = "failed"
@@ -329,16 +344,46 @@ class Pipeline:
         (destination / "listen.html").write_text(page, encoding="utf-8")
 
 
-def preflight():
+def preflight(request):
     required = [ROOT / f"envs/{name}/bin/python" for name in ["control", "sheetsage2", "yue2", "separator", "seed-vc"]]
     required += [ROOT / f"models/{name}/model.safetensors" for name in ["SheetSage2", "MERT-v2-FullSong", "YuE2-3B", "YuE2-Vae"]]
     required += [ROOT / "third_party/seed-vc/inference.py", ROOT / "configs/generation_models.lock.json"]
     required += [ROOT / "configs/voice_models.lock.json", ROOT / "configs/seed_svc.local.yml"]
+    required += [ROOT / "models" / path for path in [
+        "Seed-VC/DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth",
+        "BigVGAN/bigvgan_generator.pt", "BigVGAN/config.json", "RMVPE/rmvpe.pt",
+        "CAMPPlus/campplus_cn_common.bin", "Whisper-small/model.safetensors",
+        "Whisper-small/config.json", "Whisper-small/preprocessor_config.json",
+        "separation/model_bs_roformer_ep_317_sdr_12.9755.ckpt",
+        "separation/model_bs_roformer_ep_317_sdr_12.9755.yaml"]]
     missing = [str(path) for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError("Setup incomplete:\n" + "\n".join(missing))
     if not shutil.which("ffmpeg"):
         raise RuntimeError("ffmpeg is not available")
+    environment = os.environ.copy()
+    environment["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
+    if request.get("gpu") is not None:
+        environment["CUDA_VISIBLE_DEVICES"] = str(request["gpu"])
+    records = {}
+    for name in ["control", "sheetsage2", "yue2", "separator", "seed-vc"]:
+        result = subprocess.run([str(ROOT / f"envs/{name}/bin/python"), str(STAGE_SCRIPT),
+                                 "probe", "--device", request["device"], "--environment", name],
+                                env=environment, capture_output=True, text=True, timeout=120)
+        if result.returncode:
+            raise RuntimeError(f"{name} GPU probe failed:\n{result.stderr}\n{result.stdout}")
+        records[name] = json.loads(result.stdout.strip().splitlines()[-1])
+    devices = {record["device"] for record in records.values()}
+    if len(devices) != 1:
+        raise RuntimeError(f"Environments disagree about GPU: {records}")
+    request["device"] = devices.pop()
+    if request["device"] == "mps" and request.get("gpu") is not None:
+        raise ValueError("--gpu selects a CUDA GPU and cannot be used with MPS")
+    if request["device"] == "cuda" and request.get("gpu") is None:
+        request["gpu"] = "0"
+    request["memory_budget_gib"] = memory_budget(request.get("memory_budget_gib"), request["device"])
+    request["runtime"] = {"environments": records, "upstream": source_identity(ROOT)}
+    return request["runtime"]
 
 
 def main():
@@ -348,6 +393,8 @@ def main():
     for name in ["song", "lyrics", "reference", "style", "name"]:
         parser.add_argument("--" + name)
     parser.add_argument("--gpu")
+    parser.add_argument("--device", choices=["auto", "cuda", "mps"])
+    parser.add_argument("--memory-budget-gib", type=float)
     parser.add_argument("--seed", type=int)
     parser.add_argument("--steps", type=int)
     parser.add_argument("--reference-start", type=float)
@@ -357,21 +404,34 @@ def main():
     args = parser.parse_args()
     if args.demo and args.resume:
         parser.error("--demo and --resume cannot be combined")
-    if args.preflight:
-        preflight()
-        print("Preflight files OK")
-        return
-    request = {"name": "cover", "seed": 42, "steps": 30, "gpu": "0", "reference_start": 0.0, "reference_duration": 15.0,
+    request = {"name": "cover", "seed": 42, "steps": 30, "gpu": None, "device": "auto", "memory_budget_gib": None, "reference_start": 0.0, "reference_duration": 15.0,
                "transpose": "0"}
     if args.demo:
         request.update(json.loads((ROOT / "configs/demo.json").read_text()))
     if args.resume:
-        request.update(json.loads((args.resume.resolve() / "request.json").read_text()))
-    for name in ["song", "lyrics", "reference", "style", "name", "seed", "steps", "reference_start", "reference_duration", "transpose"]:
+        previous_request = json.loads((args.resume.resolve() / "request.json").read_text())
+        request.update(previous_request)
+        # Runs written before device selection existed were CUDA-only.
+        if "device" not in previous_request:
+            request["device"] = "cuda"
+    if args.device is not None and args.device != request["device"]:
+        request["memory_budget_gib"] = None
+    if args.device in {"auto", "mps"} and args.gpu is None:
+        request["gpu"] = None
+    for name in ["song", "lyrics", "reference", "style", "name", "seed", "steps", "reference_start", "reference_duration", "transpose", "device", "memory_budget_gib"]:
         if getattr(args, name) is not None:
             request[name] = getattr(args, name)
     if args.gpu is not None:
         request["gpu"] = args.gpu
+    if request["device"] == "mps" and request.get("gpu") is not None:
+        parser.error("--gpu cannot be combined with --device mps")
+    if request.get("gpu") is not None and request["device"] == "auto":
+        request["device"] = "cuda"
+    if request.get("memory_budget_gib") is not None:
+        memory_budget(request["memory_budget_gib"], request["device"])
+    if args.preflight:
+        print(json.dumps(preflight(request), indent=2))
+        return
     if request["transpose"] != "auto":
         try:
             value = int(request["transpose"])
@@ -394,10 +454,10 @@ def main():
         request[key] = str((ROOT / path).resolve() if not path.is_absolute() else path.resolve())
         if not Path(request[key]).is_file():
             parser.error(f"File does not exist: {request[key]}")
-    preflight()
+    preflight(request)
     name = re.sub(r"[^\w-]+", "_", request["name"])[:60]
     run_id = dt.datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + name + "_" + uuid.uuid4().hex[:6]
-    run = args.resume.resolve() if args.resume else ROOT / "runs" / run_id
+    run = args.resume.resolve() if args.resume else (ROOT / "runs" / run_id).resolve()
     pipeline = Pipeline(run, request)
     print(f"RUN: {run}", flush=True)
     try:

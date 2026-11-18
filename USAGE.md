@@ -1,6 +1,6 @@
 # 使用说明
 
-项目位置：`/data/liuhongda/music-cover-baseline`。已有的环境、权重和演示数据可重复使用，无需训练目标人物音色模型。
+在项目根目录执行。Apple Silicon 的推荐配置、命令和已验收试听见 [Mac 使用说明](docs/09-macos.md)。下文服务器示例使用历史 CUDA 环境。
 
 已有完整结果可直接验收：[试听页](runs/demo_verified/deliverables/listen.html)、[最终音频](runs/demo_verified/deliverables/final.wav)、[运行报告](runs/demo_verified/deliverables/report.md)。完整推理约 3 分钟（本机 H200 实测；不含安装、下载和附加评价），不必先重跑才能听。
 

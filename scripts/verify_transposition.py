@@ -25,9 +25,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("baseline", type=Path)
     parser.add_argument("candidate", type=Path)
-    parser.add_argument("--gpu", default="0")
+    parser.add_argument("--gpu")
+    parser.add_argument("--device", choices=["auto", "cuda", "mps"], default="auto")
     args = parser.parse_args()
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    if args.gpu is not None:
+        if args.device == "mps":
+            parser.error("--gpu cannot be combined with --device mps")
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+        args.device = "cuda"
+    from music_cover.runtime import resolve_device
+    args.device = resolve_device(args.device)
     import numpy as np
     import soundfile as sf
     import librosa
@@ -49,7 +56,7 @@ def main():
     (output / "request.json").write_text(json.dumps({"tracks": tracks}, indent=2))
     with (output / "process.log").open("w") as log:
         subprocess.run([sys.executable, str(ROOT / "scripts/stage_runner.py"), "pitch",
-                        "--request", str(output / "request.json"), "--output", str(output)],
+                        "--device", args.device, "--request", str(output / "request.json"), "--output", str(output)],
                        stdout=log, stderr=subprocess.STDOUT, check=True)
     plan = json.loads((candidate / "deliverables/transposition.json").read_text())
     analysis = {"baseline": str(baseline), "candidate": str(candidate),

@@ -8,6 +8,8 @@
 
 先阅读 [使用说明](USAGE.md)：只需要准备原曲、歌词、目标人物参考录音，并给出目标风格。
 
+**Apple Silicon 推荐使用已通过整曲试听的优化配置。** M5 24 GB 生成 3 分 25 秒的成品实测用时 16 分 36 秒。安装、恢复和运行命令见 [Mac 使用说明](docs/09-macos.md)，听感验收和各阶段计时见 [整曲实测](docs/15-mps-full-song.md)。
+
 已于 2026-10-21 完成整首端到端运行：输出 204.72 秒、48 kHz、立体声、24 bit WAV。六个阶段共约 167 秒，不含首次安装、下载和附加评价。直接打开 [已验证演示试听页](runs/demo_verified/deliverables/listen.html) 或 [最终音频](runs/demo_verified/deliverables/final.wav)。实测详情见 [验证记录](VALIDATION.md)。
 
 ```bash
@@ -23,15 +25,16 @@ bash scripts/run_baseline.sh --demo
 | `scripts/run_baseline.sh` | 统一入口，无需手动切换环境 |
 | `src/music_cover/` | 调度、音频检查、对齐和混音 |
 | `scripts/stage_runner.py` | 各模型的独立进程适配 |
+| `scripts/diagnostics/` | MPS 单模型探针、性能回放和 CPU 对照 |
 | `data/raw/` | 原曲、歌词、参考音频 |
 | `data/demo_sources.json` | 演示素材来源与哈希 |
 | `configs/` | 演示配置、模型 revision、本地资产哈希和实测环境版本 |
 | `models/`、`envs/`、`third_party/` | 已下载权重、环境、上游代码 |
 | `runs/` | 独立运行记录和交付音频 |
-| `docs/` | 01–06 为设计存档，07 为当前技术报告，08 为仓库恢复说明；当前操作以 USAGE.md 为准 |
+| `docs/` | 01–08 为设计与恢复记录，09 为 Mac 使用说明，10–14 为历次实验，15 为最新整曲实测 |
 
 演示采用官方 AI 生成中文歌曲《今晚不眠》及配套歌词，参考音色采用公开 LibriSpeech 语音。它验证链路能否执行；实际目标人物的相似度需要替换参考录音后试听。
 
 RVC / so-vits-svc 未进入当前实现，因为用户只有参考录音，没有相应目标音色模型。当前换声后端为零样本 Seed-VC。
 
-本机配置为单张 H200 串行推理，YuE2 显存预算 80 GiB。虚拟环境复用了 /opt/conda 的基础 CUDA 包；没有修改共享基础环境或上游仓库代码。音频生成质量和目标音色相似度须单独验收，自动检查不会替代听感判断。
+历史 CUDA 实测配置为单张 H200 串行推理，YuE2 显存预算 80 GiB。虚拟环境复用了 /opt/conda 的基础 CUDA 包；没有修改共享基础环境或上游仓库代码。音频生成质量和目标音色相似度须单独验收，自动检查不会替代听感判断。

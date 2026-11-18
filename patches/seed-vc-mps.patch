@@ -1,0 +1,22 @@
+diff --git a/inference.py b/inference.py
+index 84d673b..3c43513 100644
+--- a/inference.py
++++ b/inference.py
+@@ -326,8 +326,15 @@ def main(args):
+         F0_ori = f0_fn(ori_waves_16k[0], thred=0.03)
+         F0_alt = f0_fn(converted_waves_16k[0], thred=0.03)
+ 
+-        F0_ori = torch.from_numpy(F0_ori).to(device)[None]
+-        F0_alt = torch.from_numpy(F0_alt).to(device)[None]
++        F0_ori = torch.from_numpy(F0_ori)
++        # RMVPE decodes cents in NumPy float64; Metal tensors require float32.
++        if device.type == "mps":
++            F0_ori = F0_ori.float()
++        F0_ori = F0_ori.to(device)[None]
++        F0_alt = torch.from_numpy(F0_alt)
++        if device.type == "mps":
++            F0_alt = F0_alt.float()
++        F0_alt = F0_alt.to(device)[None]
+ 
+         voiced_F0_ori = F0_ori[F0_ori > 1]
+         voiced_F0_alt = F0_alt[F0_alt > 1]

@@ -1,0 +1,24 @@
+--- a/src/yue2/modeling_yue2.py
++++ b/src/yue2/modeling_yue2.py
+@@ -12,15 +12,20 @@
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
++from packaging.version import Version
+ from transformers import GenerationMixin, PretrainedConfig, PreTrainedModel
+ from transformers.cache_utils import DynamicCache
+ from transformers.modeling_outputs import CausalLMOutputWithPast
+ 
+ 
++# Native MPS GQA is validated with the isolated PyTorch 2.15 runtime.
++# Keep the established expansion path for the recoverable older environment.
++_MPS_NATIVE_GQA = Version(torch.__version__).release >= (2, 15)
++
+ def sdpa(query, key, value, *, attn_mask=None, is_causal=False):
+     """Use native grouped-query attention, including a portable MPS fallback."""
+     grouped = query.shape[1] != key.shape[1]
+-    if grouped and query.device.type == "mps":
++    if grouped and query.device.type == "mps" and not _MPS_NATIVE_GQA:
+         # PyTorch's MPS attention does not implement enable_gqa on every release.
+         groups = query.shape[1] // key.shape[1]
+         key = key.repeat_interleave(groups, dim=1)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import math
 import os
 import shutil
@@ -12,6 +13,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from music_cover.runtime import ForwardAudit, MemoryMonitor, assert_model_device, memory_budget, probe, resolve_device
 
 
 def cover_token_budget(score_seconds, prefix_tokens, context=24576, tokens_per_second=25):
@@ -37,15 +40,19 @@ def transcribe(args):
     model = AutoModel.from_pretrained(
         str(ROOT / "models/SheetSage2"), trust_remote_code=True, local_files_only=True,
         base_model_path=str(ROOT / "models/MERT-v2-FullSong"),
-    ).eval().to("cuda")
-    result = model.transcribe(args.input, output_dir=args.output, melody_only=True, dtype="bf16",
+    ).eval().to(args.device)
+    assert_model_device(model, args.device)
+    result = model.transcribe(args.input, output_dir=args.output, melody_only=True, dtype="bf16" if args.device == "cuda" else "fp32",
                               preset="default", progress=lambda event: print(event, flush=True))
     if result.get("abc_error") or not result.get("abc"):
         raise RuntimeError(result.get("abc_error") or "No ABC was produced")
 
 
 def cover(args):
-    from yue2 import YuE2Pipeline
+    cover_start = time.monotonic()
+    import numpy as np
+    from yue2 import YuE2Pipeline, SemanticResult, SongResult
+    from yue2.storage import identity
     sys.path.insert(0, str(ROOT / "src"))
     from music_cover.pitch import abc_tools
     request = json.loads(Path(args.request).read_text())
@@ -55,7 +62,10 @@ def cover(args):
     score_seconds = float(score.voices["Vocal"].time * 60 / score.bpm)
     with YuE2Pipeline.from_pretrained(
         str(ROOT / "models/YuE2-3B"), vae=str(ROOT / "models/YuE2-Vae"),
-        device="cuda", local_files_only=True, memory_budget_gib=80,
+        device=args.device, local_files_only=True, memory_budget_gib=args.memory_budget_gib,
+        backend="torch-eager" if args.device == "mps" else "torch", quantization="none",
+        vae_core_frames=512 if args.device == "mps" else None,
+        offload_ar=args.device == "mps",
     ) as pipeline:
         # Planning from an external score only tokenizes it; it performs no generation.
         plan = pipeline.plan(**request)
@@ -63,10 +73,82 @@ def cover(args):
         (Path(args.output) / "generation_budget.json").write_text(json.dumps(budget, indent=2) + "\n")
         print(f"[length] score={score_seconds:.2f}s, semantic max_tokens={budget['semantic_max_tokens']} "
               f"(audio ceiling {budget['audio_ceiling_s']:.0f}s)", flush=True)
-        result = pipeline(**request, semantic_sampling={"max_tokens": budget["semantic_max_tokens"]})
+        config = pipeline.effective_config(plan.request, semantic_sampling={"max_tokens": budget["semantic_max_tokens"]})
+        request_id = identity({"request": plan.request.to_dict(), "config": config, "weights": pipeline.weights})
+        # Keep costly intermediate results even if a later phase runs out of
+        # memory. Reuse only matching, hash-checked artifacts from this run.
+        from music_cover.runtime import source_identity
+        checkpoint_key = identity({"request": request_id, "upstream": source_identity(ROOT),
+                                   "adapter": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                                   "runtime": probe(args.device)})
+        out = Path(args.output)
+        plan.save(out / "plan")
+        tokens, metadata = restore_cover_checkpoint(out, "semantic", checkpoint_key)
+        if tokens is None:
+            semantic = pipeline.generate_semantic(plan, sampling={"max_tokens": budget["semantic_max_tokens"]})
+            if semantic.truncated:
+                raise RuntimeError("YuE2 semantic generation truncated")
+            tokens = np.asarray(semantic.tokens, dtype=np.int32)
+            metadata = {"timing": semantic.timing}
+            save_cover_checkpoint(out, "semantic", checkpoint_key, tokens, metadata)
+        else:
+            semantic = SemanticResult(plan, tokens.tolist(), metadata["timing"], False)
+        # A retry can produce different tokens even with the same seed. The
+        # acoustic result belongs to these exact tokens, not just the request.
+        latent_key = cover_latent_key(checkpoint_key, tokens)
+        latents, latent_metadata = restore_cover_checkpoint(out, "latent", latent_key)
+        if latents is None:
+            start = time.monotonic()
+            latents = pipeline.synthesize(semantic)
+            if not np.isfinite(latents).all():
+                raise RuntimeError("YuE2 produced non-finite latents")
+            latent_metadata = {"seconds": time.monotonic() - start}
+            save_cover_checkpoint(out, "latent", latent_key, latents, latent_metadata)
+        start = time.monotonic()
+        audio = pipeline.decode(latents)
+        timing = {"abc": plan.timing, "semantic": semantic.timing,
+                  "nar_seconds": latent_metadata["seconds"], "vae_seconds": time.monotonic() - start,
+                  "load": dict(pipeline.load_timing), "e2e_seconds": time.monotonic() - cover_start}
+        result = SongResult(audio, 48000, semantic, latents, config, pipeline.weights, timing, request_id)
         result.save_artifacts(Path(args.output) / "generated")
         if any(result.truncated.values()):
             raise RuntimeError(f"YuE2 result truncated: {result.truncated}")
+
+
+def cover_latent_key(request_key, tokens):
+    from yue2.storage import identity
+    return identity({"request": request_key,
+                     "semantic_sha256": hashlib.sha256(tokens.tobytes()).hexdigest()})
+
+
+def save_cover_checkpoint(output, phase, key, values, metadata):
+    import numpy as np
+    from yue2.storage import write_json
+    target = output / f"{phase}.npy"
+    np.save(target, values, allow_pickle=False)
+    write_json(output / f"{phase}.checkpoint.json", {
+        "key": key, "sha256": hashlib.sha256(target.read_bytes()).hexdigest(), "metadata": metadata})
+
+
+def restore_cover_checkpoint(output, phase, key):
+    import numpy as np
+    candidates = [output, *sorted(output.parent.glob("attempt_*"), reverse=True)]
+    for directory in candidates:
+        marker, target = directory / f"{phase}.checkpoint.json", directory / f"{phase}.npy"
+        if not marker.is_file() or not target.is_file():
+            continue
+        try:
+            record = json.loads(marker.read_text())
+        except json.JSONDecodeError:
+            continue
+        if record.get("key") != key or hashlib.sha256(target.read_bytes()).hexdigest() != record.get("sha256"):
+            continue
+        values = np.load(target, allow_pickle=False)
+        if directory != output:
+            save_cover_checkpoint(output, phase, key, values, record["metadata"])
+        print(f"[reuse] YuE2 {phase}: {directory}", flush=True)
+        return values, record["metadata"]
+    return None, None
 
 
 def separate(args):
@@ -80,6 +162,8 @@ def separate(args):
         normalization_threshold=1.0, amplification_threshold=0.0, sample_rate=44100,
         use_soundfile=True,
     )
+    if str(separator.torch_device).split(":")[0] != args.device:
+        raise RuntimeError(f"Separator selected {separator.torch_device}, expected {args.device}")
     separator.load_model(model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt")
     results = separator.separate(args.input)
     found = {}
@@ -109,7 +193,9 @@ def convert(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
+    inference.device = torch.device(args.device)
+    if args.device == "cuda":
+        torch.cuda.manual_seed_all(args.seed)
     local_auxiliary = {
         ("lj1995/VoiceConversionWebUI", "rmvpe.pt"): ROOT / "models/RMVPE/rmvpe.pt",
         ("funasr/campplus", "campplus_cn_common.bin"): ROOT / "models/CAMPPlus/campplus_cn_common.bin",
@@ -124,7 +210,7 @@ def convert(args):
         diffusion_steps=args.steps, length_adjust=1.0, inference_cfg_rate=0.7,
         f0_condition=True, auto_f0_adjust=False, semi_tone_shift=0,
         checkpoint=str(ROOT / "models/Seed-VC/DiT_seed_v2_uvit_whisper_base_f0_44k_bigvgan_pruned_ft_ema_v2.pth"),
-        config=str(ROOT / "configs/seed_svc.local.yml"), fp16=True,
+        config=str(ROOT / "configs/seed_svc.local.yml"), fp16=args.device == "cuda",
     )
     inference.main(options)
     outputs = list(Path(args.output).glob("vc_*.wav"))
@@ -143,7 +229,7 @@ def pitch(args):
     from music_cover.pitch import summarize_pitch
     from modules.rmvpe import RMVPE
     torch.set_num_threads(4)
-    model = RMVPE(str(ROOT / "models/RMVPE/rmvpe.pt"), is_half=False, device="cuda")
+    model = RMVPE(str(ROOT / "models/RMVPE/rmvpe.pt"), is_half=False, device=args.device)
     tracks = json.loads(Path(args.request).read_text())["tracks"]
     profiles = {"method": "RMVPE, 16kHz, 10ms hop; F0 65..1000Hz; RMS >= -40dBFS; no gain normalization",
                 "tracks": {}}
@@ -178,17 +264,39 @@ def pitch(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("stage", choices=["transcribe", "cover", "separate", "convert", "pitch"])
+    parser.add_argument("stage", choices=["transcribe", "cover", "separate", "convert", "pitch", "probe"])
     parser.add_argument("--input")
-    parser.add_argument("--output", required=True)
+    parser.add_argument("--output")
+    parser.add_argument("--device", choices=["auto", "cuda", "mps"], default="auto")
+    parser.add_argument("--memory-budget-gib", type=float)
+    parser.add_argument("--environment", choices=["control", "sheetsage2", "yue2", "separator", "seed-vc"])
     parser.add_argument("--request")
     parser.add_argument("--score")
     parser.add_argument("--reference")
     parser.add_argument("--steps", type=int, default=30)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
+    args.device = resolve_device(args.device)
+    args.memory_budget_gib = memory_budget(args.memory_budget_gib, args.device)
+    if args.stage == "probe":
+        if args.environment == "seed-vc":
+            sys.path.insert(0, str(ROOT / "third_party/seed-vc"))
+        print(json.dumps(probe(args.device, args.environment)))
+        return
+    if not args.output:
+        parser.error("--output is required for inference")
+    Path(args.output).mkdir(parents=True, exist_ok=True)
     start = time.monotonic()
-    globals()[args.stage](args)
+    monitor = MemoryMonitor(args.device, args.memory_budget_gib)
+    audit = ForwardAudit(args.device)
+    try:
+        with monitor, audit:
+            globals()[args.stage](args)
+        if not audit.layers:
+            raise RuntimeError("No learned-layer GPU forward was observed")
+    finally:
+        (Path(args.output) / "runtime.json").write_text(json.dumps(
+            {**monitor.report(), "forward_layers": audit.layers}, indent=2) + "\n")
     print(json.dumps({"stage": args.stage, "wall_seconds": time.monotonic() - start}), flush=True)
 
 

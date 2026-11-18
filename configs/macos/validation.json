@@ -1,0 +1,1067 @@
+{
+  "hardware": "Apple M5, 24 GB",
+  "platform": "macOS 27.2.1 arm64",
+  "fallback": false,
+  "tests": {
+    "unit_tests": 26,
+    "status": "passed"
+  },
+  "stages": {
+    "separation": {
+      "status": "passed",
+      "input_seconds": 20,
+      "runtime": {
+        "mps_allocated_peak_bytes": 2744752384,
+        "mps_driver_peak_bytes": 8230420480,
+        "rss_peak_bytes": 1653047296,
+        "memory_budget_gib": 16.0,
+        "device": "mps",
+        "wall_seconds": 41.828665458000614,
+        "sample_interval_s": 0.2,
+        "forward_layers": {
+          "RMSNorm:torch.float32:mps": 333,
+          "Linear:torch.float32:mps": 918
+        }
+      },
+      "artifacts": "runs/probes/mac/separate"
+    },
+    "pitch": {
+      "status": "passed",
+      "input_seconds": 20,
+      "runtime": {
+        "mps_allocated_peak_bytes": 436439040,
+        "mps_driver_peak_bytes": 1550008320,
+        "rss_peak_bytes": 1082163200,
+        "memory_budget_gib": 16.0,
+        "device": "mps",
+        "wall_seconds": 26.79497508300119,
+        "sample_interval_s": 0.2,
+        "forward_layers": {
+          "BatchNorm2d:torch.float32:mps": 118,
+          "Conv2d:torch.float32:mps": 124,
+          "ConvTranspose2d:torch.float32:mps": 5,
+          "GRU:torch.float32:mps": 1,
+          "Linear:torch.float32:mps": 1
+        }
+      },
+      "artifacts": "runs/probes/mac/pitch"
+    },
+    "conversion": {
+      "status": "passed",
+      "input_seconds": 20,
+      "runtime": {
+        "mps_allocated_peak_bytes": 2841174784,
+        "mps_driver_peak_bytes": 6872907776,
+        "rss_peak_bytes": 2601041920,
+        "memory_budget_gib": 16.0,
+        "device": "mps",
+        "effective_mps_budget_gib": 16.0,
+        "wall_seconds": 71.81521370800328,
+        "sample_interval_s": 0.2,
+        "forward_layers": {
+          "Conv1d:torch.float16:mps": 4,
+          "LayerNorm:torch.float16:mps": 50,
+          "Linear:torch.float16:mps": 144,
+          "Conv2d:torch.float32:mps": 260,
+          "BatchNorm2d:torch.float32:mps": 248,
+          "Conv1d:torch.float32:mps": 443,
+          "BatchNorm1d:torch.float32:mps": 109,
+          "ConvTranspose2d:torch.float32:mps": 10,
+          "GRU:torch.float32:mps": 2,
+          "Linear:torch.float32:mps": 8044,
+          "InterpolateRegulator:torch.float32:mps": 2,
+          "Embedding:torch.float32:mps": 2,
+          "GroupNorm:torch.float32:mps": 8,
+          "RMSNorm:torch.float32:mps": 2100,
+          "ConvTranspose1d:torch.float32:mps": 12,
+          "SnakeBeta:torch.float32:mps": 218
+        }
+      },
+      "artifacts": "runs/probes/mac/convert-f32"
+    },
+    "transcription": {
+      "status": "passed",
+      "input_seconds": 20,
+      "runtime": {
+        "mps_allocated_peak_bytes": 6716622848,
+        "mps_driver_peak_bytes": 16017096704,
+        "rss_peak_bytes": 782123008,
+        "memory_budget_gib": 16.0,
+        "device": "mps",
+        "effective_mps_budget_gib": 16.0,
+        "wall_seconds": 20.28744800000277,
+        "sample_interval_s": 0.2,
+        "forward_layers": {
+          "Conv1d:torch.float32:mps": 86,
+          "LayerNorm:torch.float32:mps": 5478,
+          "Linear:torch.float32:mps": 13949,
+          "GlobalResponseNorm:torch.float32:mps": 12,
+          "BartScaledWordEmbedding:torch.float32:mps": 280,
+          "BartLearnedPositionalEmbedding:torch.float32:mps": 280
+        }
+      },
+      "artifacts": "runs/probes/mac/transcribe-complete-assets"
+    },
+    "yue2": {
+      "environment": {
+        "device": "mps",
+        "packages": {
+          "numpy": "2.2.6",
+          "packaging": "26.3",
+          "requests": "2.34.2",
+          "certifi": "2026.10.23",
+          "networkx": "3.6.1",
+          "accelerate": "1.13.0",
+          "pycparser": "3.12",
+          "sympy": "1.14.0",
+          "huggingface-hub": "0.36.2",
+          "tiktoken": "0.12.0",
+          "tqdm": "4.70.1",
+          "urllib3": "2.8.0",
+          "mpmath": "1.3.0",
+          "pyyaml": "6.0.3",
+          "fsspec": "2026.9.0",
+          "filelock": "4.2.11",
+          "transformers": "4.57.6",
+          "cffi": "2.1.1",
+          "jinja2": "3.1.6",
+          "soundfile": "0.13.1",
+          "torch": "2.10.0",
+          "typing-extensions": "4.16.0",
+          "markupsafe": "3.0.4",
+          "hf-xet": "1.8.0",
+          "safetensors": "0.7.0",
+          "tokenizers": "0.22.2",
+          "psutil": "7.2.2",
+          "charset-normalizer": "3.5.2",
+          "regex": "2026.11.15",
+          "yue2-infer": "0.1.6",
+          "idna": "3.20"
+        },
+        "python": "3.11.17",
+        "machine": "arm64",
+        "platform": "macOS-27.2.1-arm64-arm-64bit",
+        "matmul": "passed"
+      },
+      "stages": {
+        "semantic": {
+          "seconds": 88.94048558299255,
+          "truncated": false
+        },
+        "synthesize": {
+          "seconds": 68.05565737500729
+        },
+        "decode": {
+          "seconds": 6.45248370799527
+        }
+      },
+      "status": "passed",
+      "memory": {
+        "mps_allocated_peak_bytes": 7586035712,
+        "mps_driver_peak_bytes": 15677243392,
+        "rss_peak_bytes": 984023040,
+        "memory_budget_gib": 16,
+        "device": "mps",
+        "effective_mps_budget_gib": 16,
+        "wall_seconds": 166.2843326250004,
+        "sample_interval_s": 0.2
+      },
+      "forward_layers": {
+        "Embedding:torch.bfloat16:mps": 1095,
+        "RMSNorm:torch.bfloat16:mps": 130966,
+        "Linear:torch.bfloat16:mps": 228514,
+        "Conv1d:torch.float32:mps": 114,
+        "SnakeBeta:torch.float32:mps": 129,
+        "ConvTranspose1d:torch.float32:mps": 18
+      }
+    },
+    "end_to_end": {
+      "status": "passed",
+      "run": "runs/20261117_165850_tonight_awake_folk_f9176f",
+      "wall_seconds_sum": 2925.3717115020117,
+      "stages": {
+        "00_prepare": {
+          "seconds": 0.3451441670040367,
+          "runtime": null
+        },
+        "01_transcribe": {
+          "seconds": 39.7249354999949,
+          "runtime": {
+            "mps_allocated_peak_bytes": 6716622848,
+            "mps_driver_peak_bytes": 17187307520,
+            "rss_peak_bytes": 781008896,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 38.912641540999175,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Conv1d:torch.float32:mps": 86,
+              "LayerNorm:torch.float32:mps": 50109,
+              "Linear:torch.float32:mps": 129050,
+              "GlobalResponseNorm:torch.float32:mps": 12,
+              "BartScaledWordEmbedding:torch.float32:mps": 2629,
+              "BartLearnedPositionalEmbedding:torch.float32:mps": 2629
+            }
+          }
+        },
+        "02_cover": {
+          "seconds": 1978.7261204590031,
+          "runtime": {
+            "mps_allocated_peak_bytes": 8979351808,
+            "mps_driver_peak_bytes": 17400168448,
+            "rss_peak_bytes": 929529856,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 1977.057628708004,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Embedding:torch.bfloat16:mps": 5123,
+              "RMSNorm:torch.bfloat16:mps": 586130,
+              "Linear:torch.bfloat16:mps": 1022030,
+              "Conv1d:torch.float32:mps": 418,
+              "SnakeBeta:torch.float32:mps": 473,
+              "ConvTranspose1d:torch.float32:mps": 66
+            }
+          }
+        },
+        "03_separate": {
+          "seconds": 215.37578845900134,
+          "runtime": {
+            "mps_allocated_peak_bytes": 1575205376,
+            "mps_driver_peak_bytes": 8230436864,
+            "rss_peak_bytes": 1780940800,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 213.84791679200134,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "RMSNorm:torch.float32:mps": 2886,
+              "Linear:torch.float32:mps": 7956
+            }
+          }
+        },
+        "04_convert": {
+          "seconds": 687.2588575420086,
+          "runtime": {
+            "mps_allocated_peak_bytes": 3017626112,
+            "mps_driver_peak_bytes": 8357068800,
+            "rss_peak_bytes": 2601992192,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 686.0707370410091,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Conv1d:torch.float16:mps": 18,
+              "LayerNorm:torch.float16:mps": 225,
+              "Linear:torch.float16:mps": 648,
+              "Conv2d:torch.float32:mps": 260,
+              "BatchNorm2d:torch.float32:mps": 248,
+              "Conv1d:torch.float32:mps": 1433,
+              "BatchNorm1d:torch.float32:mps": 109,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 44224,
+              "InterpolateRegulator:torch.float32:mps": 2,
+              "Embedding:torch.float32:mps": 2,
+              "GroupNorm:torch.float32:mps": 8,
+              "RMSNorm:torch.float32:mps": 11550,
+              "ConvTranspose1d:torch.float32:mps": 66,
+              "SnakeBeta:torch.float32:mps": 1199
+            }
+          }
+        },
+        "05_mix": {
+          "seconds": 3.940865374999703,
+          "runtime": null
+        }
+      },
+      "checks": {
+        "alignment": {
+          "windows": [
+            {
+              "start_s": 0.0,
+              "lag_ms": 0.0,
+              "correlation": 0.8725749807554731
+            },
+            {
+              "start_s": 92.41,
+              "lag_ms": 10.0,
+              "correlation": 0.7390997987581737
+            },
+            {
+              "start_s": 184.83,
+              "lag_ms": 10.0,
+              "correlation": 0.8798335784290658
+            }
+          ],
+          "consistent": true,
+          "estimated_delay_ms": 10.0,
+          "applied_shift_samples": -480,
+          "needs_listening_review": false,
+          "converted_duration_delta_s": -0.0038541666666666668,
+          "output_frames": 9832256
+        },
+        "vocal_gain": 0.6159202097428688,
+        "reconstruction": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "frames": 9832256,
+          "duration_s": 204.83866666666665,
+          "sample_peak": 0.8453203439712524,
+          "rms": 0.1393509415548741,
+          "subtype": "PCM_24",
+          "sha256": "347efd42ef844f2e27051d13ba6eda5861fa6bb8d7f76847c1f4ea431bc93af7",
+          "master_gain": 0.8525495802014657,
+          "estimated_true_peak_dbtp": -1.1000019091751683,
+          "peak_method": "scipy.resample_poly 4x; engineering estimate"
+        },
+        "final": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "frames": 9832256,
+          "duration_s": 204.83866666666665,
+          "sample_peak": 0.880488395690918,
+          "rms": 0.11206098665283282,
+          "subtype": "PCM_24",
+          "sha256": "3ee0f331f461a5adebbc77001831ebf94ea4f405954ef686bc2ad08f954cb557",
+          "master_gain": 0.698238113433962,
+          "estimated_true_peak_dbtp": -1.0999995587066482,
+          "peak_method": "scipy.resample_poly 4x; engineering estimate"
+        },
+        "subjective_quality": "not_listened; human listening required"
+      }
+    },
+    "transcription_full": {
+      "status": "passed",
+      "input_seconds": 203.48,
+      "runtime": {
+        "mps_allocated_peak_bytes": 6716622848,
+        "mps_driver_peak_bytes": 17011146752,
+        "rss_peak_bytes": 781942784,
+        "memory_budget_gib": 16.0,
+        "device": "mps",
+        "effective_mps_budget_gib": 16.0,
+        "wall_seconds": 37.98181154100166,
+        "sample_interval_s": 0.2,
+        "forward_layers": {
+          "Conv1d:torch.float32:mps": 86,
+          "LayerNorm:torch.float32:mps": 50109,
+          "Linear:torch.float32:mps": 129050,
+          "GlobalResponseNorm:torch.float32:mps": 12,
+          "BartScaledWordEmbedding:torch.float32:mps": 2629,
+          "BartLearnedPositionalEmbedding:torch.float32:mps": 2629
+        }
+      }
+    },
+    "yue2_full": {
+      "status": "passed",
+      "runtime": {
+        "mps_allocated_peak_bytes": 8979351808,
+        "mps_driver_peak_bytes": 17400168448,
+        "rss_peak_bytes": 929529856,
+        "memory_budget_gib": 16.0,
+        "device": "mps",
+        "effective_mps_budget_gib": 16.0,
+        "wall_seconds": 1977.057628708004,
+        "sample_interval_s": 0.2,
+        "forward_layers": {
+          "Embedding:torch.bfloat16:mps": 5123,
+          "RMSNorm:torch.bfloat16:mps": 586130,
+          "Linear:torch.bfloat16:mps": 1022030,
+          "Conv1d:torch.float32:mps": 418,
+          "SnakeBeta:torch.float32:mps": 473,
+          "ConvTranspose1d:torch.float32:mps": 66
+        }
+      },
+      "result": {
+        "status": "complete",
+        "truncated": {
+          "abc": false,
+          "semantic": false
+        },
+        "sample_rate": 48000,
+        "audio_seconds": 204.83866666666665
+      }
+    }
+  },
+  "cuda_regression": "not_run",
+  "listening": "not_reviewed",
+  "status": "technical_validation_passed; human_listening_and_cuda_regression_pending",
+  "assets": {
+    "verified": 188,
+    "manifest": "configs/local_assets.lock.json"
+  },
+  "memory_regression": {
+    "original_failure": "YuE2 NAR: MPS allocated 8.92 GiB + other 7.15 GiB exceeded 16 GiB",
+    "original_log": "runs/20261117_165850_tonight_awake_folk_f9176f/02_cover/attempt_001/process.log",
+    "diagnostic": {
+      "diagnostic_only": true,
+      "synthetic_repeated_tokens": 5121,
+      "ode_steps": 1,
+      "status": "passed",
+      "memory": {
+        "mps_allocated_peak_bytes": 8705474560,
+        "mps_driver_peak_bytes": 16419979264,
+        "rss_peak_bytes": 709033984,
+        "memory_budget_gib": 16,
+        "device": "mps",
+        "effective_mps_budget_gib": 16,
+        "wall_seconds": 62.85882187500829,
+        "sample_interval_s": 0.2
+      },
+      "forward_layers": {
+        "Embedding:torch.bfloat16:mps": 1,
+        "RMSNorm:torch.bfloat16:mps": 338,
+        "Linear:torch.bfloat16:mps": 596
+      }
+    },
+    "production_ode_steps": 32
+  },
+  "resume": {
+    "status": "passed",
+    "reused_stages": [
+      "00_prepare",
+      "01_transcribe",
+      "02_cover",
+      "03_separate",
+      "04_convert",
+      "05_mix"
+    ]
+  },
+  "mp3": {
+    "decode": "passed",
+    "audio": {
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 9832256,
+      "duration_s": 204.83866666666665,
+      "sample_peak": 0.8794928789138794,
+      "rms": 0.1120601746505696,
+      "subtype": "MPEG_LAYER_III",
+      "sha256": "16f776086487817aa69b6fb69f76bb1edd1039a228163c2838db723f355c24d9"
+    }
+  },
+  "upstream_runtime": {
+    "YuE": {
+      "revision": "1647252d68b70cbead046ffd3f7caf036dde47ee",
+      "source_sha256": "dc6d76c13b8d33b22815e78303457e7a687dabbe068dc6f02f6691d02cbd65f6"
+    },
+    "seed-vc": {
+      "revision": "51383efd921027683c89e5348211d93ff12ac2a8",
+      "source_sha256": "ee4c56883651210bf700f5c68a16e6a851aeca67e1f03235d53b6ad73c669efe"
+    }
+  },
+  "optional_transposition": {
+    "status": "passed",
+    "automatic": {
+      "status": "completed",
+      "run": "runs/20261117_181433_mps_short_auto_913236",
+      "selected_semitones": 0,
+      "wall_seconds_sum": 213.8406419579842,
+      "stages": {
+        "00_prepare": {
+          "status": "succeeded",
+          "runtime": null
+        },
+        "01_transcribe": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 6716623104,
+            "mps_driver_peak_bytes": 16017096704,
+            "rss_peak_bytes": 781139968,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 17.48658283399709,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Conv1d:torch.float32:mps": 86,
+              "LayerNorm:torch.float32:mps": 5478,
+              "Linear:torch.float32:mps": 13949,
+              "GlobalResponseNorm:torch.float32:mps": 12,
+              "BartScaledWordEmbedding:torch.float32:mps": 280,
+              "BartLearnedPositionalEmbedding:torch.float32:mps": 280
+            }
+          }
+        },
+        "01a_source_separate": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 773047552,
+            "mps_driver_peak_bytes": 8230436864,
+            "rss_peak_bytes": 1614725120,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 22.701802416995633,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "RMSNorm:torch.float32:mps": 333,
+              "Linear:torch.float32:mps": 918
+            }
+          }
+        },
+        "01b_pitch_adapt": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 382474752,
+            "mps_driver_peak_bytes": 1547927552,
+            "rss_peak_bytes": 990248960,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 1.9706843339954503,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "BatchNorm2d:torch.float32:mps": 236,
+              "Conv2d:torch.float32:mps": 248,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 2
+            }
+          }
+        },
+        "02_cover": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 8353933824,
+            "mps_driver_peak_bytes": 9384935424,
+            "rss_peak_bytes": 1229504512,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 70.87324983300641,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Embedding:torch.bfloat16:mps": 525,
+              "RMSNorm:torch.bfloat16:mps": 66556,
+              "Linear:torch.bfloat16:mps": 116224,
+              "Conv1d:torch.float32:mps": 76,
+              "SnakeBeta:torch.float32:mps": 86,
+              "ConvTranspose1d:torch.float32:mps": 12
+            }
+          }
+        },
+        "03_separate": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 963309056,
+            "mps_driver_peak_bytes": 8230436864,
+            "rss_peak_bytes": 1614184448,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 22.4609540419915,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "RMSNorm:torch.float32:mps": 333,
+              "Linear:torch.float32:mps": 918
+            }
+          }
+        },
+        "04_convert": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 2804199680,
+            "mps_driver_peak_bytes": 6909329408,
+            "rss_peak_bytes": 2599993344,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 70.09298441599822,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Conv1d:torch.float16:mps": 4,
+              "LayerNorm:torch.float16:mps": 50,
+              "Linear:torch.float16:mps": 144,
+              "Conv2d:torch.float32:mps": 260,
+              "BatchNorm2d:torch.float32:mps": 248,
+              "Conv1d:torch.float32:mps": 443,
+              "BatchNorm1d:torch.float32:mps": 109,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 8044,
+              "InterpolateRegulator:torch.float32:mps": 2,
+              "Embedding:torch.float32:mps": 2,
+              "GroupNorm:torch.float32:mps": 8,
+              "RMSNorm:torch.float32:mps": 2100,
+              "ConvTranspose1d:torch.float32:mps": 12,
+              "SnakeBeta:torch.float32:mps": 218
+            }
+          }
+        },
+        "05_mix": {
+          "status": "succeeded",
+          "runtime": null
+        },
+        "06_pitch_check": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 384049408,
+            "mps_driver_peak_bytes": 1543864320,
+            "rss_peak_bytes": 939769856,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 1.8745110419986304,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "BatchNorm2d:torch.float32:mps": 236,
+              "Conv2d:torch.float32:mps": 248,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 2
+            }
+          }
+        }
+      },
+      "plan": {
+        "mode": "auto",
+        "selected_semitones": 0,
+        "method": "match source P10 to reference P10, penalize P95 above sample P95+5st and large shifts",
+        "auto_candidates": [
+          {
+            "semitones": 0,
+            "loss": 1556.931975534675,
+            "predicted_low_midi": 60.04132538293667,
+            "predicted_high_midi": 69.0721873698623
+          },
+          {
+            "semitones": 1,
+            "loss": 1737.6823478984059,
+            "predicted_low_midi": 61.04132538293667,
+            "predicted_high_midi": 70.0721873698623
+          },
+          {
+            "semitones": 2,
+            "loss": 1928.6327202621374,
+            "predicted_low_midi": 62.04132538293667,
+            "predicted_high_midi": 71.0721873698623
+          },
+          {
+            "semitones": 3,
+            "loss": 2129.783092625868,
+            "predicted_low_midi": 63.04132538293667,
+            "predicted_high_midi": 72.0721873698623
+          },
+          {
+            "semitones": 4,
+            "loss": 2341.133464989599,
+            "predicted_low_midi": 64.04132538293666,
+            "predicted_high_midi": 73.0721873698623
+          },
+          {
+            "semitones": 5,
+            "loss": 2562.6838373533296,
+            "predicted_low_midi": 65.04132538293666,
+            "predicted_high_midi": 74.0721873698623
+          },
+          {
+            "semitones": 6,
+            "loss": 2794.4342097170606,
+            "predicted_low_midi": 66.04132538293666,
+            "predicted_high_midi": 75.0721873698623
+          }
+        ],
+        "auto_search_semitones": [
+          0,
+          6
+        ],
+        "reference_sample_only": true,
+        "exploratory_upper_headroom_semitones": 5,
+        "warning": "Short reference does not establish singer range; audio adherence and quality require review.",
+        "score_checks": {
+          "semitones": 0,
+          "source_key": "F",
+          "target_key": "F",
+          "notes_checked": {
+            "Vocal": 62,
+            "Ins": 0
+          },
+          "pitches_transposed_exactly": true,
+          "timing_and_meter_preserved": true,
+          "tempo_preserved": true,
+          "chords_and_keys_transposed": true
+        },
+        "seed_vc_semitones": 0
+      },
+      "checks": {
+        "alignment": {
+          "windows": [
+            {
+              "start_s": 0.0,
+              "lag_ms": 10.0,
+              "correlation": 0.7612095130646691
+            },
+            {
+              "start_s": 0.45,
+              "lag_ms": 10.0,
+              "correlation": 0.7589744326347931
+            },
+            {
+              "start_s": 0.9,
+              "lag_ms": 10.0,
+              "correlation": 0.7612530104395965
+            }
+          ],
+          "consistent": true,
+          "estimated_delay_ms": 10.0,
+          "applied_shift_samples": -480,
+          "needs_listening_review": false,
+          "converted_duration_delta_s": -0.009104166666666667,
+          "output_frames": 1004096
+        },
+        "vocal_gain": 0.6863599793288586,
+        "reconstruction": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "frames": 1004096,
+          "duration_s": 20.918666666666667,
+          "sample_peak": 0.8510288000106812,
+          "rms": 0.1558595799743646,
+          "subtype": "PCM_24",
+          "sha256": "2656018a04dc6465ba901bb5579aedf9d2e09a6d1cc7188ddb324497869a1028",
+          "master_gain": 1.0,
+          "estimated_true_peak_dbtp": -1.376726491457949,
+          "peak_method": "scipy.resample_poly 4x; engineering estimate"
+        },
+        "final": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "frames": 1004096,
+          "duration_s": 20.918666666666667,
+          "sample_peak": 0.880488395690918,
+          "rms": 0.13313796201803527,
+          "subtype": "PCM_24",
+          "sha256": "00699b3cac3890e61e0554fd7c65eec8fc512d2c34176a8c83fc9f5b5c5ad776",
+          "master_gain": 0.8559587923310427,
+          "estimated_true_peak_dbtp": -1.0999995587066482,
+          "peak_method": "scipy.resample_poly 4x; engineering estimate"
+        },
+        "subjective_quality": "not_listened; human listening required"
+      }
+    },
+    "manual": {
+      "status": "completed",
+      "run": "runs/20261117_181859_mps_short_manual_1e7a32",
+      "selected_semitones": 1,
+      "wall_seconds_sum": 213.56051520899928,
+      "stages": {
+        "00_prepare": {
+          "status": "succeeded",
+          "runtime": null
+        },
+        "01_transcribe": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 6716622848,
+            "mps_driver_peak_bytes": 16038068224,
+            "rss_peak_bytes": 781123584,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 16.230937208005344,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Conv1d:torch.float32:mps": 86,
+              "LayerNorm:torch.float32:mps": 5478,
+              "Linear:torch.float32:mps": 13949,
+              "GlobalResponseNorm:torch.float32:mps": 12,
+              "BartScaledWordEmbedding:torch.float32:mps": 280,
+              "BartLearnedPositionalEmbedding:torch.float32:mps": 280
+            }
+          }
+        },
+        "01a_source_separate": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 773047552,
+            "mps_driver_peak_bytes": 8230436864,
+            "rss_peak_bytes": 1614528512,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 22.41422279199469,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "RMSNorm:torch.float32:mps": 333,
+              "Linear:torch.float32:mps": 918
+            }
+          }
+        },
+        "01b_pitch_adapt": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 382611968,
+            "mps_driver_peak_bytes": 1547927552,
+            "rss_peak_bytes": 989609984,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 1.9656849589955527,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "BatchNorm2d:torch.float32:mps": 236,
+              "Conv2d:torch.float32:mps": 248,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 2
+            }
+          }
+        },
+        "02_cover": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 8339520768,
+            "mps_driver_peak_bytes": 9385394176,
+            "rss_peak_bytes": 1220919296,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 70.31622320799215,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Embedding:torch.bfloat16:mps": 525,
+              "RMSNorm:torch.bfloat16:mps": 66556,
+              "Linear:torch.bfloat16:mps": 116224,
+              "Conv1d:torch.float32:mps": 76,
+              "SnakeBeta:torch.float32:mps": 86,
+              "ConvTranspose1d:torch.float32:mps": 12
+            }
+          }
+        },
+        "03_separate": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 2744752384,
+            "mps_driver_peak_bytes": 8230436864,
+            "rss_peak_bytes": 1614069760,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 22.529356792001636,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "RMSNorm:torch.float32:mps": 333,
+              "Linear:torch.float32:mps": 918
+            }
+          }
+        },
+        "04_convert": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 2804200192,
+            "mps_driver_peak_bytes": 6909329408,
+            "rss_peak_bytes": 2602565632,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 72.0478892079991,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "Conv1d:torch.float16:mps": 4,
+              "LayerNorm:torch.float16:mps": 50,
+              "Linear:torch.float16:mps": 144,
+              "Conv2d:torch.float32:mps": 260,
+              "BatchNorm2d:torch.float32:mps": 248,
+              "Conv1d:torch.float32:mps": 443,
+              "BatchNorm1d:torch.float32:mps": 109,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 8044,
+              "InterpolateRegulator:torch.float32:mps": 2,
+              "Embedding:torch.float32:mps": 2,
+              "GroupNorm:torch.float32:mps": 8,
+              "RMSNorm:torch.float32:mps": 2100,
+              "ConvTranspose1d:torch.float32:mps": 12,
+              "SnakeBeta:torch.float32:mps": 218
+            }
+          }
+        },
+        "05_mix": {
+          "status": "succeeded",
+          "runtime": null
+        },
+        "06_pitch_check": {
+          "status": "succeeded",
+          "runtime": {
+            "mps_allocated_peak_bytes": 384139520,
+            "mps_driver_peak_bytes": 1540849664,
+            "rss_peak_bytes": 940474368,
+            "memory_budget_gib": 16.0,
+            "device": "mps",
+            "effective_mps_budget_gib": 16.0,
+            "wall_seconds": 1.8434634589939378,
+            "sample_interval_s": 0.2,
+            "forward_layers": {
+              "BatchNorm2d:torch.float32:mps": 236,
+              "Conv2d:torch.float32:mps": 248,
+              "ConvTranspose2d:torch.float32:mps": 10,
+              "GRU:torch.float32:mps": 2,
+              "Linear:torch.float32:mps": 2
+            }
+          }
+        }
+      },
+      "plan": {
+        "mode": "1",
+        "selected_semitones": 1,
+        "method": "match source P10 to reference P10, penalize P95 above sample P95+5st and large shifts",
+        "auto_candidates": [
+          {
+            "semitones": 0,
+            "loss": 1556.931975534675,
+            "predicted_low_midi": 60.04132538293667,
+            "predicted_high_midi": 69.0721873698623
+          },
+          {
+            "semitones": 1,
+            "loss": 1737.6823478984059,
+            "predicted_low_midi": 61.04132538293667,
+            "predicted_high_midi": 70.0721873698623
+          },
+          {
+            "semitones": 2,
+            "loss": 1928.6327202621374,
+            "predicted_low_midi": 62.04132538293667,
+            "predicted_high_midi": 71.0721873698623
+          },
+          {
+            "semitones": 3,
+            "loss": 2129.783092625868,
+            "predicted_low_midi": 63.04132538293667,
+            "predicted_high_midi": 72.0721873698623
+          },
+          {
+            "semitones": 4,
+            "loss": 2341.133464989599,
+            "predicted_low_midi": 64.04132538293666,
+            "predicted_high_midi": 73.0721873698623
+          },
+          {
+            "semitones": 5,
+            "loss": 2562.6838373533296,
+            "predicted_low_midi": 65.04132538293666,
+            "predicted_high_midi": 74.0721873698623
+          },
+          {
+            "semitones": 6,
+            "loss": 2794.4342097170606,
+            "predicted_low_midi": 66.04132538293666,
+            "predicted_high_midi": 75.0721873698623
+          }
+        ],
+        "auto_search_semitones": [
+          0,
+          6
+        ],
+        "reference_sample_only": true,
+        "exploratory_upper_headroom_semitones": 5,
+        "warning": "Short reference does not establish singer range; audio adherence and quality require review.",
+        "score_checks": {
+          "semitones": 1,
+          "source_key": "F",
+          "target_key": "Gb",
+          "notes_checked": {
+            "Vocal": 62,
+            "Ins": 0
+          },
+          "pitches_transposed_exactly": true,
+          "timing_and_meter_preserved": true,
+          "tempo_preserved": true,
+          "chords_and_keys_transposed": true
+        },
+        "seed_vc_semitones": 0
+      },
+      "checks": {
+        "alignment": {
+          "windows": [
+            {
+              "start_s": 0.0,
+              "lag_ms": 10.0,
+              "correlation": 0.8034947815115774
+            },
+            {
+              "start_s": 0.45,
+              "lag_ms": 10.0,
+              "correlation": 0.8037433695939536
+            },
+            {
+              "start_s": 0.9,
+              "lag_ms": 10.0,
+              "correlation": 0.8127826859875865
+            }
+          ],
+          "consistent": true,
+          "estimated_delay_ms": 10.0,
+          "applied_shift_samples": -480,
+          "needs_listening_review": false,
+          "converted_duration_delta_s": -0.009104166666666667,
+          "output_frames": 1004096
+        },
+        "vocal_gain": 0.5761892152351754,
+        "reconstruction": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "frames": 1004096,
+          "duration_s": 20.918666666666667,
+          "sample_peak": 0.84806227684021,
+          "rms": 0.14617481252449022,
+          "subtype": "PCM_24",
+          "sha256": "88c9479195147ac9a353da6456bfdb1b671d0815ba852a6df35094064f7eff45",
+          "master_gain": 1.0,
+          "estimated_true_peak_dbtp": -1.4229313295175974,
+          "peak_method": "scipy.resample_poly 4x; engineering estimate"
+        },
+        "final": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "frames": 1004096,
+          "duration_s": 20.918666666666667,
+          "sample_peak": 0.880488395690918,
+          "rms": 0.12001808278782503,
+          "subtype": "PCM_24",
+          "sha256": "27adf0b6a3e2819ce52747b0c2046fdd4230d7b146003545c45d49ba8380b737",
+          "master_gain": 0.832237626209702,
+          "estimated_true_peak_dbtp": -1.0999995587066482,
+          "peak_method": "scipy.resample_poly 4x; engineering estimate"
+        },
+        "subjective_quality": "not_listened; human listening required"
+      }
+    },
+    "manual_vs_automatic_pitch": {
+      "before": {
+        "common_voiced_frames": 1140,
+        "median_shift_semitones": 1.0692261457443237,
+        "within_50_cents_of_one_semitone_pct": 24.385964912280702
+      },
+      "after": {
+        "common_voiced_frames": 1130,
+        "median_shift_semitones": 1.1407467126846313,
+        "within_50_cents_of_one_semitone_pct": 22.920353982300885
+      },
+      "method": "RMVPE matching 10ms frames; 65..1000 Hz and RMS >= -40dBFS; descriptive, no audio time warping or subjective quality inference"
+    }
+  },
+  "implementation": {
+    "base_commit": "90cb742b7160a2479b75d4a141d82e8fb3026a78",
+    "branch": "codex/macos-mps",
+    "patches": [
+      "patches/yue2-mps-memory.patch",
+      "patches/seed-vc-mps.patch"
+    ]
+  },
+  "commands": {
+    "setup": "bash scripts/setup_macos.sh",
+    "asset_verification": "envs/control/bin/python scripts/verify_assets.py",
+    "preflight": "bash scripts/run_baseline.sh --device mps --preflight",
+    "full_song": "bash scripts/run_baseline.sh --demo --device mps --memory-budget-gib 16",
+    "unit_tests": "PYTHONPATH=src envs/control/bin/python -m unittest discover -s tests -v",
+    "automatic_transposition": "bash scripts/run_baseline.sh --demo --device mps --song runs/probes/mac/song-20s.wav --lyrics runs/probes/mac/short-lyrics.txt --transpose auto --name mps_short_auto",
+    "manual_transposition": "bash scripts/run_baseline.sh --demo --device mps --song runs/probes/mac/song-20s.wav --lyrics runs/probes/mac/short-lyrics.txt --transpose 1 --name mps_short_manual"
+  }
+}

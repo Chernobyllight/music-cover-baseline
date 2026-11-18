@@ -73,7 +73,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("run", type=Path)
     parser.add_argument("--skip-asr", action="store_true")
+    parser.add_argument("--device", choices=["auto", "cuda", "mps"], default="auto")
     args = parser.parse_args()
+    sys.path.insert(0, str(ROOT / "src"))
+    from music_cover.runtime import resolve_device
+    device = resolve_device(args.device)
     run = args.run.resolve()
     output = run / "deliverables"
     import numpy as np
@@ -82,7 +86,7 @@ def main():
     torch.set_num_threads(4)
     sys.path.insert(0, str(ROOT / "third_party/seed-vc"))
     from modules.rmvpe import RMVPE
-    pitch = RMVPE(str(ROOT / "models/RMVPE/rmvpe.pt"), is_half=False, device="cuda")
+    pitch = RMVPE(str(ROOT / "models/RMVPE/rmvpe.pt"), is_half=False, device=device)
     waves, pitches = {}, {}
     for name in ["vocals_before", "vocals_after"]:
         wave, _ = librosa.load(output / f"{name}.wav", sr=16000, mono=True)
@@ -100,19 +104,22 @@ def main():
         "limitations": "自动 F0 与 ASR 检查，不能替代对目标风格、音色相似度和自然度的人工试听。",
     }
     del pitch
-    torch.cuda.empty_cache()
+    if device == "cuda":
+        torch.cuda.empty_cache()
+    else:
+        torch.mps.empty_cache()
     # Diagnostic only: CAMPPlus is also the conditioning encoder in Seed-VC,
     # so this is not an independent speaker-similarity benchmark.
     import torchaudio
     from modules.campplus.DTDNN import CAMPPlus
-    speaker = CAMPPlus(feat_dim=80, embedding_size=192).eval().to("cuda")
+    speaker = CAMPPlus(feat_dim=80, embedding_size=192).eval().to(device)
     speaker.load_state_dict(torch.load(ROOT / "models/CAMPPlus/campplus_cn_common.bin", map_location="cpu", weights_only=True))
     def embedding(wave):
         features = torchaudio.compliance.kaldi.fbank(torch.from_numpy(wave).unsqueeze(0),
                                                    num_mel_bins=80, dither=0, sample_frequency=16000)
         features -= features.mean(dim=0, keepdim=True)
         with torch.inference_mode():
-            vector = speaker(features.unsqueeze(0).to("cuda"))[0]
+            vector = speaker(features.unsqueeze(0).to(device))[0]
         return torch.nn.functional.normalize(vector, dim=0)
     reference, _ = librosa.load(output / "reference.wav", sr=16000, mono=True)
     target_vector = embedding(reference)
@@ -133,17 +140,20 @@ def main():
         "limitation": "跨语言、说话与歌唱差异会影响分数；不能将该值解读为身份确认或听感达标。",
     }
     del speaker, target_vector
-    torch.cuda.empty_cache()
+    if device == "cuda":
+        torch.cuda.empty_cache()
+    else:
+        torch.mps.empty_cache()
     if not args.skip_asr:
         from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq, pipeline
         model_path = str(ROOT / "models/Whisper-small")
         processor = AutoProcessor.from_pretrained(model_path, local_files_only=True)
         model = AutoModelForSpeechSeq2Seq.from_pretrained(model_path, torch_dtype=torch.float16,
-                                                        local_files_only=True).to("cuda")
+                                                        local_files_only=True).to(device)
         recognizer = pipeline("automatic-speech-recognition", model=model,
                               tokenizer=processor.tokenizer, feature_extractor=processor.feature_extractor,
                               chunk_length_s=30, stride_length_s=5, batch_size=1,
-                              torch_dtype=torch.float16, device=0)
+                              torch_dtype=torch.float16, device=device)
         transcripts = {}
         for name, wave in waves.items():
             print(f"ASR {name}", flush=True)
