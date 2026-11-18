@@ -2,7 +2,6 @@
   "request": {
     "seed": 42,
     "steps": 30,
-    "gpu": "0",
     "reference_start": 0,
     "reference_duration": 15,
     "transpose": "0",

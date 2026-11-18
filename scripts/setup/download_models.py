@@ -33,7 +33,7 @@ def download(item):
                         "THIRD_PARTY*", "licenses/*", "render_assets/*"],
     )
     print(f"READY {name}", flush=True)
-    return name, {"repo_id": repo, "revision": revision, "path": str(target)}
+    return name, {"repo_id": repo, "revision": revision, "path": str(target.relative_to(ROOT))}
 
 
 def main():

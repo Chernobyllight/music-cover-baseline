@@ -10,7 +10,7 @@ ENVIRONMENTS = {'fish_diffusion': '/opt/conda', 'rvc': '/opt/conda', 'so_vits_sv
                 'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': '/opt/conda'}
 # Existing stage callers also use these environment names for unrelated operations.
 # Route these operations through the same resolver as preflight.
-EXECUTION_BACKENDS = {'separate': 'separator', 'pitch': 'rmvpe', 'cover': 'yue',
+EXECUTION_BACKENDS = {'transcribe': 'sheetsage', 'separate': 'separator', 'pitch': 'rmvpe', 'cover': 'yue',
                       'convert': 'seed_vc', 'convert_candidates': 'voice_metrics',
                       'evaluate_voice': 'voice_metrics', 'svc_metrics': 'voice_metrics'}
 BASE_LOCKS = {'fish_diffusion': 'fish-diffusion-base.installed.txt', 'rvc': 'rvc-base.installed.txt', 'so_vits_svc': 'svc-base.installed.txt',
@@ -25,17 +25,29 @@ MODEL_GROUPS = {
 }
 
 
-def python_for(root, backend):
+MPS_ENVIRONMENTS = {'sheetsage': 'sheetsage2', 'yue': 'yue2', 'separator': 'separator',
+                    'seed_vc': 'seed-vc', 'rmvpe': 'seed-vc'}
+
+
+def environment_for(backend, device):
+    if device == 'mps':
+        if backend not in MPS_ENVIRONMENTS:
+            raise ValueError(f'{backend} is outside the supported MPS stages 00–06')
+        return MPS_ENVIRONMENTS[backend]
+    return ENVIRONMENTS[backend]
+
+
+def python_for(root, backend, device='cuda'):
     """Resolve one backend interpreter consistently for preflight and execution."""
-    environment = Path(ENVIRONMENTS[backend])
+    environment = Path(environment_for(backend, device))
     prefix = environment if environment.is_absolute() else Path(root) / 'envs' / environment
     return prefix / 'bin/python'
 
 
-def execution_python(root, environment, operation):
+def execution_python(root, environment, operation, device="cuda"):
     """Keep stage execution and preflight aligned without moving other backends."""
     if operation in EXECUTION_BACKENDS:
-        return python_for(root, EXECUTION_BACKENDS[operation])
+        return python_for(root, EXECUTION_BACKENDS[operation], device)
     prefix = Path(environment)
     if not prefix.is_absolute():
         prefix = Path(root) / 'envs' / prefix
@@ -67,14 +79,25 @@ def resource_data(root, backend):
     return {}
 
 
-def signature(root, backends):
+def signature(root, backends, device="cuda"):
     root = Path(root)
     result = {}
     for backend in sorted(set(backends)):
-        env = ENVIRONMENTS[backend]
+        env = environment_for(backend, device)
         freeze = root / 'configs' / BASE_LOCKS.get(backend, env + '.installed.txt')
+        if device == 'mps':
+            prefix = (root / 'envs' / env).resolve().name
+            if not prefix.endswith('-torch215'):
+                prefix = env
+            locks = root / 'configs/macos'
+            freeze = (locks / 'candidates' if prefix.endswith('-torch215') else locks) / f'{prefix}.txt'
         entry = {'models': resource_data(root, backend), 'environment': env,
                  'installed_lock_sha256': sha256(freeze)}
+        if device == 'mps':
+            entry['device'] = device
+            entry['runtime'] = json.loads(subprocess.check_output(
+                [str(python_for(root, backend, device)), '-m', 'music_cover.backends.cli',
+                 'probe', '--device', device], text=True).splitlines()[-1])
         if backend == 'seed_vc':
             entry['config_sha256'] = sha256(root / 'configs/seed_svc.local.yml')
         if backend == 'voice_metrics':
@@ -91,9 +114,9 @@ def signature(root, backends):
     return result
 
 
-def requirements(root, backend):
+def requirements(root, backend, device="cuda"):
     root = Path(root)
-    required = [python_for(root, backend)]
+    required = [python_for(root, backend, device)]
     if backend == 'fish_diffusion':
         required += [root / a['path'] for a in resource_data(root, backend)['assets'] if a.get('scope') != 'training']
         required += [root / 'third_party/fish-diffusion/fish_diffusion/archs/diffsinger/diffsinger.py']
@@ -122,8 +145,8 @@ def requirements(root, backend):
     return required
 
 
-def preflight(root, backends=(), mp3=False):
-    missing = [str(p) for b in sorted(set(backends)) for p in requirements(root, b) if not p.is_file()]
+def preflight(root, backends=(), mp3=False, device="cuda"):
+    missing = [str(p) for b in sorted(set(backends)) for p in requirements(root, b, device) if not p.is_file()]
     if missing:
         raise FileNotFoundError('Selected modules need these files:\n' + '\n'.join(missing))
     if not shutil.which('ffmpeg'):
@@ -135,11 +158,14 @@ def preflight(root, backends=(), mp3=False):
         if 'libmp3lame' not in result.stdout:
             raise RuntimeError('ffmpeg must support libmp3lame')
     for backend in sorted(set(backends)):
-        command = [str(python_for(root, backend)), '-c',
+        command = [str(python_for(root, backend, device)), '-c',
                    'import importlib; ' + '; '.join('importlib.import_module(' + repr(name) + ')' for name in IMPORTS[backend])]
         result = subprocess.run(command, capture_output=True, text=True, timeout=90)
         if result.returncode:
             raise RuntimeError(f'{backend} environment imports failed:\n{result.stderr[-2000:]}')
+        if device == 'mps':
+            subprocess.run([str(python_for(root, backend, device)), '-m', 'music_cover.backends.cli',
+                            'probe', '--device', device], check=True, stdout=subprocess.DEVNULL, timeout=90)
     if 'fish_diffusion' in backends:
         from ..fish import check_assets as check_fish_assets
         check_fish_assets(root)

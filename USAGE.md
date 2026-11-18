@@ -1,5 +1,7 @@
 # 使用说明（v1.1 基线＋Fish Diffusion 工作树扩展）
 
+在 Apple Silicon 上运行 Seed-VC 零样本 00–06，使用优化版入口并指定 `--device mps --until 06_mix`。[Mac 安装和运行](docs/09-macos.md)
+
 新使用者优先按[部署 Skill](skill/SKILL.md)准备自己的数据和全新配置；包含可复制的 00–06 命令、权重下载与四种模型的训练路线。Fish 新增功能尚未单独发布，需使用包含相应脚本的代码版本。
 
 以下历史素材示例在已配置服务器执行，需要先确认对应媒体和人物模型仍存在。工程根目录为 `/data/liuhongda/music-cover-baseline`，与 `/mnt/afs_f/liuhongda/music-cover-baseline` 指向同一工程。新机器先按[环境说明](docs/03-environment.md)和[模型权重指南](docs/12_model_weights.md)恢复依赖。

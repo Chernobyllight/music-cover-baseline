@@ -176,7 +176,7 @@ class Preflight(unittest.TestCase):
                 {'scope':'evaluation','path':'embedding','sha256':sha256(asset)}]}))
             torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: True, get_device_name=lambda n: 'GPU'))
             a = check.parser().parse_args(['--scope','inference'])
-            with patch.object(check,'ROOT',root), patch.dict('sys.modules',{'torch':torch}), \
+            with patch.object(Path, 'samefile', return_value=True), patch.object(check,'ROOT',root), patch.dict('sys.modules',{'torch':torch}), \
                  patch.object(check,'preflight') as dependency, patch.object(check,'check_assets',return_value={'assets':[]}) as assets:
                 result = check.check(a)
                 self.assertFalse(result['writes']); assets.assert_called_with(root, training=False)

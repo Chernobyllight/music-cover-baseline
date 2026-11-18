@@ -1,0 +1,20 @@
+{
+  "torchcodec_0_17_save": "failed: no shared FFmpeg libraries; imageio-ffmpeg executable is insufficient",
+  "soundfile_patch": {
+    "1": {
+      "samples_equal": true,
+      "rate_equal": true,
+      "subtype": "FLOAT",
+      "clipped": false
+    },
+    "2": {
+      "samples_equal": true,
+      "rate_equal": true,
+      "subtype": "FLOAT",
+      "clipped": false
+    }
+  },
+  "production_patch_applied": false,
+  "candidate_actual_save_call": "passed in torch2.15/torchaudio2.11.1 using source AST save call: 44100Hz, 4410 samples, mono FLOAT",
+  "torchcodec_retained_in_final_lock": false
+}

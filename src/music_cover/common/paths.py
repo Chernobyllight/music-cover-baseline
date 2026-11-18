@@ -59,7 +59,14 @@ class RunPaths:
 
     def project_relative(self, value):
         path = self.resolve(value)
-        return str(path.relative_to(self.root)) if path.is_relative_to(self.root) else str(path)
+        if path.is_relative_to(self.root):
+            return str(path.relative_to(self.root))
+        # Optimized checkouts share these asset directories with the project.
+        for name in ('data', 'models', 'configs', 'runs'):
+            mount = self.root / name
+            if mount.is_symlink() and path.is_relative_to(mount.resolve()):
+                return str(Path(name) / path.relative_to(mount.resolve()))
+        return str(path)
 
     def request(self, value, *, portable=False):
         result = deepcopy(value)

@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 
 from .engine import Pipeline
+from .runtime import memory_budget, resolve_device
 from .common.io import write_json
 from .common.lyrics import clean_lyrics
 from .common.paths import ROOT, RunPaths
@@ -18,9 +19,15 @@ from .common.resources import preflight as check_resources
 from .modules import load_modules, IDS, active_ids, normalize
 from .voice import merge_voice_config
 
-DEFAULT_REQUEST = {'name': 'cover', 'seed': 42, 'steps': 30, 'gpu': '0', 'reference_start': 0.0,
+DEFAULT_REQUEST = {'name': 'cover', 'seed': 42, 'steps': 30, 'gpu': None, 'device': 'auto', 'memory_budget_gib': None, 'reference_start': 0.0,
                    'reference_duration': 15.0, 'transpose': '0', 'review': True}
 REQUEST_KEYS = set(DEFAULT_REQUEST) | {'song', 'lyrics', 'reference', 'style'}
+
+
+def apply_request_overrides(request, overrides):
+    if 'device' in overrides and overrides['device'] != request['device']:
+        request.update(gpu=None, memory_budget_gib=None)
+    request.update(overrides)
 
 
 def read_config(path):
@@ -79,6 +86,8 @@ def main():
     for name in ['reference-start', 'reference-duration']:
         parser.add_argument('--' + name, type=float)
     parser.add_argument('--review', action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument('--device', choices=['auto', 'cuda', 'mps'])
+    parser.add_argument('--memory-budget-gib', type=float)
     parser.add_argument('--preflight', action='store_true', help='只检查选中模块的依赖')
     parser.add_argument('--voice-backend', choices=['seed_vc', 'so_vits_svc', 'rvc', 'fish_diffusion'])
     parser.add_argument('--voice-mode', choices=['zero_shot', 'finetuned'])
@@ -108,7 +117,9 @@ def main():
             if state.get('schema_version') != 2:
                 parser.error('历史 v0.1 运行目录保留不动。请指定新的 --run，或不传 --run 自动创建。')
             paths = RunPaths(ROOT, run, state)
-            request.update(json.loads((run / 'request.json').read_text()))
+            previous = json.loads((run / 'request.json').read_text())
+            request.update(previous)
+            request['device'] = previous.get('device', 'cuda')
             saved = read_config(run / 'config.resolved.json')
             for stage, values in saved.get('modules', {}).items(): configs[stage].update(values)
         if args.config:
@@ -116,7 +127,7 @@ def main():
             task = read_config(path)
             unknown = set(task) - {'request', 'modules'}
             if unknown: parser.error(f'Unknown task sections: {sorted(unknown)}')
-            request.update(task.get('request', {}))
+            apply_request_overrides(request, task.get('request', {}))
             for stage, values in task.get('modules', {}).items():
                 stage = normalize(stage)
                 if stage == '05_voice_conversion':
@@ -133,9 +144,14 @@ def main():
             configs['05_voice_conversion']['voice_profile'] = None
         elif configs['05_voice_conversion'].get('voice_profile'):
             configs['05_voice_conversion']['voice_profile'] = paths.project_relative(configs['05_voice_conversion']['voice_profile'])
-        for key in REQUEST_KEYS:
-            value = getattr(args, key, None)
-            if value is not None: request[key] = value
+        apply_request_overrides(request, {key: getattr(args, key) for key in REQUEST_KEYS
+                                          if getattr(args, key, None) is not None})
+        if request['device'] not in {'auto', 'mps', 'cuda'}:
+            raise ValueError('device must be auto, cuda or mps')
+        if request['device'] == 'mps' and request.get('gpu') is not None:
+            parser.error('--gpu cannot be combined with --device mps')
+        if request.get('memory_budget_gib') is not None:
+            memory_budget(request['memory_budget_gib'], request['device'])
         request['transpose'] = str(request['transpose'])
         if request['transpose'] != 'auto':
             value = int(request['transpose'])
@@ -160,12 +176,26 @@ def main():
                 'backends': modules[name].backends(request, configs[name]), 'config': configs[name]} for name in selected},
                 'note': 'This is a static execution plan. Cache checks happen when running.'}, ensure_ascii=False, indent=2))
             return
+        # CPU-only stages and static commands need no accelerator discovery.
+        selected_backends = {b for name in selected for b in modules[name].backends(request, configs[name])}
+        if selected_backends - {'analysis', 'package'} or request['device'] != 'auto':
+            request['device'] = resolve_device(request['device'])
+            if request['device'] == 'mps' and request.get('gpu') is not None:
+                parser.error('--gpu cannot be combined with the selected MPS device')
+        if request['device'] == 'cuda' and request.get('gpu') is None:
+            request['gpu'] = '0'
+        if request['device'] != 'auto':
+            request['memory_budget_gib'] = memory_budget(request.get('memory_budget_gib'), request['device'])
+        if request['device'] == 'mps':
+            from .common.resources import environment_for
+            for backend in sorted(selected_backends):
+                environment_for(backend, 'mps')
         if args.preflight:
             if '05_voice_conversion' in selected:
                 from .voice import resolve_voice
                 c = configs['05_voice_conversion']
                 resolve_voice(c['mode'], c['voice_profile'], backend=c['backend'])
-            check_resources(ROOT, [b for name in selected for b in modules[name].backends(request, configs[name])], mp3='06_mix' in selected)
+            check_resources(ROOT, selected_backends, mp3='06_mix' in selected, device=request['device'])
             print('Selected module preflight OK')
             return
         for key in ['song', 'lyrics', 'reference', 'style']:

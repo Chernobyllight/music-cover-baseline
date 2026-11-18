@@ -15,8 +15,10 @@ def transcribe(args):
     model = AutoModel.from_pretrained(
         str(ROOT / "models/SheetSage2"), trust_remote_code=True, local_files_only=True,
         base_model_path=str(ROOT / "models/MERT-v2-FullSong"),
-    ).eval().to("cuda")
-    result = model.transcribe(args.input, output_dir=args.output, melody_only=args.stage != "transcribe_final", dtype="bf16",
+    ).eval().to(args.device)
+    from ..runtime import assert_model_device
+    assert_model_device(model, args.device)
+    result = model.transcribe(args.input, output_dir=args.output, melody_only=args.stage != "transcribe_final", dtype="bf16" if args.device == "cuda" else "fp32",
                               preset="default", progress=lambda event: print(event, flush=True))
     if args.stage == "transcribe_final":
         import mido

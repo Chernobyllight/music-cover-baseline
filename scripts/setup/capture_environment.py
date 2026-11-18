@@ -4,6 +4,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import platform
 import subprocess
 from pathlib import Path
 
@@ -16,17 +17,25 @@ def output(args, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output-dir', type=Path, default=ROOT / 'configs',
+    parser.add_argument('--output-dir', type=Path, default=None,
                         help='Use a cache directory for a read-only runtime snapshot; default updates configs locks')
+    parser.add_argument('--optimized', action='store_true', help='Capture the assembled macOS inference environments')
     parser.add_argument('--skip-assets', action='store_true', help='Skip full model-directory hashing')
     args = parser.parse_args()
+    mac = platform.system() == 'Darwin'
+    checkout = ROOT / 'envs/mps-optimized' if args.optimized else ROOT
+    if args.optimized and (not mac or not checkout.is_dir()):
+        parser.error('--optimized requires the prepared macOS workspace')
+    default_output = ROOT / ('cache/macos-optimized-snapshot' if args.optimized else 'configs/macos' if mac else 'configs')
+    args.output_dir = args.output_dir or default_output
     args.output_dir.mkdir(parents=True, exist_ok=True)
     record = {"captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
               "ffmpeg": output(["ffmpeg", "-version"]).splitlines()[0],
-              "gpu": output(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version", "--format=csv,noheader"]),
+              "gpu": output(["system_profiler", "SPDisplaysDataType"]) if mac else output(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version", "--format=csv,noheader"]),
               "environments": {}, "upstream": {}}
-    for name in ["control", "sheetsage2", "separator", "base"]:
-        python = "/opt/conda/bin/python" if name == "base" else str(ROOT / "envs" / name / "bin/python")
+    environments = ["control", "sheetsage2", "yue2", "separator", "seed-vc"] if mac else ["control", "sheetsage2", "separator", "base"]
+    for name in environments:
+        python = "/opt/conda/bin/python" if name == "base" else str(checkout / "envs" / name / "bin/python")
         code = """import sys,torch,numpy,importlib.metadata as m,json
 packages = {}
 for p in ['torchvision','torchaudio','transformers','huggingface-hub','safetensors','accelerate','soundfile','scipy','librosa','numba','onnxruntime','audio-separator','yue2-infer','triton','cuda-bindings','mido','pretty-midi','basic-pitch','demucs','speechbrain','faiss-cpu']:
@@ -39,14 +48,15 @@ print(json.dumps({'python':sys.version,'torch':torch.__version__,'cuda':torch.ve
 """
         versions = json.loads(output([python, "-c", code]))
         record["environments"][name] = versions
-        freeze = output([python, "-m", "pip", "freeze", "--local"])
+        freeze = output(["uv", "pip", "freeze", "--python", python] if mac else
+                        [python, "-m", "pip", "freeze", "--local"])
         (args.output_dir / f"{name}.installed.txt").write_text(freeze + "\n")
         if name == 'base':
             (args.output_dir / 'pitch-base.installed.txt').write_text(freeze + "\n")
             (args.output_dir / 'yue-base.installed.txt').write_text(freeze + "\n")
             (args.output_dir / 'seed-vc-base.installed.txt').write_text(freeze + "\n")
-    for name in ["YuE", "seed-vc", "so-vits-svc", "rvc"]:
-        record["upstream"][name] = output(["git", "rev-parse", "HEAD"], cwd=ROOT / "third_party" / name)
+    for name in (["YuE", "seed-vc"] if mac else ["YuE", "seed-vc", "so-vits-svc", "rvc"]):
+        record["upstream"][name] = output(["git", "rev-parse", "HEAD"], cwd=checkout / "third_party" / name)
     (args.output_dir / "environments.lock.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")
     if args.skip_assets:
         print(f"Saved environment snapshot to {args.output_dir}; model hashes skipped")

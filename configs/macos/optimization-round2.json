@@ -1,0 +1,270 @@
+{
+  "baseline": "20261117_165850_tonight_awake_folk_f9176f",
+  "separator": {
+    "workers": [
+      {
+        "start_sample": 1764000,
+        "sample_rate": 44100,
+        "torch": "2.8.0",
+        "input_sha256": "6280aed4c5dd9cc503647115cb1cc6f8aed4e0fd4c0061a32f5bcbc15b15ef98",
+        "load_and_input_s": 0.6557960420032032,
+        "first_s": 7.829136540996842,
+        "sdpa_first": {
+          "((62, 8, 801, 64), (62, 8, 801, 64), 'torch.float32', 'mps:0')": 12,
+          "((801, 8, 62, 64), (801, 8, 62, 64), 'torch.float32', 'mps:0')": 12
+        },
+        "second_s": 7.3757812500116415
+      },
+      {
+        "start_sample": 1764000,
+        "sample_rate": 44100,
+        "torch": "2.15.0",
+        "input_sha256": "6280aed4c5dd9cc503647115cb1cc6f8aed4e0fd4c0061a32f5bcbc15b15ef98",
+        "load_and_input_s": 0.8038160830037668,
+        "first_s": 5.978605959011475,
+        "sdpa_first": {
+          "((62, 8, 801, 64), (62, 8, 801, 64), 'torch.float32', 'mps:0')": 12,
+          "((801, 8, 62, 64), (801, 8, 62, 64), 'torch.float32', 'mps:0')": 12
+        },
+        "second_s": 5.428667749991291
+      }
+    ],
+    "stems": {
+      "vocals": {
+        "samples": 352800,
+        "channels": 2,
+        "baseline_peak": 0.7114388346672058,
+        "candidate_peak": 0.7114391922950745,
+        "baseline_vs_delivered": {
+          "max_abs": 3.0517578125e-05,
+          "relative_rms": 0.00013539800439262554
+        },
+        "new_vs_old": {
+          "max_abs": 9.777955710887909e-06,
+          "relative_rms": 5.001885854292418e-06
+        },
+        "delivered_edge_sample_jumps": {
+          "1764000": 0.0303955078125,
+          "2116800": 0.080413818359375
+        },
+        "candidate_edge_vs_baseline_max_abs": 6.239861249923706e-07
+      },
+      "instrumental": {
+        "samples": 352800,
+        "channels": 2,
+        "baseline_peak": 0.8040986061096191,
+        "candidate_peak": 0.8040984869003296,
+        "baseline_vs_delivered": {
+          "max_abs": 3.0517578125e-05,
+          "relative_rms": 0.00021050544189772194
+        },
+        "new_vs_old": {
+          "max_abs": 9.775161743164062e-06,
+          "relative_rms": 7.774390562872645e-06
+        },
+        "delivered_edge_sample_jumps": {
+          "1764000": 0.03045654296875,
+          "2116800": 0.095672607421875
+        },
+        "candidate_edge_vs_baseline_max_abs": 6.258487701416016e-07
+      }
+    },
+    "warm_time_reduction": 0.26398742506324696,
+    "load_delta_s": 0.14802004100056365,
+    "estimated_saving_26_blocks_s": 50.38034804149356
+  },
+  "yue": {
+    "dtype": "torch.bfloat16",
+    "shape": [
+      184704,
+      2048
+    ],
+    "cases": [
+      {
+        "cfg": 1.0,
+        "step": 0,
+        "legacy": false,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.0,
+        "step": 0,
+        "legacy": true,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.0,
+        "step": 250,
+        "legacy": false,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.0,
+        "step": 250,
+        "legacy": true,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.5,
+        "step": 0,
+        "legacy": false,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.5,
+        "step": 0,
+        "legacy": true,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.5,
+        "step": 250,
+        "legacy": false,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      },
+      {
+        "cfg": 1.5,
+        "step": 250,
+        "legacy": true,
+        "allowed_logit_max_error": 0.0,
+        "probability_max_error": 0.0,
+        "probabilities_finite": true,
+        "token_equal": true,
+        "rng_equal": true,
+        "eos_probability": 0.0
+      }
+    ],
+    "greedy_eos": {
+      "0": 163224,
+      "250": 151852
+    },
+    "projection_fraction_of_dense_AR_macs": 0.21161460624725034,
+    "saved_fraction_of_dense_AR_macs": 0.1740712989441267
+  },
+  "seed": {
+    "cases": [
+      {
+        "cfg": 0.0,
+        "zero_prompt": false,
+        "final_equal": true,
+        "prompt_zero": true
+      },
+      {
+        "cfg": 0.0,
+        "zero_prompt": true,
+        "final_equal": true,
+        "prompt_zero": true
+      },
+      {
+        "cfg": 0.7,
+        "zero_prompt": false,
+        "final_equal": true,
+        "prompt_zero": true
+      },
+      {
+        "cfg": 0.7,
+        "zero_prompt": true,
+        "final_equal": true,
+        "prompt_zero": true
+      }
+    ],
+    "static_cat_output_bytes_per_chunk_saved": 536354304,
+    "static_zero_fill_bytes_per_chunk_saved": 268177152,
+    "obsolete_states_bytes_at_final_step": 38307840,
+    "shape": [
+      2,
+      128,
+      2580
+    ]
+  },
+  "workers": [
+    {
+      "mode": "separator",
+      "started_at": 1794967655.408563,
+      "ended_at": 1794967672.512469,
+      "deadline_seconds": 30,
+      "charged_seconds": 17.10381062500528,
+      "status": "passed",
+      "command": [
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/envs/separator/bin/python",
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/scripts/profile_mps.py",
+        "separator",
+        "--run",
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/runs/20261117_165850_tonight_awake_folk_f9176f",
+        "--output",
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/runs/probes/mps-performance/11_separator",
+        "--worker"
+      ],
+      "script_sha256": "018c78f4dcc20852abc12bacdf45b39bc77aeeca9f79fc8543068c48661c80c0",
+      "thermal_before": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n",
+      "exit_code": 0,
+      "thermal_after": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+    },
+    {
+      "mode": "separator",
+      "started_at": 1794968020.667389,
+      "ended_at": 1794968034.913829,
+      "deadline_seconds": 45,
+      "charged_seconds": 14.24631916701037,
+      "status": "passed",
+      "command": [
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/envs/separator-torch215/bin/python",
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/scripts/profile_mps.py",
+        "separator",
+        "--run",
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/runs/20261117_165850_tonight_awake_folk_f9176f",
+        "--output",
+        "/Users/quyouyang/Documents/ChatGPT/music/music-cover-baseline/runs/probes/mps-performance/12_separator",
+        "--worker"
+      ],
+      "script_sha256": "018c78f4dcc20852abc12bacdf45b39bc77aeeca9f79fc8543068c48661c80c0",
+      "thermal_before": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n",
+      "exit_code": 0,
+      "thermal_after": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n"
+    }
+  ],
+  "cumulative_seconds": 250.11680083500687,
+  "full_song_reruns": 0,
+  "sha256": {
+    "scripts/profile_separator_block.py": "40261b2a5cda1b6f1def3182666ab2859f317229a5aec495a74064cd670ae1c5",
+    "scripts/check_mps_candidates_cpu.py": "cb276e84239faf91da1ba9f9260417773edb40174e83236817bde0686df4a678",
+    "scripts/compare_separator_blocks.py": "c082eaa3614d6fc90c53b3d5157bb1dd47a33c2defc66489d3d69443957bea11",
+    "configs/macos/candidates/separator-torch215.txt": "a2d87a4ba01ea4b174591856063f70fcbc17fd97b33cbd50d2f7eb4a14f3038c",
+    "patches/candidates/seed-vc-loop.patch": "9e9e2cfeb9cf318285db88cb9d41e3f497f8aa051deca7802f63e547ba0b3680"
+  }
+}

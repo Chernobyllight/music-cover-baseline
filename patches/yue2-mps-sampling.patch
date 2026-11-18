@@ -1,0 +1,24 @@
+diff --git a/src/yue2/sampling.py b/src/yue2/sampling.py
+index 9673842..0403434 100644
+--- a/src/yue2/sampling.py
++++ b/src/yue2/sampling.py
+@@ -113,7 +113,9 @@ def generate_tokens(model, prefix, sampling, seed, phase, negative=None, cfg_sca
+             else:
+                 probabilities = scores.softmax(-1)
+                 if device.type == "mps":
+-                    next_id = torch.multinomial(probabilities.cpu(), 1, generator=generator).to(device)
++                    # Sampling already runs on CPU. Read its scalar here rather
++                    # than synchronizing a redundant GPU -> CPU token copy.
++                    next_id = torch.multinomial(probabilities.cpu(), 1, generator=generator)
+                 else:
+                     next_id = torch.multinomial(probabilities, 1, generator=generator)
+             token = int(next_id.item())
+@@ -126,6 +128,8 @@ def generate_tokens(model, prefix, sampling, seed, phase, negative=None, cfg_sca
+                 break
+             history.append(token)
+             if step + 1 < sampling.max_tokens:
++                if device.type == "mps":
++                    next_id = next_id.to(device)
+                 if graph is not None:
+                     branch_logits = graph.step(next_id)
+                     conditional = branch_logits[:1]

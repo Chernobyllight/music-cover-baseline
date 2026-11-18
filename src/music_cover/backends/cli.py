@@ -28,10 +28,13 @@ OPERATIONS = {
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('stage', choices=OPERATIONS)
+    parser.add_argument('stage', choices=[*OPERATIONS, "probe"])
     for name in ['input', 'request', 'score', 'reference']:
         parser.add_argument('--' + name)
-    parser.add_argument('--output', required=True)
+    parser.add_argument('--output')
+    parser.add_argument('--device', choices=['auto', 'cuda', 'mps'], default='cuda')
+    parser.add_argument('--memory-budget-gib', type=float)
+    parser.add_argument('--environment', choices=['control', 'sheetsage2', 'yue2', 'separator', 'seed-vc'])
     parser.add_argument('--steps', type=int, default=30)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--voice-mode', choices=['zero_shot', 'finetuned'], default='zero_shot')
@@ -39,6 +42,16 @@ def main():
     parser.add_argument('--checkpoint')
     parser.add_argument('--model-config')
     args = parser.parse_args()
+    from ..runtime import ForwardAudit, MemoryMonitor, memory_budget, probe, resolve_device
+    if args.stage == 'probe':
+        if args.environment == 'seed-vc':
+            import sys
+            from ..common.paths import ROOT
+            sys.path.insert(0, str(ROOT / 'third_party/seed-vc'))
+        print(json.dumps(probe(args.device, args.environment)))
+        return
+    if not args.output:
+        parser.error('--output is required for inference')
     Path(args.output).mkdir(parents=True, exist_ok=True)
     module, function, request_api = OPERATIONS[args.stage]
     function = getattr(importlib.import_module('music_cover.backends.' + module), function)
@@ -46,7 +59,21 @@ def main():
     if request_api:
         function(json.loads(Path(args.request).read_text()), Path(args.output))
     else:
-        function(args)
+        args.device = resolve_device(args.device)
+        args.memory_budget_gib = memory_budget(args.memory_budget_gib, args.device)
+        if args.device == 'mps':
+            monitor = MemoryMonitor(args.device, args.memory_budget_gib)
+            audit = ForwardAudit(args.device)
+            try:
+                with monitor, audit:
+                    function(args)
+                if not audit.layers:
+                    raise RuntimeError('No learned-layer MPS forward observed')
+            finally:
+                from ..common.io import write_json
+                write_json(Path(args.output) / 'runtime.json', {**monitor.report(), 'forward_layers': audit.layers})
+        else:
+            function(args)
     print(json.dumps({'stage': args.stage, 'wall_seconds': time.monotonic() - start}), flush=True)
 
 
