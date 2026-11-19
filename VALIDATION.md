@@ -4,7 +4,7 @@
 
 在同一台 M5、24 GB 上，从空运行目录用提交 `82782a6` 重新生成《今晚不眠》。计时从运行命令启动至 WAV 和 MP3 写完并退出。七个阶段均首次执行成功，四个模型阶段记录到实际 MPS 前向。两次的原曲、歌词、参考录音、风格、原调、种子 42 和 16 GiB 预算一致。YuE2 声学求解为 32 步 midpoint，Seed-VC 为 30 步。
 
-当时从仓库根目录使用以下工作区入口。当前版本通过 `bash scripts/run_baseline.sh` 进入同一条 Mac 运行路线。以下计时和产物均来自 `82782a6`。
+当时从仓库根目录使用以下工作区入口。当前版本通过 `bash scripts/run_baseline.sh` 进入同一条 Mac 运行路线。11 月 19 日的计时和产物均来自 `82782a6`。
 
 ```bash
 bash envs/mps-optimized/scripts/run_baseline.sh --demo --device mps \
