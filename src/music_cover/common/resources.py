@@ -41,6 +41,9 @@ def python_for(root, backend, device='cuda'):
     """Resolve one backend interpreter consistently for preflight and execution."""
     environment = Path(environment_for(backend, device))
     prefix = environment if environment.is_absolute() else Path(root) / 'envs' / environment
+    if device == 'mps' and environment.name != 'sheetsage2':
+        if not prefix.is_symlink() or prefix.readlink().name != f'{environment.name}-torch215':
+            raise ValueError('Run scripts/setup_macos.sh and use the installed macOS runner')
     return prefix / 'bin/python'
 
 
@@ -86,11 +89,8 @@ def signature(root, backends, device="cuda"):
         env = environment_for(backend, device)
         freeze = root / 'configs' / BASE_LOCKS.get(backend, env + '.installed.txt')
         if device == 'mps':
-            prefix = (root / 'envs' / env).resolve().name
-            if not prefix.endswith('-torch215'):
-                prefix = env
             locks = root / 'configs/macos'
-            freeze = (locks / 'candidates' if prefix.endswith('-torch215') else locks) / f'{prefix}.txt'
+            freeze = locks / 'sheetsage2.txt' if env == 'sheetsage2' else locks / 'candidates' / f'{env}-torch215.txt'
         entry = {'models': resource_data(root, backend), 'environment': env,
                  'installed_lock_sha256': sha256(freeze)}
         if device == 'mps':

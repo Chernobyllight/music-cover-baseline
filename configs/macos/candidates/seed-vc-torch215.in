@@ -1,4 +1,4 @@
-# Candidate only; production seed-vc.in remains unchanged.
+# Dependency input for the default macOS Seed-VC environment (Torch 2.15).
 absl-py==2.5.1
 antlr4-python3-runtime==4.9.3
 argbind==0.3.9

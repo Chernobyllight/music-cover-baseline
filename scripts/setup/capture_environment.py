@@ -19,17 +19,19 @@ def output(args, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output-dir', type=Path, default=None,
-                        help='Use a cache directory for a read-only runtime snapshot; default updates configs locks')
-    parser.add_argument('--optimized', action='store_true', help='Capture the assembled macOS inference environments')
+    parser.add_argument('--output-dir', type=Path,
+                        help='Defaults to cache/macos-optimized-snapshot on macOS and configs on Linux')
+    parser.add_argument('--optimized', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--skip-assets', action='store_true', help='Skip full model-directory hashing')
     args = parser.parse_args()
     mac = platform.system() == 'Darwin'
-    checkout = ROOT / 'envs/mps-optimized' if args.optimized else ROOT
-    if args.optimized and (not mac or not checkout.is_dir()):
-        parser.error('--optimized requires the prepared macOS workspace')
+    if args.optimized and not mac:
+        parser.error('--optimized requires macOS')
+    checkout = ROOT / 'envs/mps-optimized' if mac else ROOT
+    if mac and not checkout.is_dir():
+        parser.error('Run scripts/setup_macos.sh before capturing the macOS environment')
     checkout = checkout.resolve()
-    default_output = ROOT / ('cache/macos-optimized-snapshot' if args.optimized else 'configs/macos' if mac else 'configs')
+    default_output = ROOT / ('cache/macos-optimized-snapshot' if mac else 'configs')
     args.output_dir = args.output_dir or default_output
     args.output_dir.mkdir(parents=True, exist_ok=True)
     ffmpeg = "ffmpeg"
@@ -60,8 +62,10 @@ print(json.dumps({'python':sys.version,'torch':torch.__version__,'cuda':torch.ve
 """
         versions = json.loads(output([python, "-c", code]))
         record["environments"][name] = versions
-        freeze = output(["uv", "pip", "freeze", "--python", python] if mac else
+        freeze = output(["uv", "pip", "freeze", "--exclude-editable", "--python", python] if mac else
                         [python, "-m", "pip", "freeze", "--local"])
+        if mac and name == 'yue2':
+            freeze += "\n# YuE source: third_party/YuE (commit recorded in environments.lock.json)"
         (args.output_dir / f"{name}.installed.txt").write_text(freeze + "\n")
         if name == 'base':
             (args.output_dir / 'pitch-base.installed.txt').write_text(freeze + "\n")

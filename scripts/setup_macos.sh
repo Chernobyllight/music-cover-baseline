@@ -2,12 +2,10 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-case "${1:-}" in
-    "") ;;
-    --optimized) ;;
-    *) echo "Usage: bash scripts/setup_macos.sh [--optimized]" >&2; exit 2 ;;
-esac
-[[ $# -le 1 ]] || { echo "Expected at most one option" >&2; exit 2; }
+if [[ $# -gt 0 && ( $# -ne 1 || "$1" != --optimized ) ]]; then
+    echo "Usage: bash scripts/setup_macos.sh" >&2
+    exit 2
+fi
 [[ "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]] || { echo 'Requires native Apple Silicon macOS' >&2; exit 1; }
 command -v uv >/dev/null || { echo 'Install uv first: https://docs.astral.sh/uv/' >&2; exit 1; }
 export UV_CACHE_DIR="${UV_CACHE_DIR:-$ROOT/cache/uv}"
@@ -16,11 +14,9 @@ export PYTORCH_ENABLE_MPS_FALLBACK=0
 export HF_HOME="$ROOT/cache/huggingface"
 command -v ffprobe >/dev/null && ffprobe -version >/dev/null || { echo "Install FFmpeg with ffprobe (brew install ffmpeg)" >&2; exit 1; }
 git submodule update --init -- third_party/YuE third_party/seed-vc
-for name in control sheetsage2 yue2 separator seed-vc; do
-    target="$name"
-    lock="configs/macos/$name.txt"
-    if [[ "${1:-}" == --optimized && "$name" != control && "$name" != sheetsage2 ]]; then
-        target="$name-torch215"
+for target in control sheetsage2 yue2-torch215 separator-torch215 seed-vc-torch215; do
+    lock="configs/macos/$target.txt"
+    if [[ "$target" == *-torch215 ]]; then
         lock="configs/macos/candidates/$target.txt"
     fi
     if [[ ! -x "envs/$target/bin/python" ]]; then
@@ -28,15 +24,9 @@ for name in control sheetsage2 yue2 separator seed-vc; do
     fi
     uv pip sync --require-hashes --python "envs/$target/bin/python" "$lock"
 done
-if [[ "${1:-}" == --optimized ]]; then
-    uv pip install --python envs/yue2-torch215/bin/python --no-deps -e third_party/YuE
-    envs/control/bin/python scripts/prepare_macos_optimized.py
-    workspace="$ROOT/envs/mps-optimized"
-else
-    uv pip install --python envs/yue2/bin/python --no-deps -e third_party/YuE
-    envs/control/bin/python scripts/apply_compat_patches.py
-    workspace="$ROOT"
-fi
+uv pip install --python envs/yue2-torch215/bin/python --no-deps -e third_party/YuE
+envs/control/bin/python scripts/prepare_macos_optimized.py
+workspace="$ROOT/envs/mps-optimized"
 envs/control/bin/python - <<'PY'
 from pathlib import Path
 import imageio_ffmpeg

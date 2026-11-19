@@ -1,4 +1,4 @@
-# Candidate only: preserve installed baseline dependencies except torch.
+# Dependency input for the default macOS YuE2 environment (Torch 2.15).
 accelerate==1.13.0
 certifi==2026.10.23
 cffi==2.1.1

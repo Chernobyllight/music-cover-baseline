@@ -59,6 +59,7 @@ class RuntimeTests(unittest.TestCase):
                 (root / "config.resolved.json").write_text("{}")
                 argv = ["pipeline", "--resume", str(root), "--device", device, "--until", "06", "--preflight"]
                 with patch.object(sys, "argv", argv), patch.object(pipeline, "resolve_device", return_value="mps"), \
+                     patch("music_cover.voice.resolve_voice"), \
                      patch.object(pipeline, "check_resources") as check:
                     pipeline.main()
                     self.assertEqual(check.call_args.kwargs["device"], "mps")
@@ -98,9 +99,17 @@ class RuntimeTests(unittest.TestCase):
         from music_cover.common.resources import signature, execution_python
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            locks = root / 'configs/macos'
+            locks = root / 'configs/macos/candidates'
             locks.mkdir(parents=True)
-            (locks / 'seed-vc.txt').write_text('locked')
+            lock = locks / 'seed-vc-torch215.txt'
+            lock.write_text('locked')
+            environment = root / 'envs/seed-vc'
+            environment.parent.mkdir()
+            with self.assertRaisesRegex(ValueError, 'scripts/setup_macos.sh'):
+                execution_python(root, 'seed-vc', 'pitch', 'mps')
+            optimized = root / 'seed-vc-torch215'
+            optimized.mkdir()
+            environment.symlink_to(optimized)
             models = root / 'third_party/seed-vc/modules'
             models.mkdir(parents=True)
             impl = models / 'rmvpe.py'
@@ -109,8 +118,11 @@ class RuntimeTests(unittest.TestCase):
             with patch('music_cover.common.resources.resource_data', return_value={}), \
                  patch('music_cover.common.resources.subprocess.check_output', return_value='{"device":"mps"}'):
                 original = signature(root, ['rmvpe'], 'mps')
+                lock.write_text('changed lock')
+                updated = signature(root, ['rmvpe'], 'mps')
+                self.assertNotEqual(original, updated)
                 impl.write_text('patched')
-                self.assertNotEqual(original, signature(root, ['rmvpe'], 'mps'))
+                self.assertNotEqual(updated, signature(root, ['rmvpe'], 'mps'))
 
 
 if __name__ == "__main__":

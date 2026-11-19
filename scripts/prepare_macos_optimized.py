@@ -15,7 +15,7 @@ def prepare():
                          for name in ("yue2", "separator", "seed-vc")})
     missing = [str(path) for path in environments.values() if not (path / "bin/python").is_file()]
     if missing:
-        raise SystemExit("Install the optimized environments via scripts/setup_macos.sh --optimized:\n"
+        raise SystemExit("Install the macOS environments via scripts/setup_macos.sh:\n"
                          + "\n".join(missing))
 
     patches = [*PATCHES, *(CANDIDATES[name] for name in OPTIMIZED)]
@@ -43,7 +43,7 @@ def prepare():
                 target = staging / path.relative_to(ROOT)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(path, target)
-            # Patch only the staged separator adapter. The base environment shares src/.
+            # Patch the staged separator adapter without changing the shared source tree.
             subprocess.run(["patch", "--batch", "-F", "0", "-p1", "-i", str(separator_patch)],
                            cwd=staging, check=True)
             for name, revision in revisions.items():
