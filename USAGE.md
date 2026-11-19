@@ -1,8 +1,16 @@
-# 使用说明（v1.1 基线＋Fish Diffusion 工作树扩展）
+# 使用说明（v1.2）
 
-在 Apple Silicon 上运行 Seed-VC 零样本 00–06，使用优化版入口并指定 `--device mps --until 06_mix`。[Mac 安装和运行](docs/09-macos.md)
+## Apple Silicon
 
-新使用者优先按[部署 Skill](skill/SKILL.md)准备自己的数据和全新配置；包含可复制的 00–06 命令、权重下载与四种模型的训练路线。Fish 新增功能尚未单独发布，需使用包含相应脚本的代码版本。
+安装后，用统一入口运行 Seed-VC 零样本流程的 00–06，生成 WAV 和 MP3。安装步骤和自备素材参数见 [Mac 安装和运行](docs/25_macos.md)。
+
+```bash
+bash scripts/run_baseline.sh --demo --device mps --until 06_mix
+```
+
+## 已配置的 NVIDIA 服务器
+
+新使用者优先按[部署 Skill](skill/SKILL.md)准备自己的数据和全新配置；包含可复制的 00–06 命令、权重下载与四种模型的训练路线。
 
 以下历史素材示例在已配置服务器执行，需要先确认对应媒体和人物模型仍存在。工程根目录为 `/data/liuhongda/music-cover-baseline`，与 `/mnt/afs_f/liuhongda/music-cover-baseline` 指向同一工程。新机器先按[环境说明](docs/03-environment.md)和[模型权重指南](docs/12_model_weights.md)恢复依赖。
 
@@ -11,7 +19,7 @@ cd /data/liuhongda/music-cover-baseline
 export PATH="/opt/conda/bin:$PATH"
 ```
 
-## 输入、默认值和运行目录
+### 输入、默认值和运行目录
 
 | 输入 | 本例使用的文件 |
 |---|---|
@@ -26,7 +34,7 @@ export PATH="/opt/conda/bin:$PATH"
 
 首次使用新的 `--run`；同名目录再次执行会按输入、参数、代码和产物哈希检查缓存。`--force` 只强制重跑选中的阶段；旧 attempt 保留。不要手动改写已经成功的 `artifacts/`。
 
-## 一次执行完整流程
+### 一次执行完整流程
 
 ```bash
 bash scripts/run_baseline.sh \
@@ -39,7 +47,7 @@ bash scripts/run_baseline.sh \
 
 预检不创建歌曲运行，也不启动训练。`RESULTS (completed)` 表示已发布交付目录；`RESULTS (partial)` 表示只完成选定的前半段。
 
-## 依次执行 00–11
+### 依次执行 00–11
 
 下面每一条命令使用同一个运行目录；首次 00 提供配置，后续读取已保存的配置。
 
@@ -78,7 +86,7 @@ bash scripts/11_delivery/run.sh --run runs/my_chuan_yue_shu_guang_seedvc
 
 每个阶段同级的 `inputs.json`、`config.json`、`command.json`、`process.log`、`checks.json`、`outputs.json` 保存来源与执行证据。单阶段不自动补跑缺失或失效的上游。
 
-## 只生成音频、续跑和重跑
+### 只生成音频、续跑和重跑
 
 ```bash
 # 只做到混音，直接试听 06 的 final.mp3

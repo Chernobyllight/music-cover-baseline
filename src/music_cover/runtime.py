@@ -13,22 +13,42 @@ import platform
 import resource
 import threading
 import time
-from pathlib import Path
-import hashlib
 import subprocess
 
 
-def resolve_device(requested="auto"):
-    import torch
+CUDA_DEFAULT_GPU = "0"
+PROBE_TIMEOUT = 90
+
+
+def cuda_environment(gpu):
+    return {**os.environ, "CUDA_VISIBLE_DEVICES": str(gpu if gpu is not None else CUDA_DEFAULT_GPU)}
+
+
+def resolve_device(requested="auto", *, gpu=None):
     if requested not in {"auto", "cuda", "mps"}:
         raise ValueError(f"Unsupported device: {requested}")
-    available = {"cuda": torch.cuda.is_available(), "mps": torch.backends.mps.is_available()}
-    device = next((name for name in ("cuda", "mps") if available[name]), None) if requested == "auto" else requested
-    if device is None or not available[device]:
-        raise RuntimeError(f"Requested GPU {requested!r} unavailable; CPU fallback is disabled")
-    if device == "mps" and os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "0":
-        raise RuntimeError("MPS validation requires PYTORCH_ENABLE_MPS_FALLBACK=0 before importing torch")
-    return device
+    if requested in {"auto", "cuda"}:
+        if gpu is None:
+            import torch
+            cuda_available = torch.cuda.is_available()
+        else:
+            import sys
+            try:
+                result = subprocess.check_output(
+                    [sys.executable, "-c", "import torch; print(int(torch.cuda.is_available()))"],
+                    env=cuda_environment(gpu), text=True, timeout=PROBE_TIMEOUT)
+            except subprocess.TimeoutExpired as error:
+                raise RuntimeError("CUDA device probe timed out") from error
+            cuda_available = result.strip().splitlines()[-1:] == ["1"]
+        if cuda_available:
+            return "cuda"
+    if requested in {"auto", "mps"}:
+        import torch
+        if torch.backends.mps.is_available():
+            if os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "0":
+                raise RuntimeError("MPS validation requires PYTORCH_ENABLE_MPS_FALLBACK=0 before importing torch")
+            return "mps"
+    raise RuntimeError(f"Requested GPU {requested!r} unavailable; CPU fallback is disabled")
 
 
 def memory_budget(value, device):
@@ -55,29 +75,15 @@ def probe(requested="auto", environment=None):
     actual = (x @ x.T).cpu()
     expected = torch.arange(16, dtype=torch.float32).reshape(4, 4)
     torch.testing.assert_close(actual, expected @ expected.T)
+    return {**runtime_identity(), "device": device, "matmul": "passed"}
+
+
+def runtime_identity():
+    """Describe installed packages without importing torch or initializing a device."""
     packages = {item.metadata["Name"].lower().replace("_", "-"): item.version
                 for item in importlib.metadata.distributions() if item.metadata["Name"]}
-    return {"device": device, "packages": packages, "python": platform.python_version(),
-            "machine": platform.machine(), "platform": platform.platform(), "matmul": "passed"}
-
-
-def source_identity(root):
-    """Hash effective upstream source, including tracked compatibility edits."""
-    root = Path(root)
-    records = {}
-    for name, revision in (("YuE", "1647252d68b70cbead046ffd3f7caf036dde47ee"),
-                           ("seed-vc", "51383efd921027683c89e5348211d93ff12ac2a8")):
-        directory = root / "third_party" / name
-        actual = subprocess.check_output(["git", "-C", str(directory), "rev-parse", "HEAD"], text=True).strip()
-        if actual != revision:
-            raise RuntimeError(f"{name} revision mismatch: {actual}; expected {revision}")
-        paths = [p for p in directory.rglob("*.py") if not any(part in {".git", "__pycache__", "checkpoints", "envs"} for part in p.relative_to(directory).parts)]
-        digest = hashlib.sha256()
-        for path in sorted(paths):
-            digest.update(str(path.relative_to(directory)).encode())
-            digest.update(path.read_bytes())
-        records[name] = {"revision": actual, "source_sha256": digest.hexdigest()}
-    return records
+    return {"packages": packages, "python": platform.python_version(),
+            "machine": platform.machine(), "platform": platform.platform()}
 
 
 def assert_model_device(model, device):

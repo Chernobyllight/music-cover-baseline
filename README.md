@@ -14,7 +14,7 @@ Version 1.2 adds Fish Diffusion singer fine-tuning with a validated 5,000-step t
 
 | 需要做什么 | 文档 |
 |---|---|
-| Apple Silicon 上用 MPS 生成 WAV 和 MP3 | [Mac 安装和运行](docs/09-macos.md) |
+| Apple Silicon MPS（00–06） | [Mac 安装和运行](docs/25_macos.md) |
 | 新使用者部署并运行 00–06 | [部署 Skill](skill/SKILL.md) |
 | 直接生成、分步检查中间文件 | [使用说明](USAGE.md) |
 | 理解整个流程与模块职责 | [当前架构](docs/01-architecture.md)、[模块化说明](docs/09_modular_pipeline.md) |

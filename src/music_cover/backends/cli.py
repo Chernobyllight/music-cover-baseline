@@ -32,7 +32,7 @@ def main():
     for name in ['input', 'request', 'score', 'reference']:
         parser.add_argument('--' + name)
     parser.add_argument('--output')
-    parser.add_argument('--device', choices=['auto', 'cuda', 'mps'], default='cuda')
+    parser.add_argument('--device', choices=['auto', 'cuda', 'mps'])
     parser.add_argument('--memory-budget-gib', type=float)
     parser.add_argument('--environment', choices=['control', 'sheetsage2', 'yue2', 'separator', 'seed-vc'])
     parser.add_argument('--steps', type=int, default=30)
@@ -44,22 +44,34 @@ def main():
     args = parser.parse_args()
     from ..runtime import ForwardAudit, MemoryMonitor, memory_budget, probe, resolve_device
     if args.stage == 'probe':
+        if args.memory_budget_gib is not None:
+            parser.error('--memory-budget-gib is only supported for device-aware inference')
         if args.environment == 'seed-vc':
             import sys
             from ..common.paths import ROOT
             sys.path.insert(0, str(ROOT / 'third_party/seed-vc'))
-        print(json.dumps(probe(args.device, args.environment)))
+        print(json.dumps(probe(args.device or 'cuda', args.environment)))
         return
+    if args.environment is not None:
+        parser.error('--environment is only supported for probe')
     if not args.output:
         parser.error('--output is required for inference')
-    Path(args.output).mkdir(parents=True, exist_ok=True)
     module, function, request_api = OPERATIONS[args.stage]
+    if request_api and (args.device is not None or args.memory_budget_gib is not None):
+        parser.error(f'{args.stage} does not accept --device or --memory-budget-gib')
+    if args.stage == 'transcribe_final' and args.device == 'mps':
+        parser.error('transcribe_final is outside the supported MPS stages 00–06')
+    Path(args.output).mkdir(parents=True, exist_ok=True)
     function = getattr(importlib.import_module('music_cover.backends.' + module), function)
     start = time.monotonic()
     if request_api:
         function(json.loads(Path(args.request).read_text()), Path(args.output))
     else:
-        args.device = resolve_device(args.device)
+        args.device = resolve_device(args.device or 'cuda')
+        if args.stage == 'transcribe_final' and args.device == 'mps':
+            parser.error('transcribe_final is outside the supported MPS stages 00–06')
+        if args.device == 'cuda' and args.stage != 'cover' and args.memory_budget_gib is not None:
+            parser.error(f'{args.stage} does not support --memory-budget-gib on CUDA')
         args.memory_budget_gib = memory_budget(args.memory_budget_gib, args.device)
         if args.device == 'mps':
             monitor = MemoryMonitor(args.device, args.memory_budget_gib)

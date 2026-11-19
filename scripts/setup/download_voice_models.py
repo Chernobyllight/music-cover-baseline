@@ -38,8 +38,8 @@ def main():
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
         records = dict(pool.map(download, SPECS.items()))
     config = yaml.safe_load((ROOT / "models/Seed-VC/config_dit_mel_seed_uvit_whisper_base_f0_44k.yml").read_text())
-    config["model_params"]["vocoder"]["name"] = "models/BigVGAN"
-    config["model_params"]["speech_tokenizer"]["name"] = "models/Whisper-small"
+    config["model_params"]["vocoder"]["name"] = records["BigVGAN"]["path"]
+    config["model_params"]["speech_tokenizer"]["name"] = records["Whisper-small"]["path"]
     (ROOT / "configs/seed_svc.local.yml").write_text(yaml.safe_dump(config, sort_keys=False))
     (ROOT / "configs/voice_models.lock.json").write_text(json.dumps(records, indent=2) + "\n")
 

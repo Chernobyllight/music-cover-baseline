@@ -4,6 +4,7 @@ import time
 import json
 import math
 from pathlib import Path
+from ..common.io import identity as checkpoint_identity, write_json
 from ..common.paths import ROOT
 
 def cover_token_budget(score_seconds, prefix_tokens, context=24576, tokens_per_second=25):
@@ -55,10 +56,13 @@ def cover(args):
         request_id = identity({"request": plan.request.to_dict(), "config": config, "weights": pipeline.weights})
         # Keep costly intermediate results even if a later phase runs out of
         # memory. Reuse only matching, hash-checked artifacts from this run.
-        from music_cover.runtime import probe, source_identity
-        checkpoint_key = identity({"request": request_id, "upstream": source_identity(ROOT),
-                                   "adapter": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                                   "runtime": probe(args.device)})
+        from ..common.resources import upstream_code
+        from ..runtime import runtime_identity
+        checkpoint_key = checkpoint_identity({
+            "request": request_id, "upstream": upstream_code(ROOT, "yue"),
+            "adapter": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            "runtime": runtime_identity(),
+        })
         out = Path(args.output)
         plan.save(out / "plan")
         tokens, metadata = restore_cover_checkpoint(out, "semantic", checkpoint_key)
@@ -94,14 +98,12 @@ def cover(args):
 
 
 def cover_latent_key(request_key, tokens):
-    from yue2.storage import identity
-    return identity({"request": request_key,
-                     "semantic_sha256": hashlib.sha256(tokens.tobytes()).hexdigest()})
+    return checkpoint_identity({"request": request_key,
+                                "semantic_sha256": hashlib.sha256(tokens.tobytes()).hexdigest()})
 
 
 def save_cover_checkpoint(output, phase, key, values, metadata):
     import numpy as np
-    from yue2.storage import write_json
     target = output / f"{phase}.npy"
     np.save(target, values, allow_pickle=False)
     write_json(output / f"{phase}.checkpoint.json", {
@@ -120,13 +122,36 @@ def restore_cover_checkpoint(output, phase, key):
             continue
         try:
             record = json.loads(marker.read_text())
-        except json.JSONDecodeError:
+            if not isinstance(record, dict) or record.get("key") != key:
+                continue
+            metadata = record.get("metadata")
+            if not isinstance(metadata, dict):
+                continue
+            if phase == "semantic" and not isinstance(metadata.get("timing"), dict):
+                continue
+            if phase == "latent":
+                seconds = metadata.get("seconds")
+                if type(seconds) not in (int, float) or not 0 <= seconds < math.inf:
+                    continue
+            # The copied marker must be writable as strict JSON, including nested timing.
+            json.dumps(metadata, allow_nan=False)
+            if hashlib.sha256(target.read_bytes()).hexdigest() != record.get("sha256"):
+                continue
+            with target.open("rb") as array:
+                values = np.lib.format.read_array(array, allow_pickle=False)
+        except (OSError, ValueError, EOFError):
             continue
-        if record.get("key") != key or hashlib.sha256(target.read_bytes()).hexdigest() != record.get("sha256"):
+        if not values.size:
             continue
-        values = np.load(target, allow_pickle=False)
+        if phase == "semantic" and (values.ndim != 1 or values.dtype != np.int32):
+            continue
+        if phase == "latent":
+            # YuE2 VAE accepts [T, 64] or [1, 64, T].
+            valid_shape = values.shape[1:] == (64,) or (values.ndim == 3 and values.shape[:2] == (1, 64))
+            if not valid_shape or values.dtype.kind != "f" or not np.isfinite(values).all():
+                continue
         if directory != output:
-            save_cover_checkpoint(output, phase, key, values, record["metadata"])
+            save_cover_checkpoint(output, phase, key, values, metadata)
         print(f"[reuse] YuE2 {phase}: {directory}", flush=True)
-        return values, record["metadata"]
+        return values, metadata
     return None, None

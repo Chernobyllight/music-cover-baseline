@@ -8,9 +8,12 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "src"))
+from music_cover.common.macos import ENVIRONMENTS, WORKSPACE
 
 
 def output(args, **kwargs):
@@ -21,15 +24,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', type=Path,
                         help='Defaults to cache/macos-optimized-snapshot on macOS and configs on Linux')
-    parser.add_argument('--optimized', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--skip-assets', action='store_true', help='Skip full model-directory hashing')
     args = parser.parse_args()
     mac = platform.system() == 'Darwin'
-    if args.optimized and not mac:
-        parser.error('--optimized requires macOS')
-    checkout = ROOT / 'envs/mps-optimized' if mac else ROOT
+    checkout = ROOT / WORKSPACE if mac else ROOT
     if mac and not checkout.is_dir():
-        parser.error('Run scripts/setup_macos.sh before capturing the macOS environment')
+        parser.error('Run scripts/setup/macos.sh before capturing the macOS environment')
     checkout = checkout.resolve()
     default_output = ROOT / ('cache/macos-optimized-snapshot' if mac else 'configs')
     args.output_dir = args.output_dir or default_output
@@ -47,9 +47,11 @@ def main():
               "environments": {}, "upstream": {}}
     if mac:
         record["ffmpeg_path"] = str(Path(ffmpeg).absolute())
-    environments = ["control", "sheetsage2", "yue2", "separator", "seed-vc"] if mac else ["control", "sheetsage2", "separator", "base"]
+    environments = ENVIRONMENTS if mac else ["control", "sheetsage2", "separator", "base"]
     for name in environments:
         python = "/opt/conda/bin/python" if name == "base" else str(checkout / "envs" / name / "bin/python")
+        if mac and not Path(python).is_file():
+            parser.error(f"Mac runtime interpreter missing: {python}")
         code = """import sys,torch,numpy,importlib.metadata as m,json
 packages = {}
 for p in ['torchvision','torchaudio','transformers','huggingface-hub','safetensors','accelerate','soundfile','scipy','librosa','numba','onnxruntime','audio-separator','yue2-infer','triton','cuda-bindings','mido','pretty-midi','basic-pitch','demucs','speechbrain','faiss-cpu']:

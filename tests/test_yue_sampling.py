@@ -1,35 +1,40 @@
 """Small sampler regression against the pinned upstream implementation.
 
-Runs on CPU by default; the bounded MPS diagnostic also executes this suite
-on Metal. No release checkpoint or audio generation is required.
+Runs on CPU by default, or on Metal with MUSIC_TEST_DEVICE=mps.
+No release checkpoint or audio generation is required.
 """
 import importlib.util
-import os
 from pathlib import Path
 import subprocess
 import unittest
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[1]
+from yue_test_support import DEVICE, ROOT, require_assembled_yue
 
 
-@unittest.skipUnless(importlib.util.find_spec("yue2"), "Requires the isolated yue2 environment")
+@unittest.skipUnless(DEVICE == "mps" or importlib.util.find_spec("yue2"), "Requires the isolated yue2 environment")
 class SamplingRegressionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import torch
         from yue2.modeling_yue2 import YuE2Config, YuE2ForCausalLM
         import yue2.sampling as sampling
+        if DEVICE == "mps":
+            require_assembled_yue(sampling)
         cls.torch, cls.current = torch, sampling
+        revision = subprocess.check_output(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD:third_party/YuE"], text=True).strip()
         source = subprocess.check_output(["git", "-C", str(ROOT / "third_party/YuE"),
-            "show", "1647252d68b70cbead046ffd3f7caf036dde47ee:src/yue2/sampling.py"], text=True)
+            "show", f"{revision}:src/yue2/sampling.py"], text=True)
+        if DEVICE == "mps" and Path(sampling.__file__).read_text() == source:
+            raise AssertionError("The MPS workspace is missing the YuE sampling patch")
         cls.original = {"__package__": "yue2", "__name__": "baseline_sampling"}
         exec(compile(source, "pinned_sampling.py", "exec"), cls.original)
         torch.manual_seed(41)
         config = YuE2Config(hidden_size=32, num_hidden_layers=1, num_attention_heads=2,
             num_key_value_heads=1, head_dim=16, intermediate_size=64,
             max_position_embeddings=64, max_latent_frames=64)
-        cls.model = YuE2ForCausalLM(config).eval().to(os.environ.get("MUSIC_TEST_DEVICE", "cpu"))
+        cls.model = YuE2ForCausalLM(config).eval().to(DEVICE)
 
     def compare(self, temperature=1.0, cfg_scale=1.0, eos=False):
         from yue2.protocol import Sampling, MUSIC_END

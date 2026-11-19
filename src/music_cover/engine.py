@@ -18,6 +18,7 @@ from .common.io import identity, write_json, artifact_paths
 from .common.paths import ROOT, RunPaths
 from .common import resources
 from .modules import load_modules, active_ids
+from .runtime import cuda_environment
 
 SCHEMA_VERSION = 2
 CONTRACT_VERSION = 1
@@ -72,8 +73,8 @@ class Pipeline:
         self.resolved = {}
         self.events = []
         self.runtime_cache = {}
-        self.environment = os.environ.copy()
-        self.environment.update({'CUDA_VISIBLE_DEVICES': str(request.get('gpu', '0')), 'OMP_NUM_THREADS': '4',
+        self.environment = cuda_environment(request.get('gpu'))
+        self.environment.update({'OMP_NUM_THREADS': '4',
             'MKL_NUM_THREADS': '4', 'OPENBLAS_NUM_THREADS': '4', 'HF_HOME': str(self.root / 'cache/huggingface'),
             'HF_HUB_DOWNLOAD_TIMEOUT': '180', 'HF_HUB_ETAG_TIMEOUT': '60', 'TOKENIZERS_PARALLELISM': 'false',
             'PYTHONUNBUFFERED': '1', 'USE_TF': '0', 'USE_FLAX': '0', 'TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD': '1',
@@ -99,7 +100,8 @@ class Pipeline:
     def runtime(self, module):
         backends = tuple(sorted(module.backends(self.request, self.config[module.ID])))
         if backends not in self.runtime_cache:
-            self.runtime_cache[backends] = resources.signature(self.root, backends, self.request.get("device", "cuda"))
+            self.runtime_cache[backends] = resources.signature(
+                self.root, backends, self.request.get("device", "cuda"), environment=self.environment)
         return self.runtime_cache[backends]
 
     def fingerprint(self, module, inputs, params):
@@ -179,8 +181,9 @@ class Pipeline:
         command = [str(interpreter), '-m', 'music_cover.backends.cli', operation,
                    '--output', str(output), *map(str, arguments)]
         if operation in {'cover', 'convert', 'separate', 'pitch', 'transcribe', 'transcribe_final'}:
-            command.extend(['--device', self.request.get('device', 'cuda')])
-            if self.request.get('memory_budget_gib') is not None:
+            device = self.request.get('device', 'cuda')
+            command.extend(['--device', device])
+            if (device == 'mps' or operation == 'cover') and self.request.get('memory_budget_gib') is not None:
                 command.extend(['--memory-budget-gib', str(self.request['memory_budget_gib'])])
         attempt, log_path, commands, params = self.current
         commands['backend_commands'].append({'argv': command, 'cwd': str(self.root), 'environment': environment,
@@ -211,7 +214,8 @@ class Pipeline:
             return cached
         if name not in selected:
             raise DependencyError(f'{name} is missing, changed or corrupt. Run it first, or use --from {name}. No later stage was allowed to consume it.')
-        resources.preflight(self.root, module.backends(self.request, self.config[name]), mp3=name == '06_mix', device=self.request.get('device', 'cuda'))
+        resources.preflight(self.root, module.backends(self.request, self.config[name]), mp3=name == '06_mix',
+                            device=self.request.get('device', 'cuda'), environment=self.environment)
         base = self.run / 'stages' / name
         base.mkdir(parents=True, exist_ok=True)
         numbers = [int(p.name[8:]) for p in base.glob('attempt_*') if p.name[8:].isdigit()]

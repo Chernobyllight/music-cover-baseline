@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 
 from .engine import Pipeline
-from .runtime import memory_budget, resolve_device
+from .runtime import CUDA_DEFAULT_GPU, cuda_environment, memory_budget, resolve_device
 from .common.io import write_json
 from .common.lyrics import clean_lyrics
 from .common.paths import ROOT, RunPaths
@@ -24,13 +24,32 @@ DEFAULT_REQUEST = {'name': 'cover', 'seed': 42, 'steps': 30, 'gpu': None, 'devic
 REQUEST_KEYS = set(DEFAULT_REQUEST) | {'song', 'lyrics', 'reference', 'style'}
 
 
-def apply_request_overrides(request, overrides):
-    current_device = request['device']
-    target_device = overrides.get('device', current_device)
-    # An explicit CUDA choice can use the options already supplied for auto.
-    if target_device != current_device and (current_device, target_device) != ('auto', 'cuda'):
-        request.update(gpu=None, memory_budget_gib=None)
+def apply_request_overrides(request, overrides, deferred=None):
+    if deferred is None:
+        deferred = {}
+    current = request['device']
+    target = overrides.get('device', current)
+    for key in ('gpu', 'memory_budget_gib'):
+        if key in overrides:
+            deferred.pop(key, None)
+        elif target != current and request.get(key) is not None:
+            if target == 'auto':
+                # An explicit auto choice can resolve back to the saved device.
+                deferred[key] = current
+            else:
+                origin = deferred.pop(key, current)
+                if origin != target and (origin, target) != ('auto', 'cuda'):
+                    request[key] = None
     request.update(overrides)
+
+
+def validate_device_options(request, selected):
+    if request['device'] != 'mps':
+        return
+    if request.get('gpu') is not None:
+        raise ValueError('--gpu cannot be combined with the selected MPS device')
+    if any(IDS.index(stage) > IDS.index('06_mix') for stage in selected):
+        raise ValueError('MPS supports stages 00–06. Use --until 06_mix.')
 
 
 def read_config(path):
@@ -113,6 +132,8 @@ def main():
         default_request, configs = module_config()
         request = {**DEFAULT_REQUEST, **default_request}
         paths = RunPaths(ROOT, run)
+        saved_device = None
+        deferred = {}
         if args.demo:
             request.update(json.loads((ROOT / 'configs/demo.json').read_text()))
         if run and (run / 'request.json').exists():
@@ -122,7 +143,8 @@ def main():
             paths = RunPaths(ROOT, run, state)
             previous = json.loads((run / 'request.json').read_text())
             request.update(previous)
-            request['device'] = previous.get('device', 'cuda')
+            saved_device = previous.get('device', 'cuda')
+            request['device'] = saved_device
             saved = read_config(run / 'config.resolved.json')
             for stage, values in saved.get('modules', {}).items(): configs[stage].update(values)
         if args.config:
@@ -130,7 +152,7 @@ def main():
             task = read_config(path)
             unknown = set(task) - {'request', 'modules'}
             if unknown: parser.error(f'Unknown task sections: {sorted(unknown)}')
-            apply_request_overrides(request, task.get('request', {}))
+            apply_request_overrides(request, task.get('request', {}), deferred)
             for stage, values in task.get('modules', {}).items():
                 stage = normalize(stage)
                 if stage == '05_voice_conversion':
@@ -147,12 +169,10 @@ def main():
             configs['05_voice_conversion']['voice_profile'] = None
         elif configs['05_voice_conversion'].get('voice_profile'):
             configs['05_voice_conversion']['voice_profile'] = paths.project_relative(configs['05_voice_conversion']['voice_profile'])
-        apply_request_overrides(request, {key: getattr(args, key) for key in REQUEST_KEYS
-                                          if getattr(args, key, None) is not None})
+        cli_overrides = {key: getattr(args, key) for key in REQUEST_KEYS if getattr(args, key, None) is not None}
+        apply_request_overrides(request, cli_overrides, deferred)
         if request['device'] not in {'auto', 'mps', 'cuda'}:
             raise ValueError('device must be auto, cuda or mps')
-        if request['device'] == 'mps' and request.get('gpu') is not None:
-            parser.error('--gpu cannot be combined with --device mps')
         if request.get('memory_budget_gib') is not None:
             memory_budget(request['memory_budget_gib'], request['device'])
         request['transpose'] = str(request['transpose'])
@@ -166,6 +186,7 @@ def main():
         if not isinstance(request['steps'], int) or isinstance(request['steps'], bool) or not 1 <= request['steps'] <= 200: raise ValueError('steps must be between 1 and 200')
         if not isinstance(request['seed'], int) or isinstance(request['seed'], bool) or not 0 <= request['seed'] < 2**32: raise ValueError('seed must be between 0 and 2**32 - 1')
         selected = select_stages(request, stage=args.stage, start=args.start, until=args.until)
+        validate_device_options(request, selected)
         modules = {m.ID: m for m in load_modules()}
         for name, module in modules.items():
             unknown = set(configs[name]) - set(module.DEFAULTS)
@@ -181,12 +202,19 @@ def main():
             return
         # CPU-only stages and static commands need no accelerator discovery.
         selected_backends = {b for name in selected for b in modules[name].backends(request, configs[name])}
-        if selected_backends - {'analysis', 'package'} or request['device'] != 'auto':
-            request['device'] = resolve_device(request['device'])
-            if request['device'] == 'mps' and request.get('gpu') is not None:
-                parser.error('--gpu cannot be combined with the selected MPS device')
+        if selected_backends - {'analysis', 'package'}:
+            gpu = request['gpu'] if deferred.get('gpu', 'cuda') == 'cuda' else None
+            request['device'] = resolve_device(
+                request['device'], gpu=gpu if gpu is not None else CUDA_DEFAULT_GPU)
+        elif request['device'] == 'auto' and saved_device:
+            request['device'] = saved_device
+        if request['device'] != 'auto':
+            for key, origin in deferred.items():
+                if origin != request['device']:
+                    request[key] = None
+        validate_device_options(request, selected)
         if request['device'] == 'cuda' and request.get('gpu') is None:
-            request['gpu'] = '0'
+            request['gpu'] = CUDA_DEFAULT_GPU
         if request['device'] != 'auto':
             request['memory_budget_gib'] = memory_budget(request.get('memory_budget_gib'), request['device'])
         if request['device'] == 'mps':
@@ -198,7 +226,9 @@ def main():
                 from .voice import resolve_voice
                 c = configs['05_voice_conversion']
                 resolve_voice(c['mode'], c['voice_profile'], backend=c['backend'])
-            check_resources(ROOT, selected_backends, mp3='06_mix' in selected, device=request['device'])
+            environment = cuda_environment(request['gpu']) if request['device'] == 'cuda' else None
+            check_resources(ROOT, selected_backends, mp3='06_mix' in selected,
+                            device=request['device'], environment=environment)
             print('Selected module preflight OK')
             return
         for key in ['song', 'lyrics', 'reference', 'style']:

@@ -141,7 +141,7 @@ envs/control/bin/python scripts/download_models.py
 envs/control/bin/python scripts/download_voice_models.py
 ```
 
-得到 `models/Seed-VC/`、`models/Whisper-small/`、`models/CAMPPlus/`、`models/RMVPE/` 和 `models/BigVGAN/`。脚本同时根据**当前项目根目录**生成 `configs/seed_svc.local.yml`，更新其中的声码器和编码器绝对路径。对应实现是 [scripts/setup/download_voice_models.py](../scripts/setup/download_voice_models.py)。
+得到 `models/Seed-VC/`、`models/Whisper-small/`、`models/CAMPPlus/`、`models/RMVPE/` 和 `models/BigVGAN/`。脚本以仓库相对路径更新模型清单，并将清单中的声码器和编码器位置写入 `configs/seed_svc.local.yml`。Seed-VC 执行时将这些位置解析到本次运行的配置副本。对应实现是 [scripts/setup/download_voice_models.py](../scripts/setup/download_voice_models.py)。
 
 ### 4.4 下载基础人声分离模型（1 组）
 
@@ -276,7 +276,7 @@ PY
 | 克隆仓库后提示缺少模型 | Git 不带 `models/`；按第 4 节恢复，并保留整个模型目录 |
 | 02/10 缺 `rmvpe.pt` | 运行换声模型下载脚本；RMVPE 同时服务选调、换声与音高评估 |
 | 已有 Seed-VC 主权重仍不能换声 | 检查 Whisper-small、CAMPPlus、RMVPE、BigVGAN 及 `configs/seed_svc.local.yml` |
-| 迁移后仍引用旧 `/data/...` 路径 | 重新执行换声模型准备脚本生成本机配置；锁文件中的历史绝对路径也应按迁移后的实际位置更新 |
+| 迁移后仍引用旧 `/data/...` 路径 | 重新执行对应模型下载脚本，重建使用仓库相对路径的模型清单和 Seed-VC 配置 |
 | 07/09 缺模型，基础歌曲却能生成 | 补齐评审依赖，并执行 `setup_review_assets.py`；只有不需要评审输出时才使用 `--no-review` |
 | BS-RoFormer/Karaoke 权重存在但报配置缺失 | 检查对应 YAML、`audio-separator` 版本及首次加载时的网络/缓存 |
 | `ffmpeg is not available` | 当前服务器执行 `export PATH="/opt/conda/bin:$PATH"`，再运行预检 |

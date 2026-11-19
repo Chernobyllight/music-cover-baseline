@@ -1,8 +1,22 @@
-# v1.2 发布前复核（2026-11-05）
+# v1.2 验收记录
 
 ## M5 整曲加速复测（2026-11-19）
 
 在同一台 M5、24 GB 上，从空运行目录用提交 `82782a6` 重新生成《今晚不眠》。计时从运行命令启动至 WAV 和 MP3 写完并退出。七个阶段均首次执行成功，四个模型阶段记录到实际 MPS 前向。两次的原曲、歌词、参考录音、风格、原调、种子 42 和 16 GiB 预算一致。YuE2 声学求解为 32 步 midpoint，Seed-VC 为 30 步。
+
+当时从仓库根目录使用以下工作区入口。当前版本通过 `bash scripts/run_baseline.sh` 进入同一条 Mac 运行路线。以下计时和产物均来自 `82782a6`。
+
+```bash
+bash envs/mps-optimized/scripts/run_baseline.sh --demo --device mps \
+  --memory-budget-gib 16 --until 06_mix --run runs/v12-mps-speed-20261119
+```
+
+本地运行目录为 `runs/v12-mps-speed-20261119/`，WAV 和 MP3 均位于下方相对于该目录的位置。
+
+| 本地成品 | SHA-256 |
+|---|---|
+| `stages/06_mix/attempt_001/artifacts/final.wav` | `1eb4616e21095d2b98445e29fb31a023893ed4b2314193086430078e604b62aa` |
+| `stages/06_mix/attempt_001/artifacts/final.mp3` | `be25abc7e2c2553a379abd9095768fb6dd8c5e9cc33d38c5d6e5818fe5dc392c` |
 
 | 耗时（秒） | 11 月 18 日 | 11 月 19 日 |
 |---|---:|---:|
@@ -19,9 +33,19 @@ YuE2 的 5,119 个内容 token、完整 latent 和生成的 FLAC 与上次逐文
 
 两版最终混音的综合响度均为 −16.54 LUFS，波形相关系数 0.9981，相对幅度谱 RMS 差 1.76%。抽查主歌、副歌及结尾各 8 秒的换声轨，pYIN 在两版共同有声的帧上测得的绝对音高差 P95 均为 0 音分。波形差异最大的一秒从 2:21 开始，可重点试听桥段 2:18–2:26。此版记录的是客观音频检查，整曲主观听感待试听。本次未做 CUDA 实机回归。
 
+## Mac 安装与短样本回归（2026-11-19）
+
+本轮 PR 整理后，在独立检出中按 [Mac 安装指南](docs/25_macos.md) 新建五套锁定环境并组装补丁。五套环境均通过 MPS 矩阵乘法预检，187 项现有模型资产通过 SHA-256 校验。统一入口的 00–06 预检通过。
+
+沿用 20 秒短样本，以自动移调和 Seed-VC 零样本设置完成 00–06，生成 WAV 和完整解码通过的 MP3。同目录续跑复用了七个阶段。模拟 03 失败后再次运行，YuE2 跳过损坏记录，从更早的有效检查点恢复语义 token 和 latent，重新解码的 FLAC 哈希一致。
+
+测试中常规回归 257 项、RVC 17 项、YuE2 数值与采样 7 项通过。YuE2 用例分别在 CPU 和 MPS 执行，MPS 用例也确认会拒绝未打补丁的上游源码。
+
+上节 918.99 秒来自 `82782a6` 的整曲实测。本轮执行了安装、预检和短样本回归。CUDA 设备选择和旧运行恢复使用替身验证，实机回归待进行。
+
 ## Apple Silicon MPS 00–06 验收（2026-11-18）
 
-在 M5、24 GB 统一内存上，通过集成提交 `55cccc5` 的 v1.2 模块化入口，从空运行目录执行一次《今晚不眠》整曲。命令启动到 06 完成 WAV 与 MP3 共 **966.21 秒（16 分 06.21 秒）**。原 main 实现的实测为 995.66 秒到 WAV，另用 1.21 秒编码 MP3。两次运行的入口、混音检查和编码流程有差异。[Mac 安装与运行](docs/09-macos.md) · [原实现实测](docs/15-mps-full-song.md)
+在 M5、24 GB 统一内存上，通过集成提交 `55cccc5` 的 v1.2 模块化入口，从空运行目录执行一次《今晚不眠》整曲。命令启动到 06 完成 WAV 与 MP3 共 **966.21 秒（16 分 06.21 秒）**。原 main 实现的实测为 995.66 秒到 WAV，另用 1.21 秒编码 MP3。两次运行的入口、混音检查和编码流程有差异。[Mac 安装与运行](docs/25_macos.md) · [原实现实测](https://github.com/q6y6y6/music-cover-baseline/blob/68b247b19ca9423e2125ea0116e67df611f18166/docs/15-mps-full-song.md)
 
 ```bash
 bash envs/mps-optimized/scripts/run_baseline.sh --demo --device mps \
@@ -45,7 +69,9 @@ bash envs/mps-optimized/scripts/run_baseline.sh --demo --device mps \
 - 20 秒输入已通过 00–06。另用同一短样本验证指定升两个半音及自动移调；自动模式因参考音域证据不足保留原调。短样本验证中复用了成功的前置阶段并恢复了失败阶段。
 - 281 项测试分环境通过，其中 257 项模块、路径、设备及相关测试，17 项独立运行的 RVC 测试，7 项 YuE2 算子和采样测试。RVC 数值单测使用测试用的 faiss-cpu 1.11.0。CUDA 实机回归仍待验证。
 
-本次产物位于 `runs/v12-mps-full/stages/06_mix/attempt_001/artifacts/`。状态文件中的 `partial` 表示本次执行止于 06。各阶段命令、输出哈希、有效精度和学习层计数保存在对应 attempt。
+本次产物位于 `runs/v12-mps-full/stages/06_mix/attempt_001/artifacts/`。状态文件中的 `partial` 表示本次执行止于 06。各阶段命令、输出哈希、学习层的参数 dtype 和前向调用次数保存在对应 attempt。
+
+## v1.2 发布前复核（2026-11-05）
 
 本版纳入 Fish Diffusion 独立训练/推理、优化方案及部署文档，保留原有 Seed-VC、SVC、RVC 和 00–11 主流程。发布前对当前源码重新执行以下检查；真实歌曲证据另列在下节。
 
@@ -67,7 +93,7 @@ bash envs/mps-optimized/scripts/run_baseline.sh --demo --device mps \
 
 ---
 
-# Fish Diffusion 手动训练与 05→06 验证（2026-11-05，v1.2）
+## Fish Diffusion 手动训练与 05→06 验证（2026-11-05，v1.2）
 
 用户从单依纯原始录音重新分离、创建配置、准备数据/特征、训练 5000 步、验证和导出，随后完成《绿洲》的 05 换声与 06 混音。本文是对已完成运行的只读核验，不表示本轮文档更新重新跑了训练。
 
@@ -90,7 +116,7 @@ bash envs/mps-optimized/scripts/run_baseline.sh --demo --device mps \
 
 ---
 
-# v1.1 发布前复核（2026-11-04）
+## v1.1 发布前复核（2026-11-04）
 
 本版纳入 v1.0 之后的 base 运行适配、配置生成与路径迁移、统一音色验收、以及 `skill/` 部署指南。模型、素材、训练数据和生成音频不随 Git 发布。
 
