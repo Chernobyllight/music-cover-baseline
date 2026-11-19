@@ -123,7 +123,7 @@ class RuntimeContracts(unittest.TestCase):
                 self.assertNotEqual(first, signature(root, ['separator', 'rmvpe']))
 
     def test_missing_ffprobe_is_caught_before_processing(self):
-        with patch('music_cover.common.resources.shutil.which', side_effect=lambda n: '/bin/ffmpeg' if n == 'ffmpeg' else None):
+        with patch('music_cover.common.resources.shutil.which', side_effect=lambda n, **_: '/bin/ffmpeg' if n == 'ffmpeg' else None):
             with self.assertRaisesRegex(RuntimeError, 'ffprobe'):
                 preflight('/project')
 

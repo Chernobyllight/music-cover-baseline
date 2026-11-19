@@ -1,0 +1,22 @@
+--- a/src/music_cover/backends/separator.py
++++ b/src/music_cover/backends/separator.py
+@@ -22,6 +22,19 @@
+     if separator.torch_device.type != args.device:
+         raise RuntimeError(f"Separator selected {separator.torch_device}, expected {args.device}")
+     separator.load_model(model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt")
++    if args.device == "mps":
++        import torch
++
++        def axial_fp16(forward):
++            def call(x):
++                with torch.autocast("mps", dtype=torch.float16):
++                    return forward(x).float()
++            return call
++
++        # The loaded RoFormer belongs to this single separation invocation.
++        for layers in separator.model_instance.model_run.layers:
++            for transformer in layers:
++                transformer.forward = axial_fp16(transformer.forward)
+     results = separator.separate(args.input)
+     found = {}
+     for name in results:

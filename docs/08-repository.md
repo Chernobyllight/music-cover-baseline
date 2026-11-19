@@ -53,7 +53,7 @@ git submodule update --init third_party/so-vits-svc third_party/rvc
 
 RVC 不需要递归初始化实时 VST 子模块；其权重、现有 base 依赖、训练和具体路径见 [RVC 指南](20_rvc.md)。
 
-克隆代码不会同时获得可直接运行的 GPU 环境。现有 `envs/` 复用了原服务器 `/opt/conda` 的基础包，不能直接复制到另一台机器使用。迁移时需恢复 base，以及仍在使用的 `control`、`sheetsage2` 环境；需要 07–11 评审时另恢复 `separator` 环境，不再要求旧 `seed-vc` 环境，实际 Python、Torch、CUDA 与关键包版本见 `configs/environments.lock.json`。03 YuE2 现在直接调用 base，不需要重建 yue2 环境；在已经配置的 base 中以 `--no-deps --no-build-isolation -e third_party/YuE` 安装该子模块，具体兼容版本与限制见[环境说明](03-environment.md)。当前运行锁为 `configs/yue-base.installed.txt`。
+克隆代码不会同时获得可直接运行的 GPU 环境。已有 CUDA 部署的 `envs/` 复用了服务器 `/opt/conda` 的基础包，不能直接复制到另一台机器使用。迁移时需恢复 base，以及仍在使用的 `control`、`sheetsage2` 环境；需要 07–11 评审时另恢复 `separator` 环境，不再要求旧 `seed-vc` 环境，实际 Python、Torch、CUDA 与关键包版本见 `configs/environments.lock.json`。03 YuE2 现在直接调用 base，不需要重建 yue2 环境；在已经配置的 base 中以 `--no-deps --no-build-isolation -e third_party/YuE` 安装该子模块，具体兼容版本与限制见[环境说明](03-environment.md)。当前运行锁为 `configs/yue-base.installed.txt`。
 
 `configs/*.installed.txt` 是当时各环境的局部安装记录，部分条目引用原服务器 wheel 路径，而且没有列出从基础环境继承的全部包；它们不是可直接在任意机器执行的完整安装清单。当前验证记录见 [VALIDATION.md](../VALIDATION.md)。
 
@@ -69,7 +69,7 @@ envs/control/bin/python scripts/download_voice_models.py
 envs/control/bin/python scripts/download_separator_model.py
 ```
 
-下载脚本需要相应的 `huggingface_hub`、`PyYAML` 等依赖。它们会创建模型目录并更新本地模型清单；`download_voice_models.py` 还会按当前仓库位置重建 `configs/seed_svc.local.yml` 中的绝对路径。版本清单里的原始绝对路径是原服务器记录，迁移时不能直接照搬。
+下载脚本需要 `huggingface_hub`、`PyYAML` 等依赖。两个下载器将模型位置以仓库相对路径写入本地模型清单。`download_voice_models.py` 也用相对路径重建 `configs/seed_svc.local.yml` 中的声码器和编码器位置。Seed-VC 运行前将这些位置解析为绝对路径，写入该次运行的配置副本。
 
 从 `v0.1` 起默认开启成品分轨和 MIDI 评审，`v1.0` 继续保留。基础 separator 环境配置好后，还需要安装附加依赖和模型：
 

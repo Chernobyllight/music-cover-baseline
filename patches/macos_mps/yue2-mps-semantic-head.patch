@@ -1,0 +1,59 @@
+--- a/src/yue2/modeling_yue2.py
++++ b/src/yue2/modeling_yue2.py
+@@ -556,7 +556,14 @@
+             selected = hidden_states[:, logits_to_keep.to(device), :]
+         if labels is not None and selected.shape[1] != hidden_states.shape[1]:
+             raise ValueError("Loss computation requires logits_to_keep=0")
+-        logits = self.lm_head(selected)
++        if kwargs.get("semantic_output_only", False):
++            from .protocol import MUSIC_END, CODEC_OFFSET, CODEC_SIZE
++            allowed = slice(MUSIC_END, CODEC_OFFSET + CODEC_SIZE)
++            partial = F.linear(selected, self.lm_head.weight[allowed])
++            logits = partial.new_zeros((*partial.shape[:-1], self.lm_head.out_features))
++            logits[..., allowed] = partial
++        else:
++            logits = self.lm_head(selected)
+ 
+         loss = None
+         if labels is not None:
+--- a/src/yue2/sampling.py
++++ b/src/yue2/sampling.py
+@@ -72,13 +72,16 @@
+     generator = torch.Generator(device=rng_device).manual_seed(seed)
+     config = model.config
+ 
++    compact = device.type == "mps" and phase == "semantic" and cfg_scale == 1.0
++    head_options = {"semantic_output_only": True} if compact else {}
++
+     def prefill(ids):
+         cache = StaticKVCache(num_layers=config.num_hidden_layers, batch_size=1,
+                               num_kv_heads=config.num_key_value_heads,
+                               max_seq_len=len(ids) + sampling.max_tokens,
+                               head_dim=config.head_dim, dtype=dtype, device=device)
+         output = model(torch.tensor([ids], device=device), past_key_values=cache,
+-                       use_cache=True, logits_to_keep=1)
++                       use_cache=True, logits_to_keep=1, **head_options)
+         return output.logits[:, -1, :], output.past_key_values
+ 
+     graph = None
+@@ -136,10 +139,10 @@
+                     unconditional = branch_logits[1:] if cfg_scale != 1 else None
+                 else:
+                     conditional = model(next_id, past_key_values=positive_cache, use_cache=True,
+-                                        logits_to_keep=1).logits[:, -1, :]
++                                        logits_to_keep=1, **head_options).logits[:, -1, :]
+                     if negative_cache is not None:
+                         unconditional = model(next_id, past_key_values=negative_cache, use_cache=True,
+-                                              logits_to_keep=1).logits[:, -1, :]
++                                              logits_to_keep=1, **head_options).logits[:, -1, :]
+         synchronize(device)
+         seconds = time.perf_counter() - start
+         count = len(history) + int(eos)
+@@ -147,6 +150,7 @@
+                   "ttft_seconds": first, "output_tokens": count, "content_tokens": len(history),
+                   "output_tps": count / seconds, "prefix_tokens": len(prefix),
+                   "cfg_branches": 1 if cfg_scale == 1 else 2,
++                  "output_head": "semantic_rows" if compact else "full_vocab",
+                   "execution": "cuda_graph" if graph is not None else "eager",
+                   "attention": graph.attention_backend if graph is not None else "sdpa"}
+         if use_cuda_graph and not graph_enabled:

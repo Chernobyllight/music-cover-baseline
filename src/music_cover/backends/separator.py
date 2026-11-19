@@ -19,6 +19,8 @@ def separate(args):
         normalization_threshold=1.0, amplification_threshold=0.0, sample_rate=44100,
         use_soundfile=True,
     )
+    if separator.torch_device.type != args.device:
+        raise RuntimeError(f"Separator selected {separator.torch_device}, expected {args.device}")
     separator.load_model(model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt")
     results = separator.separate(args.input)
     found = {}

@@ -4,10 +4,16 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
+import platform
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "src"))
+from music_cover.common.macos import ENVIRONMENTS, WORKSPACE
 
 
 def output(args, **kwargs):
@@ -16,17 +22,36 @@ def output(args, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output-dir', type=Path, default=ROOT / 'configs',
-                        help='Use a cache directory for a read-only runtime snapshot; default updates configs locks')
+    parser.add_argument('--output-dir', type=Path,
+                        help='Defaults to cache/macos-optimized-snapshot on macOS and configs on Linux')
     parser.add_argument('--skip-assets', action='store_true', help='Skip full model-directory hashing')
     args = parser.parse_args()
+    mac = platform.system() == 'Darwin'
+    checkout = ROOT / WORKSPACE if mac else ROOT
+    if mac and not checkout.is_dir():
+        parser.error('Run scripts/setup/macos.sh before capturing the macOS environment')
+    checkout = checkout.resolve()
+    default_output = ROOT / ('cache/macos-optimized-snapshot' if mac else 'configs')
+    args.output_dir = args.output_dir or default_output
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    ffmpeg = "ffmpeg"
+    if mac:
+        # Match scripts/run_baseline.sh when the shell has another FFmpeg.
+        search_path = os.pathsep.join((str(checkout / 'envs/control/bin'), os.environ.get('PATH', os.defpath)))
+        ffmpeg = shutil.which("ffmpeg", path=search_path)
+        if ffmpeg is None:
+            raise FileNotFoundError("ffmpeg was not found in the control environment or PATH")
     record = {"captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              "ffmpeg": output(["ffmpeg", "-version"]).splitlines()[0],
-              "gpu": output(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version", "--format=csv,noheader"]),
+              "ffmpeg": output([ffmpeg, "-version"]).splitlines()[0],
+              "gpu": output(["system_profiler", "SPDisplaysDataType"]) if mac else output(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version", "--format=csv,noheader"]),
               "environments": {}, "upstream": {}}
-    for name in ["control", "sheetsage2", "separator", "base"]:
-        python = "/opt/conda/bin/python" if name == "base" else str(ROOT / "envs" / name / "bin/python")
+    if mac:
+        record["ffmpeg_path"] = str(Path(ffmpeg).absolute())
+    environments = ENVIRONMENTS if mac else ["control", "sheetsage2", "separator", "base"]
+    for name in environments:
+        python = "/opt/conda/bin/python" if name == "base" else str(checkout / "envs" / name / "bin/python")
+        if mac and not Path(python).is_file():
+            parser.error(f"Mac runtime interpreter missing: {python}")
         code = """import sys,torch,numpy,importlib.metadata as m,json
 packages = {}
 for p in ['torchvision','torchaudio','transformers','huggingface-hub','safetensors','accelerate','soundfile','scipy','librosa','numba','onnxruntime','audio-separator','yue2-infer','triton','cuda-bindings','mido','pretty-midi','basic-pitch','demucs','speechbrain','faiss-cpu']:
@@ -39,14 +64,17 @@ print(json.dumps({'python':sys.version,'torch':torch.__version__,'cuda':torch.ve
 """
         versions = json.loads(output([python, "-c", code]))
         record["environments"][name] = versions
-        freeze = output([python, "-m", "pip", "freeze", "--local"])
+        freeze = output(["uv", "pip", "freeze", "--exclude-editable", "--python", python] if mac else
+                        [python, "-m", "pip", "freeze", "--local"])
+        if mac and name == 'yue2':
+            freeze += "\n# YuE source: third_party/YuE (commit recorded in environments.lock.json)"
         (args.output_dir / f"{name}.installed.txt").write_text(freeze + "\n")
         if name == 'base':
             (args.output_dir / 'pitch-base.installed.txt').write_text(freeze + "\n")
             (args.output_dir / 'yue-base.installed.txt').write_text(freeze + "\n")
             (args.output_dir / 'seed-vc-base.installed.txt').write_text(freeze + "\n")
-    for name in ["YuE", "seed-vc", "so-vits-svc", "rvc"]:
-        record["upstream"][name] = output(["git", "rev-parse", "HEAD"], cwd=ROOT / "third_party" / name)
+    for name in (["YuE", "seed-vc"] if mac else ["YuE", "seed-vc", "so-vits-svc", "rvc"]):
+        record["upstream"][name] = output(["git", "rev-parse", "HEAD"], cwd=checkout / "third_party" / name)
     (args.output_dir / "environments.lock.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")
     if args.skip_assets:
         print(f"Saved environment snapshot to {args.output_dir}; model hashes skipped")
@@ -54,13 +82,16 @@ print(json.dumps({'python':sys.version,'torch':torch.__version__,'cuda':torch.ve
     # Compute hashes locally; distinguish them from the upstream download revision locks.
     assets = {}
     for path in sorted((ROOT / "models").rglob("*")):
+        relative = path.relative_to(ROOT)
+        if mac and relative == Path("models/separation/download_checks.json"):
+            continue  # Historical diagnostics are not restored by the downloader.
         if not path.is_file() or any(part.startswith(".") or part == "__pycache__" for part in path.relative_to(ROOT / "models").parts):
             continue
         digest = hashlib.sha256()
         with path.open("rb") as stream:
             for block in iter(lambda: stream.read(8 * 1024**2), b""):
                 digest.update(block)
-        assets[str(path.relative_to(ROOT))] = {"bytes": path.stat().st_size, "sha256": digest.hexdigest()}
+        assets[str(relative)] = {"bytes": path.stat().st_size, "sha256": digest.hexdigest()}
     (args.output_dir / "local_assets.lock.json").write_text(json.dumps(assets, indent=2) + "\n")
     print(f"Saved environment and asset snapshots to {args.output_dir}")
 

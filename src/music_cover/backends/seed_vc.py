@@ -32,7 +32,9 @@ def convert(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
+    inference.device = torch.device(args.device)
+    if args.device == "cuda":
+        torch.cuda.manual_seed_all(args.seed)
     local_auxiliary = {
         ("lj1995/VoiceConversionWebUI", "rmvpe.pt"): ROOT / "models/RMVPE/rmvpe.pt",
         ("funasr/campplus", "campplus_cn_common.bin"): ROOT / "models/CAMPPlus/campplus_cn_common.bin",
@@ -57,7 +59,7 @@ def convert(args):
         source=args.input, target=args.reference, output=args.output,
         diffusion_steps=args.steps, length_adjust=1.0, inference_cfg_rate=0.7,
         f0_condition=True, auto_f0_adjust=False, semi_tone_shift=0,
-        checkpoint=str(voice['checkpoint']), config=str(runtime_config), fp16=True,
+        checkpoint=str(voice['checkpoint']), config=str(runtime_config), fp16=args.device == "cuda",
     )
     inference.main(options)
     outputs = list(Path(args.output).glob("vc_*.wav"))

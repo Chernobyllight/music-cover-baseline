@@ -1,0 +1,45 @@
+--- a/src/yue2/nar.py
++++ b/src/yue2/nar.py
+@@ -9,6 +9,7 @@
+ from contextlib import contextmanager, nullcontext
+ from dataclasses import dataclass
+ from numbers import Integral
++import os
+ from typing import Callable, Sequence
+ 
+ import torch
+@@ -46,6 +47,16 @@
+     noise = torch.randn((len(codec), 64), dtype=torch.float32, device="cpu", generator=generator)
+     return [Chunk(prefix + [value + CODEC_OFFSET for value in codec[a:b]] + [MUSIC_END], noise[a:b])
+             for a, b in ranges]
++
++
++def _query_ranges(length, block, blocks_per_call):
++    # The short final block must keep its own SDPA dispatch.
++    full = length - length % block
++    stride = block * blocks_per_call
++    for start in range(0, full, stride):
++        yield start, min(start + stride, full)
++    if full < length:
++        yield full, length
+ 
+ 
+ def attention(q, k, v, *, causal=False, backend="sdpa", query_chunk_size=None):
+@@ -80,10 +91,15 @@
+     if backend != "sdpa":
+         from torch.nn.attention import SDPBackend, sdpa_kernel
+         context = sdpa_kernel(SDPBackend.MATH if backend == "math" else SDPBackend.FLASH_ATTENTION)
++    # The optimized MPS prefill kernel streams K/V. Keep the original cap
++    # when the MPSGraph fallback or an explicit chunk size is requested.
++    coalesce = (q.device.type == "mps" and backend == "sdpa" and not causal
++                and query_chunk_size is None and q.dtype == torch.bfloat16
++                and q.shape[-1] == 128
++                and os.environ.get("PYTORCH_MPS_DISABLE_PREFILL_ATTENTION", "0") == "0")
+     outputs = []
+     with context:
+-        for start in range(0, len(q), block):
+-            end = min(start + block, len(q))
++        for start, end in _query_ranges(len(q), block, 20 if coalesce else 1):
+             used_key = key[..., :end, :] if causal else key
+             used_value = value[..., :end, :] if causal else value
+             # is_causal on a rectangular Q/K uses an upper-left triangle, so a

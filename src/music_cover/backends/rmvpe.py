@@ -17,7 +17,7 @@ def pitch(args):
     from music_cover.pitch import summarize_pitch
     from modules.rmvpe import RMVPE
     torch.set_num_threads(4)
-    model = RMVPE(str(ROOT / "models/RMVPE/rmvpe.pt"), is_half=False, device="cuda")
+    model = RMVPE(str(ROOT / "models/RMVPE/rmvpe.pt"), is_half=False, device=args.device)
     tracks = json.loads(Path(args.request).read_text())["tracks"]
     profiles = {"method": "RMVPE, 16kHz, 10ms hop; F0 65..1000Hz; RMS >= -40dBFS; no gain normalization",
                 "tracks": {}}

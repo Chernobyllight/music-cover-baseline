@@ -1,16 +1,19 @@
 """Backend-scoped model/runtime identities and preflight requirements."""
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
-from ..audio import sha256
+from ..runtime import PROBE_TIMEOUT
+from .macos import lock_path
 
 ENVIRONMENTS = {'fish_diffusion': '/opt/conda', 'rvc': '/opt/conda', 'so_vits_svc': '/opt/conda', 'sheetsage': 'sheetsage2', 'yue': '/opt/conda', 'separator': '/opt/conda',
                 'seed_vc': '/opt/conda', 'rmvpe': '/opt/conda', 'review_stems': 'separator',
                 'midi': 'separator', 'analysis': 'separator', 'package': 'separator', 'voice_metrics': '/opt/conda'}
 # Existing stage callers also use these environment names for unrelated operations.
 # Route these operations through the same resolver as preflight.
-EXECUTION_BACKENDS = {'separate': 'separator', 'pitch': 'rmvpe', 'cover': 'yue',
+EXECUTION_BACKENDS = {'transcribe': 'sheetsage', 'separate': 'separator', 'pitch': 'rmvpe', 'cover': 'yue',
                       'convert': 'seed_vc', 'convert_candidates': 'voice_metrics',
                       'evaluate_voice': 'voice_metrics', 'svc_metrics': 'voice_metrics'}
 BASE_LOCKS = {'fish_diffusion': 'fish-diffusion-base.installed.txt', 'rvc': 'rvc-base.installed.txt', 'so_vits_svc': 'svc-base.installed.txt',
@@ -25,17 +28,29 @@ MODEL_GROUPS = {
 }
 
 
-def python_for(root, backend):
+MPS_ENVIRONMENTS = {'sheetsage': 'sheetsage2', 'yue': 'yue2', 'separator': 'separator',
+                    'seed_vc': 'seed-vc', 'rmvpe': 'seed-vc'}
+
+
+def environment_for(backend, device):
+    if device == 'mps':
+        if backend not in MPS_ENVIRONMENTS:
+            raise ValueError(f'{backend} is outside the supported MPS stages 00–06')
+        return MPS_ENVIRONMENTS[backend]
+    return ENVIRONMENTS[backend]
+
+
+def python_for(root, backend, device='cuda'):
     """Resolve one backend interpreter consistently for preflight and execution."""
-    environment = Path(ENVIRONMENTS[backend])
+    environment = Path(environment_for(backend, device))
     prefix = environment if environment.is_absolute() else Path(root) / 'envs' / environment
     return prefix / 'bin/python'
 
 
-def execution_python(root, environment, operation):
+def execution_python(root, environment, operation, device="cuda"):
     """Keep stage execution and preflight aligned without moving other backends."""
     if operation in EXECUTION_BACKENDS:
-        return python_for(root, EXECUTION_BACKENDS[operation])
+        return python_for(root, EXECUTION_BACKENDS[operation], device)
     prefix = Path(environment)
     if not prefix.is_absolute():
         prefix = Path(root) / 'envs' / prefix
@@ -67,33 +82,72 @@ def resource_data(root, backend):
     return {}
 
 
-def signature(root, backends):
+def upstream_code(root, backend):
+    """Hash Python source used by this backend, including its compatibility changes."""
+    root = Path(root)
+    prefixes = {
+        'fish_diffusion': ('third_party/fish-diffusion/fish_diffusion',),
+        'rvc': ('third_party/rvc/infer', 'third_party/rvc/tools', 'third_party/rvc/train'),
+        'so_vits_svc': ('third_party/so-vits-svc',),
+        'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
+        'yue': ('models/YuE2-3B', 'models/YuE2-Vae', 'third_party/YuE'),
+        'seed_vc': ('third_party/seed-vc',), 'rmvpe': ('third_party/seed-vc/modules',),
+        'voice_metrics': ('third_party/seed-vc/modules',),
+    }.get(backend, ())
+    files = [p for prefix in prefixes for p in (root / prefix).rglob('*.py')
+             if '__pycache__' not in p.parts and not p.name.startswith('._')]
+    checksums = {}
+    for path in sorted(files):
+        with path.open('rb') as source:
+            checksums[str(path.relative_to(root))] = hashlib.file_digest(source, 'sha256').hexdigest()
+    return checksums
+
+
+def check_mps_torch(root, name, actual):
+    with lock_path(root, name).open() as lock:
+        expected = next((line.split()[0].removeprefix('torch==') for line in lock if line.startswith('torch==')), None)
+    if expected is None:
+        raise ValueError(f'{name} macOS lock has no torch pin')
+    if actual != expected:
+        raise ValueError(f'{name} has torch {actual or "missing"}, expected {expected}. Run scripts/setup/macos.sh.')
+
+
+def signature(root, backends, device="cuda", *, environment=None):
+    from ..audio import sha256
+
     root = Path(root)
     result = {}
+    runtimes = {}
     for backend in sorted(set(backends)):
-        env = ENVIRONMENTS[backend]
-        freeze = root / 'configs' / BASE_LOCKS.get(backend, env + '.installed.txt')
+        env = environment_for(backend, device)
+        freeze = (lock_path(root, env) if device == 'mps' else
+                  root / 'configs' / BASE_LOCKS.get(backend, env + '.installed.txt'))
         entry = {'models': resource_data(root, backend), 'environment': env,
                  'installed_lock_sha256': sha256(freeze)}
+        if device == 'mps':
+            if env not in runtimes:
+                command = [str(python_for(root, backend, device)), '-c',
+                           'import json; from music_cover.runtime import runtime_identity; print(json.dumps(runtime_identity()))']
+                try:
+                    output = subprocess.check_output(command, cwd=root, env=environment, text=True, timeout=PROBE_TIMEOUT)
+                except subprocess.TimeoutExpired as error:
+                    raise RuntimeError(f'{env} runtime identity probe timed out') from error
+                identity = json.loads(output)
+                check_mps_torch(root, env, identity['packages'].get('torch'))
+                runtimes[env] = identity
+            entry.update(device=device, runtime=runtimes[env])
         if backend == 'seed_vc':
             entry['config_sha256'] = sha256(root / 'configs/seed_svc.local.yml')
         if backend == 'voice_metrics':
             entry['additional_requirements_sha256'] = sha256(root / 'configs/requirements-voice-adaptation.txt')
-        # Small local model implementation files are executable dependencies, too.
-        prefixes = {'fish_diffusion': ('third_party/fish-diffusion/fish_diffusion',), 'rvc': ('third_party/rvc/infer', 'third_party/rvc/tools', 'third_party/rvc/train'), 'so_vits_svc': ('third_party/so-vits-svc',), 'sheetsage': ('models/SheetSage2', 'models/MERT-v2-FullSong'),
-                    'yue': ('models/YuE2-3B', 'models/YuE2-Vae', 'third_party/YuE'),
-                    'seed_vc': ('third_party/seed-vc',), 'rmvpe': ('third_party/seed-vc/modules',),
-                    'voice_metrics': ('third_party/seed-vc/modules',)}.get(backend, ())
-        files = [p for prefix in prefixes for p in (root / prefix).rglob('*.py')
-                 if '__pycache__' not in p.parts and not p.name.startswith('._')]
-        entry['upstream_code'] = {str(p.relative_to(root)): sha256(p) for p in sorted(files)}
+        entry['upstream_code'] = upstream_code(root, backend)
         result[backend] = entry
     return result
 
 
-def requirements(root, backend):
+def requirements(root, backend, device="cuda"):
     root = Path(root)
-    required = [python_for(root, backend)]
+    required = [python_for(root, backend, device)]
     if backend == 'fish_diffusion':
         required += [root / a['path'] for a in resource_data(root, backend)['assets'] if a.get('scope') != 'training']
         required += [root / 'third_party/fish-diffusion/fish_diffusion/archs/diffsinger/diffsinger.py']
@@ -122,24 +176,42 @@ def requirements(root, backend):
     return required
 
 
-def preflight(root, backends=(), mp3=False):
-    missing = [str(p) for b in sorted(set(backends)) for p in requirements(root, b) if not p.is_file()]
+def preflight(root, backends=(), mp3=False, device="cuda", *, environment=None):
+    missing = [str(p) for b in sorted(set(backends)) for p in requirements(root, b, device) if not p.is_file()]
     if missing:
         raise FileNotFoundError('Selected modules need these files:\n' + '\n'.join(missing))
-    if not shutil.which('ffmpeg'):
+    path = environment.get('PATH', os.defpath) if environment is not None else None
+    if not shutil.which('ffmpeg', path=path):
         raise RuntimeError('ffmpeg is not available; add /opt/conda/bin to PATH')
-    if not shutil.which('ffprobe'):
+    if not shutil.which('ffprobe', path=path):
         raise RuntimeError('ffprobe is not available; add the FFmpeg binary directory to PATH')
     if mp3:
-        result = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], check=True, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], check=True, capture_output=True,
+                                text=True, timeout=30, env=environment)
         if 'libmp3lame' not in result.stdout:
             raise RuntimeError('ffmpeg must support libmp3lame')
+    environments = {}
     for backend in sorted(set(backends)):
-        command = [str(python_for(root, backend)), '-c',
-                   'import importlib; ' + '; '.join('importlib.import_module(' + repr(name) + ')' for name in IMPORTS[backend])]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=90)
+        name = environment_for(backend, device)
+        key = name if device == 'mps' else backend
+        imports = environments.setdefault(key, (python_for(root, backend, device), {}))[1]
+        imports.update(dict.fromkeys(IMPORTS[backend]))
+    for name, (interpreter, imports) in environments.items():
+        code = 'import importlib; ' + '; '.join(f'importlib.import_module({module!r})' for module in imports)
+        options = {'env': environment}
+        if device == 'mps':
+            code += ('; import torch; import json; from music_cover.runtime import probe; '
+                     'probe("mps"); print(json.dumps(torch.__version__))')
+            options['cwd'] = root
+        try:
+            result = subprocess.run([str(interpreter), '-c', code], capture_output=True, text=True,
+                                    timeout=PROBE_TIMEOUT, **options)
+        except subprocess.TimeoutExpired as error:
+            raise RuntimeError(f'{name} environment preflight timed out') from error
         if result.returncode:
-            raise RuntimeError(f'{backend} environment imports failed:\n{result.stderr[-2000:]}')
+            raise RuntimeError(f'{name} environment preflight failed:\n{result.stderr[-2000:]}')
+        if device == 'mps':
+            check_mps_torch(Path(root), name, json.loads(result.stdout.splitlines()[-1]))
     if 'fish_diffusion' in backends:
         from ..fish import check_assets as check_fish_assets
         check_fish_assets(root)
@@ -149,6 +221,8 @@ def preflight(root, backends=(), mp3=False):
     if 'rvc' in backends:
         from ..rvc import check_assets as check_rvc_assets
         check_rvc_assets(root)
+    from ..audio import sha256
+
     for b in set(backends) & {'midi', 'review_stems'}:
         for item in resource_data(root, b)['assets']:
             p = Path(root) / item['path']

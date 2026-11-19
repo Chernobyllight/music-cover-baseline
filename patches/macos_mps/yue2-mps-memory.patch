@@ -1,0 +1,54 @@
+diff --git a/src/yue2/nar.py b/src/yue2/nar.py
+index cb0bccc..482a1ac 100644
+--- a/src/yue2/nar.py
++++ b/src/yue2/nar.py
+@@ -218,6 +218,8 @@ def _offload_ar(model, enabled):
+                     moved.append((module, device))
+             if torch.cuda.is_available():
+                 torch.cuda.empty_cache()
++            elif torch.backends.mps.is_available():
++                torch.mps.empty_cache()
+         yield
+     finally:
+         for module, device in moved:
+diff --git a/src/yue2/pipeline.py b/src/yue2/pipeline.py
+index 5bc2960..5a2ce7b 100644
+--- a/src/yue2/pipeline.py
++++ b/src/yue2/pipeline.py
+@@ -294,6 +294,9 @@ class YuE2Pipeline:
+         if self.quantization != "none":
+             from .quantization import restore_ar
+             restore_ar(self._model)
++        if self.device.type == "mps":
++            torch.mps.synchronize()
++            torch.mps.empty_cache()
+         model = self._load_model(for_nar=True)
+         with self._status("Synthesizing audio", unit="steps") as status:
+             report = (lambda completed, total: status.update(completed, total=total)) if self.progress else None
+@@ -310,6 +313,8 @@ class YuE2Pipeline:
+         self._model, self._vae = None, None
+         if self.device.type == "cuda":
+             torch.cuda.empty_cache()
++        elif self.device.type == "mps":
++            torch.mps.empty_cache()
+ 
+     def __enter__(self):
+         return self
+@@ -324,6 +329,8 @@ class YuE2Pipeline:
+                 self._model.to("cpu")
+             if self.device.type == "cuda":
+                 torch.cuda.empty_cache()
++            elif self.device.type == "mps":
++                torch.mps.empty_cache()
+             if vae is not None:
+                 model = YuE2VAE.from_pretrained(vae, decoder_only=True, device=self.device)
+             else:
+@@ -354,6 +361,8 @@ class YuE2Pipeline:
+             model.to("cpu")
+             if self.device.type == "cuda":
+                 torch.cuda.empty_cache()
++            elif self.device.type == "mps":
++                torch.mps.empty_cache()
+ 
+     def effective_config(self, request, abc_sampling=None, semantic_sampling=None):
+         config = self.generation_config.to_dict()
