@@ -45,6 +45,16 @@ bash "$runner" --resume runs/mac-demo --device mps --until 06_mix
 
 每个后端在独立进程执行。阶段指纹包括输入、参数、源码和运行环境。YuE2 在同一阶段的失败 attempt 间还可复用身份与哈希都匹配的语义 token 和 latent。查看 `attempt_*/process.log`、`command.json`、`config.json` 以及模型产物中的 `runtime.json`，可以核对实际解释器、设备、学习层前向精度和内存峰值。
 
+## Mac 优化入口的推理配置
+
+YuE2 的 BF16 非因果声学 attention 会合并最多 20 个完整的 256-query 块，末尾不足 256 个 query 的部分仍独立计算。显式分块设置和因果预填充沿用原有路径。
+
+优化入口在 BS-RoFormer 的时间与频率 Transformer 中使用 MPS FP16 autocast，输出恢复 FP32。Seed-VC 的 BigVGAN 对 Conv1d 和 ConvTranspose1d 使用相同的局部精度，滤波和激活沿用原精度。权重、分离块长、YuE2 的 32 步和 Seed-VC 的 30 步沿用原配置。
+
+M5 上同一 8 秒双声道分离块的热态前向由 5.43 秒降至 2.44 秒。BigVGAN 在同一份 mel 上解码 19.53 秒人声，由 8.31 秒降至 7.28 秒。两组对照片段已通过试听。按验收曲的 26 个分离块与 11 个换声块外推，分别约省 78 秒和 11 秒。新版组合的整曲耗时尚待实测。
+
+组装时会保留旧的优化目录。已有安装可在更新前运行 `readlink envs/mps-optimized` 记录旧目录名，之后直接用该目录下的 `scripts/run_baseline.sh` 回到原 Torch 2.15 组合。
+
 ## 环境和历史对照
 
 `--device auto` 优先 CUDA，其次 MPS。显式 `--gpu` 指定 CUDA 设备编号。MPS 默认内存目标为 16 GiB，allocator 的实际限制还受设备推荐工作集影响。Mac 入口关闭 PyTorch 隐式 CPU 回退。

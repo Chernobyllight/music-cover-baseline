@@ -9,7 +9,9 @@ PATCHES = [("seed-vc", "51383efd921027683c89e5348211d93ff12ac2a8", "seed-vc-mps.
            ("YuE", "1647252d68b70cbead046ffd3f7caf036dde47ee", "yue2-mps-memory.patch"),
            ("YuE", "1647252d68b70cbead046ffd3f7caf036dde47ee", "yue2-mps-sampling.patch")]
 CANDIDATES = {
+    "seed-vc-mps-bigvgan-conv": ("seed-vc", "51383efd921027683c89e5348211d93ff12ac2a8", "candidates/seed-vc-mps-bigvgan-conv.patch"),
     "seed-vc-mps-dit-fp16": ("seed-vc", "51383efd921027683c89e5348211d93ff12ac2a8", "candidates/seed-vc-mps-dit-fp16.patch"),
+    "yue2-mps-nar-query-blocks": ("YuE", "1647252d68b70cbead046ffd3f7caf036dde47ee", "candidates/yue2-mps-nar-query-blocks.patch"),
     "yue2-mps-semantic-head": ("YuE", "1647252d68b70cbead046ffd3f7caf036dde47ee", "candidates/yue2-mps-semantic-head.patch"),
     "seed-vc-key-mask": ("seed-vc", "51383efd921027683c89e5348211d93ff12ac2a8", "candidates/seed-vc-key-mask.patch"),
     "seed-vc-equal-heads": ("seed-vc", "51383efd921027683c89e5348211d93ff12ac2a8", "candidates/seed-vc-equal-heads.patch"),
@@ -19,10 +21,10 @@ CANDIDATES = {
 }
 
 
-# The combination measured together in docs/15-mps-full-song.md.
+# Optimizations installed only in the isolated Mac checkout.
 OPTIMIZED = (
-    "yue2-native-ar-gqa", "yue2-mps-semantic-head", "seed-vc-mps-dit-fp16",
-    "seed-vc-key-mask", "seed-vc-equal-heads", "seed-vc-soundfile",
+    "yue2-native-ar-gqa", "yue2-mps-semantic-head", "yue2-mps-nar-query-blocks", "seed-vc-mps-dit-fp16",
+    "seed-vc-key-mask", "seed-vc-equal-heads", "seed-vc-soundfile", "seed-vc-mps-bigvgan-conv",
 )
 
 

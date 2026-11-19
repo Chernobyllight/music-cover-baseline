@@ -1,0 +1,21 @@
+--- a/inference.py
++++ b/inference.py
+@@ -103,6 +103,18 @@
+         # remove weight norm in the model and set to eval mode
+         bigvgan_model.remove_weight_norm()
+         bigvgan_model = bigvgan_model.eval().to(device)
++        if device.type == "mps":
++            # Keep the anti-alias filters and activations in their original precision.
++            def fp16_convolution(forward):
++                def call(x):
++                    with torch.autocast("mps", dtype=torch.float16):
++                        result = forward(x)
++                    return result.float()
++                return call
++
++            for module in bigvgan_model.modules():
++                if isinstance(module, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
++                    module.forward = fp16_convolution(module.forward)
+         vocoder_fn = bigvgan_model
+     elif vocoder_type == 'hifigan':
+         from modules.hifigan.generator import HiFTGenerator

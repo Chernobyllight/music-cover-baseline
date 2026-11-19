@@ -22,7 +22,8 @@ def prepare():
     revisions = {name: revision for name, revision, _ in patches}
     scripts = [ROOT / "scripts" / name for name in ("run_baseline.sh", "stage_runner.py")]
     sources = scripts + sorted((ROOT / "src").rglob("*.py"))
-    digest = hashlib.sha256()
+    separator_patch = ROOT / "patches/candidates/separator-mps-axial-fp16.patch"
+    digest = hashlib.sha256(separator_patch.read_bytes())
     for name, revision, patch in patches:
         digest.update(f"{name}/{revision}/{patch}\n".encode())
         digest.update((ROOT / "patches" / patch).read_bytes())
@@ -42,6 +43,9 @@ def prepare():
                 target = staging / path.relative_to(ROOT)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(path, target)
+            # Patch only the staged separator adapter. The base environment shares src/.
+            subprocess.run(["patch", "--batch", "-F", "0", "-p1", "-i", str(separator_patch)],
+                           cwd=staging, check=True)
             for name, revision in revisions.items():
                 target = staging / "third_party" / name
                 subprocess.run(["git", "clone", "--quiet", "--local", "--no-checkout",
